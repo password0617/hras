@@ -560,27 +560,28 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="page-title">供应商看板</div>
         <div class="page-desc">全集团供应商核心指标一览，按 BU / 国家 / 地区多维度呈现</div>
 
-        <div class="stat-cards" id="kanbanCards" style="margin-bottom:24px;"></div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-          <div class="chart-card">
-            <div class="chart-title">各 BU 供应商数量分布</div>
-            <div id="kanbanBUChart" style="width:100%;height:300px;"></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">各国家供应商数量分布</div>
-            <div id="kanbanCountryChart" style="width:100%;height:300px;"></div>
-          </div>
+        <!-- Section 1: BU 供应商数量 -->
+        <div class="chart-card" style="margin-bottom:16px;">
+          <div class="chart-title">1. 各 BU 供应商数量</div>
+          <div id="kanbanBUChart" style="width:100%;height:260px;"></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-          <div class="chart-card">
-            <div class="chart-title">各地区供应商分布 Top10</div>
-            <div id="kanbanAreaChart" style="width:100%;height:300px;"></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">供应商评级分布</div>
-            <div id="kanbanRatingChart" style="width:100%;height:300px;"></div>
-          </div>
+
+        <!-- Section 2: 国家供应商数量 -->
+        <div class="chart-card" style="margin-bottom:16px;">
+          <div class="chart-title">2. 各国家供应商数量</div>
+          <div id="kanbanCountryChart" style="width:100%;height:320px;"></div>
+        </div>
+
+        <!-- Section 3: 地区供应商数量 -->
+        <div class="chart-card" style="margin-bottom:16px;">
+          <div class="chart-title">3. 各地区供应商数量</div>
+          <div id="kanbanAreaChart" style="width:100%;height:420px;"></div>
+        </div>
+
+        <!-- Section 4: BU 使用情况 -->
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title">4. 各 BU 供应商使用情况（在用 vs 停用）</div>
+          <div id="kanbanUsageChart" style="width:100%;height:260px;"></div>
         </div>
       </div>
 
@@ -1089,89 +1090,112 @@ function renderCurrentPage() {
 // ============================== Page 0: 供应商看板 ==============================
 let kanbanCharts = {};
 function renderKanban() {
-  // Stat cards
-  const bus = {};
+  // Dispose all existing charts
+  Object.values(kanbanCharts).forEach(c => { if (c) c.dispose(); });
+  kanbanCharts = {};
+
+  // === Data aggregation ===
+  const buData = {};
   suppliers.forEach(s => {
-    if (!bus[s.bu]) bus[s.bu] = { total: 0, active: 0, countries: new Set() };
-    bus[s.bu].total++;
-    if (s.status === '使用中' || s.status === '新增') bus[s.bu].active++;
-    bus[s.bu].countries.add(s.country);
-  });
-  const totalAll = suppliers.length;
-  const activeAll = suppliers.filter(s => s.status === '使用中' || s.status === '新增').length;
-  const allCountries = new Set(suppliers.map(s => s.country));
-  const allAreas = new Set(suppliers.map(s => s.area));
-
-  let cardHtml = `<div class="stat-card selected">
-    <div class="sc-label">全集团供应商</div><div class="sc-value">${totalAll}</div>
-    <div class="sc-sub">在用 ${activeAll} · ${allCountries.size} 国家 · ${allAreas.size} 地区</div>
-  </div>`;
-  Object.entries(bus).forEach(([bu, d]) => {
-    cardHtml += `<div class="stat-card"><div class="sc-label">${bu}</div><div class="sc-value">${d.total}</div>
-    <div class="sc-sub">在用 ${d.active} · ${d.countries.size} 国家</div></div>`;
-  });
-  document.getElementById('kanbanCards').innerHTML = cardHtml;
-
-  // BU chart
-  if (kanbanCharts.bu) kanbanCharts.bu.dispose();
-  kanbanCharts.bu = echarts.init(document.getElementById('kanbanBUChart'));
-  const buNames = Object.keys(bus);
-  const buTotals = buNames.map(b => bus[b].total);
-  const buActives = buNames.map(b => bus[b].active);
-  kanbanCharts.bu.setOption({
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['总数','在用'], bottom: 0 },
-    grid: { top: 20, left: 40, right: 20, bottom: 40 },
-    xAxis: { type: 'category', data: buNames },
-    yAxis: { type: 'value', minInterval: 1 },
-    series: [
-      { name: '总数', type: 'bar', data: buTotals, itemStyle: { color: '#3A7BD5', borderRadius: [4,4,0,0] } },
-      { name: '在用', type: 'bar', data: buActives, itemStyle: { color: '#6BA3E8', borderRadius: [4,4,0,0] } }
-    ]
+    if (!buData[s.bu]) buData[s.bu] = { total: 0, active: 0, inactive: 0, newCount: 0 };
+    buData[s.bu].total++;
+    if (s.status === '使用中') buData[s.bu].active++;
+    else if (s.status === '停用') buData[s.bu].inactive++;
+    else if (s.status === '新增') buData[s.bu].newCount++;
   });
 
-  // Country chart
-  if (kanbanCharts.country) kanbanCharts.country.dispose();
-  kanbanCharts.country = echarts.init(document.getElementById('kanbanCountryChart'));
   const countryMap = {};
   suppliers.forEach(s => { countryMap[s.country] = (countryMap[s.country] || 0) + 1; });
   const sortedCountries = Object.entries(countryMap).sort((a,b) => b[1]-a[1]);
-  kanbanCharts.country.setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { top: 10, left: 80, right: 30, bottom: 10 },
-    xAxis: { type: 'value', minInterval: 1 },
-    yAxis: { type: 'category', data: sortedCountries.map(c => c[0]).reverse() },
-    series: [{ type: 'bar', data: sortedCountries.map(c => c[1]).reverse(), itemStyle: { color: '#3A7BD5', borderRadius: [0,4,4,0] } }]
-  });
 
-  // Area chart (top 10)
-  if (kanbanCharts.area) kanbanCharts.area.dispose();
-  kanbanCharts.area = echarts.init(document.getElementById('kanbanAreaChart'));
   const areaMap = {};
   suppliers.forEach(s => { areaMap[s.area] = (areaMap[s.area] || 0) + 1; });
-  const sortedAreas = Object.entries(areaMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
-  kanbanCharts.area.setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { top: 10, left: 80, right: 30, bottom: 10 },
-    xAxis: { type: 'value', minInterval: 1 },
-    yAxis: { type: 'category', data: sortedAreas.map(a => a[0]).reverse() },
-    series: [{ type: 'bar', data: sortedAreas.map(a => a[1]).reverse(), itemStyle: { color: '#2E6BC0', borderRadius: [0,4,4,0] } }]
+  const sortedAreas = Object.entries(areaMap).sort((a,b) => b[1]-a[1]);
+
+  const buNames = Object.keys(buData);
+
+  // === Chart 1: BU 供应商数量 (horizontal bar with labels) ===
+  kanbanCharts.bu = echarts.init(document.getElementById('kanbanBUChart'));
+  kanbanCharts.bu.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+      formatter: p => `<b>${p[0].name}</b><br/>供应商数量: ${p[0].value} 家`
+    },
+    grid: { top: 10, left: 100, right: 60, bottom: 10 },
+    xAxis: { type: 'value', minInterval: 1, axisLabel: { fontSize: 12 } },
+    yAxis: { type: 'category', data: buNames.slice().reverse(), axisLabel: { fontSize: 13, fontWeight: 600 } },
+    series: [{
+      type: 'bar', barWidth: 36,
+      data: buNames.map(b => buData[b].total).reverse(),
+      itemStyle: { color: '#3A7BD5', borderRadius: [0,6,6,0] },
+      label: { show: true, position: 'right', formatter: '{c} 家', fontSize: 13, fontWeight: 700, color: '#1E3D7A' }
+    }]
   });
 
-  // Rating chart (pie)
-  if (kanbanCharts.rating) kanbanCharts.rating.dispose();
-  kanbanCharts.rating = echarts.init(document.getElementById('kanbanRatingChart'));
-  const ratingMap = {};
-  suppliers.forEach(s => { const r = s.rating === '—' ? '未评级' : s.rating + '级'; ratingMap[r] = (ratingMap[r] || 0) + 1; });
-  const colors = {'A级':'#27AE60','B级':'#3A7BD5','C级':'#F5A623','D级':'#E5484D','未评级':'#9E9E9E'};
-  kanbanCharts.rating.setOption({
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    legend: { bottom: 0 },
+  // === Chart 2: 各国家供应商数量 ===
+  kanbanCharts.country = echarts.init(document.getElementById('kanbanCountryChart'));
+  kanbanCharts.country.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+      formatter: p => `<b>${p[0].name}</b><br/>供应商数量: ${p[0].value} 家`
+    },
+    grid: { top: 10, left: 80, right: 60, bottom: 10 },
+    xAxis: { type: 'value', minInterval: 1 },
+    yAxis: { type: 'category', data: sortedCountries.map(c => c[0]).reverse(), axisLabel: { fontSize: 12 } },
     series: [{
-      type: 'pie', radius: ['40%','65%'], center: ['50%','45%'],
-      data: Object.entries(ratingMap).map(([k,v]) => ({ name: k, value: v, itemStyle: { color: colors[k] || '#9E9E9E' } })),
-      label: { formatter: '{b}\n{c}家' }
+      type: 'bar', barWidth: 24,
+      data: sortedCountries.map(c => c[1]).reverse(),
+      itemStyle: { color: '#2E6BC0', borderRadius: [0,4,4,0] },
+      label: { show: true, position: 'right', formatter: '{c} 家', fontSize: 12, fontWeight: 600, color: '#333' }
     }]
+  });
+
+  // === Chart 3: 各地区供应商数量 ===
+  kanbanCharts.area = echarts.init(document.getElementById('kanbanAreaChart'));
+  kanbanCharts.area.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+      formatter: p => `<b>${p[0].name}</b><br/>供应商数量: ${p[0].value} 家`
+    },
+    grid: { top: 10, left: 100, right: 60, bottom: 10 },
+    xAxis: { type: 'value', minInterval: 1 },
+    yAxis: { type: 'category', data: sortedAreas.map(a => a[0]).reverse(), axisLabel: { fontSize: 11 } },
+    series: [{
+      type: 'bar', barWidth: 18,
+      data: sortedAreas.map(a => a[1]).reverse(),
+      itemStyle: {
+        borderRadius: [0,4,4,0],
+        color: function(params) {
+          const colors = ['#3A7BD5','#4A8DE0','#5A9CE8','#6AABF0','#7ABAF5','#8AC5F8','#2E6BC0','#1D5FA8','#0EA5E9','#0284C7','#38BDF8','#60A5FA','#818CF8'];
+          return colors[params.dataIndex % colors.length];
+        }
+      },
+      label: { show: true, position: 'right', formatter: '{c} 家', fontSize: 11, fontWeight: 600, color: '#555' }
+    }]
+  });
+
+  // === Chart 4: BU 使用情况（在用 vs 停用 vs 新增）===
+  kanbanCharts.usage = echarts.init(document.getElementById('kanbanUsageChart'));
+  kanbanCharts.usage.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['在用','停用','新增'], bottom: 0 },
+    grid: { top: 20, left: 100, right: 40, bottom: 40 },
+    xAxis: { type: 'value', minInterval: 1 },
+    yAxis: { type: 'category', data: buNames.slice().reverse(), axisLabel: { fontSize: 13, fontWeight: 600 } },
+    series: [
+      { name: '在用', type: 'bar', stack: 'total', barWidth: 32,
+        data: buNames.map(b => buData[b].active).reverse(),
+        itemStyle: { color: '#27AE60' },
+        label: { show: true, position: 'inside', formatter: '{c}', fontSize: 12, color: '#fff' }
+      },
+      { name: '停用', type: 'bar', stack: 'total',
+        data: buNames.map(b => buData[b].inactive).reverse(),
+        itemStyle: { color: '#E5484D' },
+        label: { show: true, position: 'inside', formatter: p => p.value > 0 ? p.value : '', fontSize: 12, color: '#fff' }
+      },
+      { name: '新增', type: 'bar', stack: 'total',
+        data: buNames.map(b => buData[b].newCount).reverse(),
+        itemStyle: { color: '#F5A623', borderRadius: [0,4,4,0] },
+        label: { show: true, position: 'inside', formatter: p => p.value > 0 ? p.value : '', fontSize: 12, color: '#fff' }
+      }
+    ]
   });
 }
 
