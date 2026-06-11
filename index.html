@@ -202,13 +202,14 @@ input, select, textarea { font-family: var(--font); outline: none; }
 .stat-cards {
   display: flex; gap: 10px; margin-bottom: 20px;
   overflow-x: auto; padding-bottom: 4px;
+  flex-wrap: nowrap;
 }
 .stat-card {
   background: var(--primary-light);
   border-radius: 8px; padding: 12px 16px;
   cursor: pointer; transition: var(--transition);
   border: 1px solid transparent;
-  min-width: 120px; flex-shrink: 0;
+  min-width: 0; flex: 1; flex-shrink: 0;
 }
 .stat-card::before { display: none; }
 .stat-card:hover { background: #C8DBFA; transform: translateY(-1px); }
@@ -445,7 +446,8 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* Responsive */
 @media (max-width: 1400px) {
-  .stat-cards { flex-wrap: wrap; }
+  .stat-cards { gap: 6px; }
+  .stat-card { padding: 10px 12px; }
 }
 
 /* Scrollbar */
