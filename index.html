@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRAS全球劳务工供应商管理平台</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+/* ============================== CSS Reset & Variables ============================== */
+:root {
+  --primary: #2E6BE5;
+  --primary-light: #DAE8FB;
+  --primary-dark: #1D4FA0;
+  --success: #36B37E;
+  --warning: #F5A623;
+  --danger: #E5484D;
+  --info: #0EA5E9;
+  --accent-teal: #00B8A9;
+  --accent-purple: #7C5CFC;
+  --accent-amber: #D97706;
+  --accent-rose: #E11D48;
+  --navy: #1E3D7A;
+  --navy-light: #2B5DAE;
+  --navy-dark: #152D5C;
+  --bg: #E8EEF6;
+  --card: #FFFFFF;
+  --border: #D0DAE8;
+  --text-primary: #1A1D26;
+  --text-secondary: #4A5568;
+  --text-tertiary: #8794A8;
+  --sidebar-bg: #243B63;
+  --sidebar-text: #94A3BF;
+  --sidebar-active-bg: rgba(46,107,229,0.18);
+  --sidebar-width: 260px;
+  --header-height: 60px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(27,42,74,0.08), 0 2px 8px rgba(27,42,74,0.04);
+  --shadow-md: 0 4px 14px rgba(27,42,74,0.12), 0 1px 4px rgba(27,42,74,0.06);
+  --shadow-lg: 0 8px 30px rgba(27,42,74,0.18);
+  --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --transition: all 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text-primary); font-size: 14px; line-height: 1.5; }
+a { color: var(--primary); text-decoration: none; }
+button { cursor: pointer; font-family: var(--font); border: none; outline: none; }
+input, select, textarea { font-family: var(--font); outline: none; }
+
+/* ============================== Layout ============================== */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  background: linear-gradient(180deg, #DAE6F5 0%, #C8D8ED 100%);
+  border-right: 1px solid #B8C9DF;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.sidebar-logo-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.sidebar-logo .logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #2E6BE5 0%, #4A8AF4 50%, #00B8A9 100%);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 10px rgba(46,107,229,0.3);
+  flex-shrink: 0;
+}
+.sidebar-logo .logo-brand {
+  font-size: 18px; font-weight: 700; color: #1A2D50;
+  letter-spacing: 1px;
+}
+.sidebar-logo .logo-title {
+  font-size: 13px; font-weight: 400; color: #4A5D7A;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+}
+.sidebar-logo .logo-sub {
+  font-size: 11px; color: #7A8DA6; margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  letter-spacing: 0.3px;
+}
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-label {
+  font-size: 11px; color: #6B7F99;
+  letter-spacing: 1px; padding: 12px 16px 6px; font-weight: 700;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; border-radius: 8px; margin-bottom: 2px;
+  color: #3D5068; font-size: 14px; font-weight: 500;
+  transition: var(--transition); cursor: pointer;
+  position: relative;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,0.5); color: #1A2D50; }
+.nav-item.active {
+  background: rgba(46,107,229,0.12); color: #2E6BE5; font-weight: 600;
+  border-left-color: #2E6BE5;
+}
+.nav-item .badge {
+  margin-left: auto; background: var(--danger); color: #fff;
+  font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 600;
+}
+.sidebar-footer {
+  padding: 14px 22px; border-top: 1px solid rgba(0,0,0,0.08);
+  font-size: 11px; color: #7A8DA6; line-height: 1.6;
+}
+
+/* Main Area */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Header */
+.header {
+  height: var(--header-height);
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; flex-shrink: 0;
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--navy) 0%, var(--primary) 50%, var(--navy-light) 100%);
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-title { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.header-breadcrumb { font-size: 13px; color: var(--text-tertiary); }
+.header-right { display: flex; align-items: center; gap: 20px; }
+.role-switch {
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary);
+}
+.role-switch .toggle {
+  width: 40px; height: 22px; background: linear-gradient(135deg, var(--primary), var(--accent-teal)); border-radius: 11px;
+  position: relative; cursor: pointer; transition: var(--transition);
+  box-shadow: 0 1px 4px rgba(46,107,229,0.3);
+}
+.role-switch .toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; background: #fff; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: var(--transition);
+}
+.role-switch .toggle.off { background: linear-gradient(135deg, #B0B8CC, #898F9E); box-shadow: none; }
+.role-switch .toggle.off::after { left: 20px; }
+.user-info {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 14px; background: #F5F6FA; border-radius: 8px;
+  border: 1px solid #ECEEF3;
+}
+.user-avatar {
+  width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--accent-teal));
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 600;
+  box-shadow: 0 2px 6px rgba(46,107,229,0.25);
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.user-role { font-size: 11px; color: var(--text-tertiary); }
+
+/* Content */
+.content { flex: 1; overflow-y: auto; padding: 24px 28px; background: var(--bg); }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ============================== Common Components ============================== */
+.page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; color: var(--text-primary); }
+.page-desc { font-size: 13px; color: var(--text-tertiary); margin-bottom: 20px; }
+
+/* Stat Cards */
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--navy-light) 100%);
+  border-radius: var(--radius); padding: 18px 20px;
+  box-shadow: 0 3px 12px rgba(30,61,122,0.2); cursor: pointer; transition: var(--transition);
+  border: none;
+  border-left: none;
+  position: relative;
+  color: #fff;
+}
+.stat-card::before { display: none; }
+.stat-card:hover { box-shadow: 0 6px 20px rgba(30,61,122,0.3); transform: translateY(-2px); }
+.stat-card.selected { box-shadow: 0 0 0 3px rgba(255,255,255,0.4), 0 6px 20px rgba(30,61,122,0.3); }
+.stat-card .sc-label { font-size: 12px; color: rgba(255,255,255,0.75); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; }
+.stat-card .sc-value { font-size: 28px; font-weight: 800; color: #FFFFFF; }
+.stat-card .sc-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+.stat-card .sc-trend { font-size: 12px; font-weight: 600; margin-top: 4px; }
+.stat-card .sc-trend.up { color: var(--success); }
+.stat-card .sc-trend.down { color: var(--danger); }
+
+/* Filter Bar */
+.filter-bar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.filter-bar select, .filter-bar input {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; background: var(--card); color: var(--text-primary);
+  transition: var(--transition);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.filter-bar select:focus, .filter-bar input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(46,107,229,0.1);
+}
+.filter-bar .filter-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+
+/* Buttons */
+.btn {
+  padding: 8px 18px; border-radius: var(--radius-sm); font-size: 13px;
+  font-weight: 600; transition: var(--transition); display: inline-flex;
+  align-items: center; gap: 6px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--navy-light));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(46,107,229,0.3);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-dark), #1B3570);
+  box-shadow: 0 4px 12px rgba(46,107,229,0.35);
+  transform: translateY(-1px);
+}
+.btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.btn-outline:hover { background: #F5F6FA; border-color: #C8CCD8; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { background: linear-gradient(135deg, var(--danger), var(--accent-rose)); color: #fff; box-shadow: 0 2px 6px rgba(255,59,48,0.25); }
+.btn-success { background: linear-gradient(135deg, #2EAD4B, var(--success)); color: #fff; box-shadow: 0 2px 6px rgba(52,199,89,0.25); }
+
+/* Tables */
+.table-wrapper {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid #ECEEF3;
+}
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: linear-gradient(180deg, #F8F9FC 0%, #F0F2F7 100%);
+  padding: 13px 16px; text-align: left;
+  font-weight: 700; color: var(--text-secondary); border-bottom: 2px solid var(--border);
+  white-space: nowrap; position: sticky; top: 0; z-index: 5;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+tbody td {
+  padding: 12px 16px; border-bottom: 1px solid #F0F1F5;
+  color: var(--text-primary); vertical-align: middle;
+}
+tbody tr { transition: var(--transition); cursor: pointer; }
+tbody tr:nth-child(even) { background: #FAFBFD; }
+tbody tr:hover { background: #EEF2FF; }
+tbody tr:last-child td { border-bottom: none; }
+
+/* Tags / Badges */
+.tag {
+  display: inline-block; padding: 3px 10px; border-radius: 4px;
+  font-size: 12px; font-weight: 600;
+  border-left: 3px solid transparent;
+}
+.tag-a { background: #E8F5E9; color: #2E7D32; border-left-color: #43A047; }
+.tag-b { background: #E3F2FD; color: #1565C0; border-left-color: #1E88E5; }
+.tag-c { background: #FFF8E1; color: #E65100; border-left-color: var(--accent-amber); }
+.tag-d { background: #FFEBEE; color: #C62828; border-left-color: var(--danger); }
+.tag-active { background: #E8F5E9; color: #2E7D32; border-left-color: #43A047; }
+.tag-inactive { background: #F5F5F5; color: #757575; border-left-color: #BDBDBD; }
+.tag-new { background: #EDE7F6; color: var(--accent-purple); border-left-color: var(--accent-purple); }
+.tag-red { background: #FFEBEE; color: #C62828; border-left-color: var(--danger); }
+.tag-yellow { background: #FFF8E1; color: #E65100; border-left-color: var(--accent-amber); }
+.tag-blue { background: #E3F2FD; color: #1565C0; border-left-color: var(--accent-teal); }
+.tag-green { background: #E8F5E9; color: #2E7D32; border-left-color: #43A047; }
+
+/* Cards Grid */
+.cards-grid { display: grid; gap: 16px; }
+
+/* Chart Container */
+.chart-box {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 22px 24px; margin-bottom: 20px;
+  border: 1px solid #ECEEF3;
+  position: relative;
+  overflow: hidden;
+}
+.chart-box::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--navy-light));
+}
+.chart-box .cb-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-primary); }
+.chart-box .cb-desc { font-size: 12px; color: var(--text-tertiary); margin-bottom: 16px; line-height: 1.6; }
+.chart-area { width: 100%; height: 380px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--card); padding: 4px; border-radius: 8px; display: inline-flex; box-shadow: var(--shadow); border: 1px solid #ECEEF3; }
+.tab-btn {
+  padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 500;
+  color: var(--text-secondary); background: transparent; transition: var(--transition);
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--primary), var(--navy-light));
+  color: #fff; font-weight: 600;
+  box-shadow: 0 2px 8px rgba(46,107,229,0.3);
+}
+.tab-btn:hover:not(.active) { background: #F5F6FA; color: var(--text-primary); }
+
+/* Drawer / Slide Panel */
+.drawer-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15,20,35,0.45); z-index: 1000; display: none;
+  opacity: 0; transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+.drawer-overlay.show { display: block; opacity: 1; }
+.drawer {
+  position: fixed; top: 0; right: -560px; width: 560px; height: 100%;
+  background: var(--card); z-index: 1001; transition: right 0.3s ease;
+  box-shadow: -4px 0 30px rgba(0,0,0,0.15); display: flex; flex-direction: column;
+}
+.drawer.show { right: 0; }
+.drawer-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(180deg, #F8F9FC, #FFFFFF);
+}
+.drawer-header h3 { font-size: 17px; font-weight: 700; }
+.drawer-close {
+  width: 32px; height: 32px; border-radius: 6px; display: flex;
+  align-items: center; justify-content: center; font-size: 18px;
+  color: var(--text-tertiary); cursor: pointer; transition: var(--transition);
+}
+.drawer-close:hover { background: var(--bg); color: var(--text-primary); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+.drawer-section { margin-bottom: 24px; }
+.drawer-section h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); padding-bottom: 8px; border-bottom: 2px solid var(--primary-light); }
+.drawer-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.drawer-info-item { padding: 8px 10px; background: #F8F9FC; border-radius: 6px; }
+.drawer-info-item .dii-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.drawer-info-item .dii-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+
+/* Form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-group { margin-bottom: 16px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.2px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px; transition: var(--transition);
+  background: var(--card);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,107,229,0.1);
+}
+.form-group textarea { resize: vertical; min-height: 80px; }
+.upload-zone {
+  border: 2px dashed #C8CCD8; border-radius: var(--radius);
+  padding: 30px; text-align: center; color: var(--text-tertiary);
+  cursor: pointer; transition: var(--transition);
+  background: #FAFBFD;
+}
+.upload-zone:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.upload-zone div:first-child { font-size: 28px; margin-bottom: 8px; display: block; color: #C8CCD8; }
+.upload-zone:hover div:first-child { color: var(--primary); }
+
+/* Alert List */
+.alert-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 20px; background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 12px; transition: var(--transition);
+  border: 1px solid #ECEEF3;
+  border-left: 4px solid var(--border);
+}
+.alert-item:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
+.alert-item[data-level="red"], .alert-item:has(.alert-dot.red) { border-left-color: var(--danger); }
+.alert-item:has(.alert-dot.yellow) { border-left-color: var(--warning); }
+.alert-item:has(.alert-dot.blue) { border-left-color: var(--accent-teal); }
+.alert-dot {
+  width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+}
+.alert-dot.red { background: var(--danger); }
+.alert-dot.yellow { background: var(--warning); }
+.alert-dot.blue { background: var(--info); }
+.alert-content { flex: 1; }
+.alert-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.alert-desc { font-size: 12px; color: var(--text-tertiary); }
+.alert-meta { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+.alert-actions { display: flex; gap: 8px; align-items: center; }
+
+/* Heatmap Cell */
+.heat-cell {
+  padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 4px;
+  border-left: 3px solid transparent;
+}
+.heat-top { background: #E8F5E9; color: #1B5E20; border-left-color: #2E7D32; }
+.heat-good { background: #F1F8E9; color: #33691E; border-left-color: #689F38; }
+.heat-mid { background: #FFFDE7; color: #F57F17; border-left-color: #FBC02D; }
+.heat-low { background: #FFF3E0; color: #E65100; border-left-color: #EF6C00; }
+.heat-bad { background: #FFEBEE; color: #B71C1C; border-left-color: #C62828; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, #1A2236, #2A3550); color: #fff; padding: 14px 30px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; z-index: 2000; opacity: 0;
+  transition: opacity 0.3s ease; pointer-events: none;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.toast.show { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .stat-cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C8CCD8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #898F9E; }
+
+.sidebar ::-webkit-scrollbar-thumb { background: #B0C0D5; }
+.sidebar ::-webkit-scrollbar-thumb:hover { background: #8FA5BE; }
+
+/* Animation */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.3s ease; }
+
+/* Progress bar */
+.progress-bar { height: 6px; background: #E8EAF0; border-radius: 3px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; background: linear-gradient(90deg, var(--primary), var(--accent-teal)); }
+
+/* Mini table in drawer */
+.mini-table { width: 100%; font-size: 12px; border: 1px solid #ECEEF3; border-radius: 6px; overflow: hidden; }
+.mini-table th { padding: 8px 10px; background: linear-gradient(180deg, #F8F9FC, #F0F2F7); font-weight: 700; color: var(--text-secondary); text-align: left; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+.mini-table td { padding: 8px 10px; border-bottom: 1px solid #F0F1F5; }
+.mini-table tr:last-child td { border-bottom: none; }
+.mini-table tbody tr:nth-child(even) { background: #FAFBFD; }
+
+/* Modal for detail */
+.detail-chart { width: 100%; height: 220px; margin-top: 12px; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
+.empty-state p { font-size: 15px; }
+
+/* Tooltip override */
+.custom-tooltip { max-width: 260px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============================== Sidebar ============================== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-top">
+        <div class="logo-icon">HRAS</div>
+        <div class="logo-brand">HRAS</div>
+      </div>
+      <div class="logo-title">全球劳务工供应商管理平台</div>
+      <div class="logo-sub">FBU交付前台管理系统</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">管理中心</div>
+      <div class="nav-item active" data-page="registry" onclick="switchPage('registry')">
+        <span>供应商明细</span>
+      </div>
+      <div class="nav-item" data-page="pricing" onclick="switchPage('pricing')">
+        <span>供应商定价</span>
+      </div>
+      <div class="nav-item" data-page="assessment" onclick="switchPage('assessment')">
+        <span>供应商考核</span>
+      </div>
+      <div class="nav-label" style="margin-top: 12px;">运营支持</div>
+      <div class="nav-item" data-page="onboard" onclick="switchPage('onboard')">
+        <span>引入供应商</span>
+      </div>
+      <div class="nav-item" data-page="compliance" onclick="switchPage('compliance')">
+        <span>合规及预警</span>
+        <span class="badge" id="alertBadge">8</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="margin-bottom:4px;">FBU 交付前台管理系统</div>
+      <div>v2.6.0 · 数据更新于 2026-06</div>
+    </div>
+  </aside>
+
+  <!-- ============================== Main ============================== -->
+  <div class="main">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="header-title" id="headerTitle">供应商明细</div>
+        <div class="header-breadcrumb" id="headerBreadcrumb">全集团 / 供应商管理</div>
+      </div>
+      <div class="header-right">
+        <div class="role-switch">
+          <span>CHO权限</span>
+          <div class="toggle" id="roleToggle" onclick="toggleRole()"></div>
+          <span id="roleLabel" style="font-size:12px;color:var(--primary);font-weight:600;">全量数据</span>
+        </div>
+        <div class="user-info">
+          <div class="user-avatar">CHO</div>
+          <div>
+            <div class="user-name">集团CHO</div>
+            <div class="user-role">全集团数据访问权限</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="content">
+
+      <!-- ============================== Page 1: 供应商明细 ============================== -->
+      <div class="page active" id="page-registry">
+        <div class="page-title">供应商明细</div>
+        <div class="page-desc">全集团劳务工供应商全景信息，支持多维度筛选与下钻分析</div>
+
+        <!-- BU Stat Cards -->
+        <div class="stat-cards" id="buCards"></div>
+
+        <!-- Filter -->
+        <div class="filter-bar">
+          <span class="filter-label">筛选：</span>
+          <select id="filterRegion" onchange="renderRegistryTable()">
+            <option value="">全部大区</option>
+            <option value="美洲区">美洲区</option>
+            <option value="欧洲区">欧洲区</option>
+            <option value="亚太区">亚太区</option>
+          </select>
+          <select id="filterArea" onchange="renderRegistryTable()">
+            <option value="">全部区域</option>
+          </select>
+          <select id="filterType" onchange="renderRegistryTable()">
+            <option value="">全部类型</option>
+            <option value="劳务">劳务</option>
+            <option value="卸柜">卸柜</option>
+            <option value="外包">外包</option>
+            <option value="保安">保安</option>
+          </select>
+          <select id="filterStatus" onchange="renderRegistryTable()">
+            <option value="">全部状态</option>
+            <option value="使用中">使用中</option>
+            <option value="停用">停用</option>
+            <option value="新增">新增</option>
+          </select>
+          <select id="filterRating" onchange="renderRegistryTable()">
+            <option value="">全部评级</option>
+            <option value="A">A级</option>
+            <option value="B">B级</option>
+            <option value="C">C级</option>
+            <option value="D">D级</option>
+          </select>
+          <input type="text" id="filterSearch" placeholder="搜索供应商名称…" oninput="renderRegistryTable()" style="min-width:200px;">
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <div class="table-scroll">
+            <table id="registryTable">
+              <thead>
+                <tr>
+                  <th>供应商ID</th>
+                  <th>供应商名称</th>
+                  <th>大区</th>
+                  <th>区域</th>
+                  <th>公司类型</th>
+                  <th>结算时薪</th>
+                  <th>Markup</th>
+                  <th>用工占比</th>
+                  <th>评级</th>
+                  <th>启用状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="registryBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div style="padding:12px 16px;font-size:12px;color:var(--text-tertiary);display:flex;justify-content:space-between;align-items:center;">
+          <span id="tableCount">共 0 条记录</span>
+          <span>数据基于 2026年 FBU交付前台劳务供应商更新表</span>
+        </div>
+      </div>
+
+      <!-- ============================== Page 2: 供应商定价 ============================== -->
+      <div class="page" id="page-pricing">
+        <div class="page-title">供应商定价</div>
+        <div class="page-desc">多维度对比分析，支持BU、工种、供应商三方视角</div>
+
+        <div class="tabs" id="pricingTabs">
+          <button class="tab-btn active" onclick="switchPricingTab('bu', event)">BU对比</button>
+          <button class="tab-btn" onclick="switchPricingTab('type', event)">工种对比</button>
+          <button class="tab-btn" onclick="switchPricingTab('supplier', event)">供应商跨BU对比</button>
+        </div>
+
+        <!-- BU Comparison -->
+        <div id="pricingBU" class="pricing-panel">
+          <div class="chart-box">
+            <div class="cb-title">各大区平均结算时薪对比</div>
+            <div class="cb-desc">按大区统计所有在用供应商的平均白班普工结算时薪（本币），点击柱子可下钻查看该区供应商报价排名</div>
+            <div class="chart-area" id="chartBUavg"></div>
+          </div>
+          <div class="chart-box" id="buDrillDown" style="display:none;">
+            <div class="cb-title" id="buDrillTitle">供应商报价排名</div>
+            <div class="cb-desc">该大区下各供应商结算时薪由低到高排列</div>
+            <div class="chart-area" id="chartBUdrill"></div>
+          </div>
+        </div>
+
+        <!-- Type Comparison -->
+        <div id="pricingType" class="pricing-panel" style="display:none;">
+          <div class="chart-box">
+            <div class="cb-title">不同工种类型供应商Markup对比</div>
+            <div class="cb-desc">对比劳务、卸柜、外包、保安等不同公司类型供应商的Markup水平</div>
+            <div class="chart-area" id="chartTypeCompare"></div>
+          </div>
+        </div>
+
+        <!-- Supplier Cross-BU -->
+        <div id="pricingSupplier" class="pricing-panel" style="display:none;">
+          <div class="filter-bar" style="margin-bottom:16px;">
+            <span class="filter-label">选择供应商：</span>
+            <select id="supplierSelect" onchange="renderSupplierCrossBU()" style="min-width:280px;">
+            </select>
+          </div>
+          <div class="chart-box">
+            <div class="cb-title" id="crossBUTitle">供应商跨区域Markup对比</div>
+            <div class="cb-desc">展示选定供应商在各服务区域的Markup差异</div>
+            <div class="chart-area" id="chartCrossBU"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================== Page 3: 供应商考核 ============================== -->
+      <div class="page" id="page-assessment">
+        <div class="page-title">供应商考核</div>
+        <div class="page-desc">绩效看板，一眼识别极端指标值，支持时间维度下钻</div>
+
+        <div class="chart-box" style="margin-bottom:24px;">
+          <div class="cb-title">综合考核热力图</div>
+          <div class="cb-desc">每行一个供应商，每列一个考核指标。颜色深浅反映得分高低，绿色为前20%优秀，红色为后20%需关注</div>
+          <div class="table-wrapper" style="box-shadow:none;">
+            <div class="table-scroll">
+              <table id="assessTable">
+                <thead>
+                  <tr>
+                    <th>供应商名称</th>
+                    <th>评级</th>
+                    <th>交付及时率</th>
+                    <th>质量合格率</th>
+                    <th>人员稳定性</th>
+                    <th>安全事故率</th>
+                    <th>合规扣分</th>
+                    <th>综合得分</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="assessBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-box" id="assessDetail" style="display:none;">
+          <div class="cb-title" id="assessDetailTitle">考核趋势</div>
+          <div class="cb-desc">近6个月考核指标变化趋势</div>
+          <div class="chart-area" id="chartAssessTrend"></div>
+        </div>
+      </div>
+
+      <!-- ============================== Page 4: 引入供应商 ============================== -->
+      <div class="page" id="page-onboard">
+        <div class="page-title">引入供应商</div>
+        <div class="page-desc">快速录入新供应商信息，提交后自动同步至供应商明细</div>
+
+        <div class="chart-box">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>供应商名称 <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="newName" placeholder="请输入供应商全称">
+            </div>
+            <div class="form-group">
+              <label>供应商ID</label>
+              <input type="text" id="newId" placeholder="系统自动生成" readonly style="background:#F8F9FB;">
+            </div>
+            <div class="form-group">
+              <label>所属大区 <span style="color:var(--danger)">*</span></label>
+              <select id="newRegion">
+                <option value="">请选择</option>
+                <option value="美洲区">美洲区</option>
+                <option value="欧洲区">欧洲区</option>
+                <option value="亚太区">亚太区</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>所属区域 <span style="color:var(--danger)">*</span></label>
+              <select id="newArea">
+                <option value="">请先选择大区</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>公司类型</label>
+              <select id="newType">
+                <option value="劳务">劳务</option>
+                <option value="卸柜">卸柜</option>
+                <option value="外包">外包</option>
+                <option value="保安">保安</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>结算时薪（本币）</label>
+              <input type="number" id="newRate" placeholder="请输入">
+            </div>
+            <div class="form-group">
+              <label>基本时薪（本币）</label>
+              <input type="number" id="newBase" placeholder="请输入">
+            </div>
+            <div class="form-group">
+              <label>联系人信息</label>
+              <input type="text" id="newContact" placeholder="姓名 / 电话 / 邮箱">
+            </div>
+            <div class="form-group full">
+              <label>资质文件</label>
+              <div class="upload-zone" onclick="simulateUpload()">
+                点击上传劳务派遣证、ISO认证等资质文件
+                <div style="font-size:11px;margin-top:4px;">支持 PDF / JPG / PNG，单文件不超过 10MB</div>
+              </div>
+              <div id="uploadResult" style="margin-top:8px;font-size:12px;color:var(--success);display:none;">
+                文件已上传（模拟）
+              </div>
+            </div>
+            <div class="form-group full">
+              <label>备注</label>
+              <textarea id="newNote" placeholder="可填写供应商特别说明信息"></textarea>
+            </div>
+          </div>
+          <div style="margin-top:24px;display:flex;gap:12px;">
+            <button class="btn btn-primary" onclick="submitNewSupplier()">
+              提交并添加至名册
+            </button>
+            <button class="btn btn-outline" onclick="resetForm()">
+              重置表单
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================== Page 5: 合规及预警 ============================== -->
+      <div class="page" id="page-compliance">
+        <div class="page-title">合规及预警</div>
+        <div class="page-desc">风险监控中心，实时追踪供应商合规状态与预警事件</div>
+
+        <div class="stat-cards" style="grid-template-columns: repeat(4, 1fr); margin-bottom:24px;">
+          <div class="stat-card" style="background:linear-gradient(135deg, #C0392B, #E5484D);">
+            <div class="sc-label">红色预警</div>
+            <div class="sc-value" id="alertRed">3</div>
+            <div class="sc-sub">需立即处理</div>
+          </div>
+          <div class="stat-card" style="background:linear-gradient(135deg, #D97706, #F5A623);">
+            <div class="sc-label">黄色预警</div>
+            <div class="sc-value" id="alertYellow">3</div>
+            <div class="sc-sub">需关注跟进</div>
+          </div>
+          <div class="stat-card" style="background:linear-gradient(135deg, #0284C7, #0EA5E9);">
+            <div class="sc-label">蓝色提醒</div>
+            <div class="sc-value" id="alertBlue">2</div>
+            <div class="sc-sub">信息通知</div>
+          </div>
+          <div class="stat-card" style="background:linear-gradient(135deg, #15803D, #36B37E);">
+            <div class="sc-label">已处理</div>
+            <div class="sc-value" id="alertResolved">0</div>
+            <div class="sc-sub">本月已解决</div>
+          </div>
+        </div>
+
+        <div class="filter-bar" style="margin-bottom:16px;">
+          <span class="filter-label">级别筛选：</span>
+          <select id="alertLevelFilter" onchange="renderAlerts()">
+            <option value="">全部</option>
+            <option value="red">红色预警</option>
+            <option value="yellow">黄色预警</option>
+            <option value="blue">蓝色提醒</option>
+          </select>
+          <select id="alertStatusFilter" onchange="renderAlerts()">
+            <option value="">全部状态</option>
+            <option value="pending">待处理</option>
+            <option value="resolved">已处理</option>
+          </select>
+        </div>
+
+        <div id="alertList"></div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<!-- Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h3 id="drawerTitle">供应商详情</h3>
+    <div class="drawer-close" onclick="closeDrawer()">✕</div>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================== Mock Data ==============================
+// 基于FBU交付前台2026年劳务供应商真实数据结构生成的Mock数据集
+
+const AREAS_MAP = {
+  '美洲区': ['加州区','新泽西区','亚特兰大区','芝加哥区','萨凡纳区','达拉斯区','迈阿密区','休斯顿区','诺福克区','西雅图区','加拿大区','墨西哥区'],
+  '欧洲区': ['英国区','捷克区','法国区','德国区','波兰区','意大利区','西班牙区'],
+  '亚太区': ['澳洲区','日本区','韩国区']
+};
+
+// ECharts实例管理（集中声明，避免TDZ问题）
+let pricingChartInstances = {};
+
+// 生成模拟考核数据
+function genAssessMetrics(rating) {
+  const base = rating === 'A' ? 90 : rating === 'B' ? 78 : rating === 'C' ? 62 : rating === 'D' ? 45 : 70;
+  const r = () => Math.max(30, Math.min(100, base + (Math.random() - 0.5) * 24));
+  return {
+    delivery: Math.round(r() * 10) / 10,
+    quality: Math.round(r() * 10) / 10,
+    stability: Math.round(r() * 10) / 10,
+    safety: Math.round((100 - r() * 0.3) * 10) / 10,
+    compliance: Math.round((Math.random() * 8))
+  };
+}
+
+function genMonthlyTrend(base) {
+  const months = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'];
+  return months.map(m => ({
+    month: m,
+    delivery: Math.round((base.delivery + (Math.random()-0.5)*10)*10)/10,
+    quality: Math.round((base.quality + (Math.random()-0.5)*8)*10)/10,
+    stability: Math.round((base.stability + (Math.random()-0.5)*12)*10)/10,
+  }));
+}
+
+// 主数据源 - 从Excel提取的代表性供应商 + 合理扩展字段
+let suppliers = [
+  // ===== 美洲区 - 加州区 =====
+  {id:'S000116', name:'Citi Staffing', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:22.5, base:16.5, markup:'36%', ratio:'29%', rating:'B', contact:'Jakob Vicencio · 909-225-5015', startDate:'2022-03', cert:'劳务派遣证 / ISO9001'},
+  {id:'S000018', name:'Prompt Priority INC', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:21.8, base:16.5, markup:'32%', ratio:'18%', rating:'B', contact:'Esmeralda · 909-203-5990', startDate:'2021-06', cert:'劳务派遣证'},
+  {id:'S000037', name:'Workforce Priority INC', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:23.1, base:16.5, markup:'40%', ratio:'22%', rating:'A', contact:'Diana Ontiveros · 909-390-9100', startDate:'2020-11', cert:'劳务派遣证 / ISO9001 / ISO14001'},
+  {id:'S000038', name:'Fairway Staffing Service', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:20.5, base:16.5, markup:'24%', ratio:'12%', rating:'A', contact:'Evelyn · 909-241-5772', startDate:'2021-01', cert:'劳务派遣证'},
+  {id:'S000117', name:'Voyage Employer Services', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:21.2, base:16.5, markup:'28%', ratio:'15%', rating:'B', contact:'Erica Beltran · 909-458-0104', startDate:'2023-05', cert:'劳务派遣证'},
+  // ===== 美洲区 - 新泽西区 =====
+  {id:'S000012', name:'Cosmopolitan Staffing Service', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:19.8, base:15.0, markup:'32%', ratio:'20%', rating:'C', contact:'Ana Cruz', startDate:'2021-08', cert:'劳务派遣证'},
+  {id:'S000013', name:'Grande Solutions LLC', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:22.0, base:15.0, markup:'47%', ratio:'25%', rating:'B', contact:'Ivan Tasik / Wendy He / Charlie Kaligis', startDate:'2020-03', cert:'劳务派遣证 / ISO9001'},
+  {id:'S000024', name:'Central Agency LLC', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:20.5, base:15.0, markup:'37%', ratio:'16%', rating:'B', contact:'Vena Haryanto / Vincent Tan', startDate:'2022-01', cert:'劳务派遣证'},
+  {id:'S000027', name:'Quantum Staffing Group LLC', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:21.3, base:15.0, markup:'42%', ratio:'18%', rating:'B', contact:'Juanita Sanchez / Edwin Villalta', startDate:'2021-05', cert:'劳务派遣证 / OHSAS18001'},
+  {id:'S000025', name:'Lyneer Staffing Solutions', region:'美洲区', area:'新泽西区', type:'卸柜', status:'使用中', rate:18.5, base:15.0, markup:'23%', ratio:'10%', rating:'B', contact:'Raul Berberena', startDate:'2022-04', cert:'卸柜作业许可'},
+  {id:'S000095', name:'Jovagu Unloading LLC', region:'美洲区', area:'新泽西区', type:'卸柜', status:'使用中', rate:17.2, base:15.0, markup:'15%', ratio:'8%', rating:'C', contact:'Daniel · 909-734-6959', startDate:'2023-02', cert:'卸柜作业许可'},
+  // ===== 美洲区 - 亚特兰大区 =====
+  {id:'S000057', name:'Rekaeya Consulting LLC', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:20.0, base:15.0, markup:'33%', ratio:'22%', rating:'B', contact:'Juan · 404-973-8033', startDate:'2022-07', cert:'劳务派遣证'},
+  {id:'S000047', name:'Solid USA Consulting LLC', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:21.5, base:15.0, markup:'43%', ratio:'28%', rating:'A', contact:'Lucas · 412-515-6384', startDate:'2021-09', cert:'劳务派遣证 / ISO9001'},
+  // ===== 美洲区 - 芝加哥区 =====
+  {id:'S000101', name:'FORCENATION INC.', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:22.8, base:16.0, markup:'43%', ratio:'30%', rating:'B', contact:'HR Department', startDate:'2022-01', cert:'劳务派遣证'},
+  {id:'S000102', name:'Golden Group (GA)', region:'美洲区', area:'芝加哥区', type:'劳务', status:'停用', rate:20.0, base:16.0, markup:'25%', ratio:'5%', rating:'C', contact:'Manager Office', startDate:'2023-03', cert:'劳务派遣证'},
+  // ===== 美洲区 - 萨凡纳区 =====
+  {id:'S000110', name:'Masis Staffing Solutions', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:19.5, base:15.0, markup:'30%', ratio:'35%', rating:'A', contact:'Masis Office', startDate:'2021-04', cert:'劳务派遣证 / ISO9001'},
+  {id:'S000111', name:'Imperial Workforce', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:20.2, base:15.0, markup:'35%', ratio:'20%', rating:'B', contact:'HR Office', startDate:'2022-06', cert:'劳务派遣证'},
+  // ===== 美洲区 - 加拿大区 =====
+  {id:'S000140', name:'Goldstar Consulting', region:'美洲区', area:'加拿大区', type:'劳务', status:'使用中', rate:24.5, base:17.5, markup:'40%', ratio:'30%', rating:'B', contact:'Office Manager', startDate:'2022-03', cert:'劳务派遣证'},
+  {id:'S000141', name:'First Talent International Inc', region:'美洲区', area:'加拿大区', type:'劳务', status:'使用中', rate:23.0, base:17.5, markup:'31%', ratio:'22%', rating:'B', contact:'Recruitment Team', startDate:'2023-01', cert:'劳务派遣证'},
+  // ===== 欧洲区 - 英国区 =====
+  {id:'S000132', name:'HRA Recruitment Services', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.1, base:12.71, markup:'27%', ratio:'72%', rating:'B', contact:'holly@hra-recruitment.co.uk', startDate:'2022-05', cert:'UK Employment License'},
+  {id:'S000289', name:'STAFFZILLA LTD', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.2, base:12.71, markup:'27%', ratio:'2%', rating:'A', contact:'colin.c@staffzilla.co.uk', startDate:'2024-05', cert:'UK Employment License'},
+  {id:'S000274', name:'Jobsworth Recruitment Solutions', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.14, base:12.71, markup:'27%', ratio:'4%', rating:'B', contact:'rob@simplyjobsworth.co.uk', startDate:'2024-11', cert:'UK Employment License'},
+  // ===== 欧洲区 - 捷克区 =====
+  {id:'S000192', name:'FILKOPI Agency s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:255, base:175, markup:'46%', ratio:'27%', rating:'B', contact:'KOPINEC · 725876789', startDate:'2023-08', cert:'CZ Labour License'},
+  {id:'S000175', name:'Armz HR', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:270, base:175, markup:'54%', ratio:'23%', rating:'B', contact:'Oleksander Starytskyi', startDate:'2022-10', cert:'CZ Labour License'},
+  {id:'S000098', name:'PERSONALEK Plus', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:270, base:175, markup:'54%', ratio:'8%', rating:'C', contact:'Pavel Vesely', startDate:'2024-04', cert:'CZ Labour License'},
+  {id:'S000225', name:'WIW', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:260, base:175, markup:'49%', ratio:'1%', rating:'C', contact:'Nemeš · 732834823', startDate:'2024-06', cert:'CZ Labour License'},
+  {id:'S000005', name:'KAMO GROUP S.R.O.（外包）', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:230, base:175, markup:'31%', ratio:'3%', rating:'B', contact:'Surmachevskyi · 770138311', startDate:'2023-11', cert:'CZ Business License'},
+  {id:'S000210', name:'Boroleos（外包）', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:0, base:175, markup:'—', ratio:'2%', rating:'—', contact:'David Cermak · 739203770', startDate:'2023-09', cert:'CZ Business License'},
+  {id:'S000260', name:'Tarat Security s.r.o.', region:'欧洲区', area:'捷克区', type:'保安', status:'使用中', rate:220, base:175, markup:'26%', ratio:'2%', rating:'—', contact:'Sladek Pavel · 720020000', startDate:'2024-07', cert:'Security License CZ'},
+  // ===== 欧洲区 - 法国区 =====
+  {id:'S000150', name:'PLANETT', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:14.5, base:11.65, markup:'24%', ratio:'35%', rating:'A', contact:'FR Office', startDate:'2022-01', cert:'FR Travail License'},
+  {id:'S000151', name:'ADEQUAT', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:14.8, base:11.65, markup:'27%', ratio:'28%', rating:'B', contact:'FR Office', startDate:'2022-06', cert:'FR Travail License'},
+  // ===== 欧洲区 - 德国区 =====
+  {id:'S000160', name:'TimePartner Personalmanagement GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:18.5, base:14.0, markup:'32%', ratio:'40%', rating:'A', contact:'DE HR Office', startDate:'2021-03', cert:'DE AÜG License / ISO9001'},
+  {id:'S000161', name:'Gohar Gmbh', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:17.2, base:14.0, markup:'23%', ratio:'15%', rating:'B', contact:'DE Office', startDate:'2023-02', cert:'DE AÜG License'},
+  // ===== 欧洲区 - 波兰区 =====
+  {id:'S000170', name:'DK Global', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:28.0, base:22.0, markup:'27%', ratio:'30%', rating:'B', contact:'PL Office', startDate:'2022-05', cert:'PL Labour License'},
+  {id:'S000171', name:'Prowork', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:27.5, base:22.0, markup:'25%', ratio:'18%', rating:'B', contact:'PL Office', startDate:'2023-01', cert:'PL Labour License'},
+  // ===== 亚太区 - 澳洲区 =====
+  {id:'S000200', name:'DX-悉尼', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:38.0, base:28.0, markup:'36%', ratio:'45%', rating:'B', contact:'AU Sydney Office', startDate:'2022-08', cert:'AU Labour Hire License'},
+  {id:'S000201', name:'ZT Resources Pty Ltd', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:36.5, base:28.0, markup:'30%', ratio:'20%', rating:'B', contact:'AU Sydney Office', startDate:'2023-03', cert:'AU Labour Hire License'},
+  // ===== 亚太区 - 日本区 =====
+  {id:'S000210J', name:'株式会社バリューアップ', region:'亚太区', area:'日本区', type:'劳务', status:'使用中', rate:1800, base:1400, markup:'29%', ratio:'35%', rating:'A', contact:'JP Office', startDate:'2022-04', cert:'JP 労働者派遣許可'},
+  {id:'S000211J', name:'子豊株式会社', region:'亚太区', area:'日本区', type:'劳务', status:'使用中', rate:1750, base:1400, markup:'25%', ratio:'22%', rating:'B', contact:'JP Office', startDate:'2023-06', cert:'JP 労働者派遣許可'},
+  // ===== 亚太区 - 韩国区 =====
+  {id:'S000220K', name:'주식회사 진성기업', region:'亚太区', area:'韩国区', type:'劳务', status:'使用中', rate:12000, base:9860, markup:'22%', ratio:'50%', rating:'B', contact:'KR Office', startDate:'2023-01', cert:'KR 파견법 허가'},
+  {id:'S000221K', name:'(주)씨에프씨', region:'亚太区', area:'韩国区', type:'劳务', status:'新增', rate:11500, base:9860, markup:'17%', ratio:'10%', rating:'—', contact:'KR Office', startDate:'2026-04', cert:'KR 파견법 허가 (申请中)'},
+];
+
+// 为每个供应商生成考核指标
+suppliers.forEach(s => {
+  const r = s.rating === '—' ? 'B' : s.rating;
+  s.metrics = genAssessMetrics(r);
+  s.trend = genMonthlyTrend(s.metrics);
+  s.composite = Math.round((s.metrics.delivery * 0.3 + s.metrics.quality * 0.25 + s.metrics.stability * 0.2 + s.metrics.safety * 0.15 + (100 - s.metrics.compliance * 5) * 0.1) * 10) / 10;
+});
+
+// 预警数据
+let alerts = [
+  {id:1, level:'red', title:'PERSONALEK Plus 资质即将到期', desc:'该供应商劳务派遣证将于2026-06-25到期，剩余不足15天，请尽快跟进续期事宜。', supplier:'PERSONALEK Plus', time:'2026-06-10', status:'pending'},
+  {id:2, level:'red', title:'Workforce staffing 考核低于阈值', desc:'该供应商最近一期交付及时率仅65.2%，低于80%预警线，建议启动供应商改善计划。', supplier:'Workforce staffing', time:'2026-06-09', status:'pending'},
+  {id:3, level:'red', title:'Grande Solutions LLC 合同纠纷', desc:'收到该供应商关于新泽西区合同条款争议函件，涉及加价比例未达协议约定。', supplier:'Grande Solutions LLC', time:'2026-06-08', status:'pending'},
+  {id:4, level:'yellow', title:'WIW  Markup异常偏高', desc:'该供应商捷克区Markup达49%，显著高于区域平均水平，建议约谈协商。', supplier:'WIW', time:'2026-06-07', status:'pending'},
+  {id:5, level:'yellow', title:'Armz HR 人员稳定性下降', desc:'近3个月人员流失率从12%升至23%，需关注人员管理能力。', supplier:'Armz HR', time:'2026-06-06', status:'pending'},
+  {id:6, level:'yellow', title:'Prompt Priority INC 合同即将到期', desc:'该供应商框架合同将于2026-07-15到期，请提前安排续签。', supplier:'Prompt Priority INC', time:'2026-06-05', status:'pending'},
+  {id:7, level:'blue', title:'(주)씨에프씨 新供应商入职完成', desc:'韩国区新引入供应商已完成注册，资质文件审核中，预计一周内完成。', supplier:'(주)씨에프씨', time:'2026-06-04', status:'pending'},
+  {id:8, level:'blue', title:'HRA Recruitment 年检报告已提交', desc:'英国区年度合规审查报告已收到，各项指标达标。', supplier:'HRA Recruitment Services', time:'2026-06-03', status:'pending'},
+];
+let resolvedCount = 0;
+
+// 权限控制
+let isCHO = true;
+function toggleRole() {
+  isCHO = !isCHO;
+  const toggle = document.getElementById('roleToggle');
+  const label = document.getElementById('roleLabel');
+  if (isCHO) {
+    toggle.classList.remove('off');
+    label.textContent = '全量数据';
+    label.style.color = 'var(--primary)';
+  } else {
+    toggle.classList.add('off');
+    label.textContent = '受限视图';
+    label.style.color = 'var(--text-tertiary)';
+  }
+  renderCurrentPage();
+  showToast(isCHO ? '已切换为CHO全权限视图' : '已切换为受限视图（部分数据已隐藏）');
+}
+function maskSensitive(val) {
+  return isCHO ? val : '***';
+}
+
+// ============================== Page Navigation ==============================
+const PAGE_TITLES = {
+  registry: '供应商明细',
+  pricing: '供应商定价',
+  assessment: '供应商考核',
+  onboard: '引入供应商',
+  compliance: '合规及预警'
+};
+const PAGE_BREADCRUMBS = {
+  registry: '全集团 / 供应商管理',
+  pricing: '全集团 / 定价分析',
+  assessment: '全集团 / 绩效考核',
+  onboard: '全集团 / 供应商引入',
+  compliance: '全集团 / 风险监控'
+};
+let currentPage = 'registry';
+
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  document.querySelectorAll('.page').forEach(el => { el.classList.remove('active'); el.style.display = 'none'; });
+  const pageEl = document.getElementById('page-' + page);
+  pageEl.style.display = 'block';
+  setTimeout(() => pageEl.classList.add('active'), 10);
+  document.getElementById('headerTitle').textContent = PAGE_TITLES[page];
+  document.getElementById('headerBreadcrumb').textContent = PAGE_BREADCRUMBS[page];
+  renderCurrentPage();
+}
+
+function renderCurrentPage() {
+  switch (currentPage) {
+    case 'registry': renderBUCards(); renderRegistryTable(); break;
+    case 'pricing': renderPricingCharts(); break;
+    case 'assessment': renderAssessment(); break;
+    case 'compliance': renderAlerts(); break;
+  }
+}
+
+// ============================== Page 1: 供应商明细 ==============================
+function renderBUCards() {
+  const regions = {};
+  suppliers.forEach(s => {
+    if (!regions[s.region]) regions[s.region] = { total: 0, active: 0, areas: new Set() };
+    regions[s.region].total++;
+    if (s.status === '使用中' || s.status === '新增') regions[s.region].active++;
+    regions[s.region].areas.add(s.area);
+  });
+  const totalAll = suppliers.length;
+  const activeAll = suppliers.filter(s => s.status === '使用中' || s.status === '新增').length;
+  const allAreas = new Set(suppliers.map(s => s.area));
+
+  let html = `<div class="stat-card ${document.getElementById('filterRegion').value === '' ? 'selected' : ''}" onclick="filterByBU('')">
+    <div class="sc-label">全集团供应商</div>
+    <div class="sc-value">${totalAll}</div>
+    <div class="sc-sub">在用 ${activeAll} · 覆盖 ${allAreas.size} 个区域</div>
+  </div>`;
+
+  const icons = {'美洲区':'','欧洲区':'','亚太区':''};
+  Object.entries(regions).forEach(([region, data]) => {
+    const selected = document.getElementById('filterRegion').value === region;
+    html += `<div class="stat-card ${selected?'selected':''}" onclick="filterByBU('${region}')">
+      <div class="sc-label">${region}</div>
+      <div class="sc-value">${data.total}</div>
+      <div class="sc-sub">在用 ${data.active} · ${data.areas.size} 个区域</div>
+    </div>`;
+  });
+  document.getElementById('buCards').innerHTML = html;
+
+  // Update area filter
+  const filterRegion = document.getElementById('filterRegion').value;
+  const areaSelect = document.getElementById('filterArea');
+  const currentArea = areaSelect.value;
+  const areas = filterRegion ? AREAS_MAP[filterRegion] || [] : Object.values(AREAS_MAP).flat();
+  areaSelect.innerHTML = '<option value="">全部区域</option>' + areas.map(a => `<option value="${a}" ${a===currentArea?'selected':''}>${a}</option>`).join('');
+}
+
+function filterByBU(region) {
+  document.getElementById('filterRegion').value = region;
+  renderBUCards();
+  renderRegistryTable();
+}
+
+function getFilteredSuppliers() {
+  const region = document.getElementById('filterRegion').value;
+  const area = document.getElementById('filterArea').value;
+  const type = document.getElementById('filterType').value;
+  const status = document.getElementById('filterStatus').value;
+  const rating = document.getElementById('filterRating').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+
+  return suppliers.filter(s => {
+    if (region && s.region !== region) return false;
+    if (area && s.area !== area) return false;
+    if (type && s.type !== type) return false;
+    if (status && s.status !== status) return false;
+    if (rating && s.rating !== rating && !(rating === 'A' && s.rating === 'A级') && !(rating === 'B' && s.rating === 'B级') && !(rating === 'C' && s.rating === 'C级') && !(rating === 'D' && s.rating === 'D级')) {
+      // Also check with 级 suffix
+      const rMap = {'A':'A','B':'B','C':'C','D':'D'};
+      if (s.rating !== rating && s.rating !== rating + '级' && s.rating !== rating) return false;
+    }
+    if (search && !s.name.toLowerCase().includes(search) && !s.id.toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+function renderRegistryTable() {
+  const filtered = getFilteredSuppliers();
+  const tbody = document.getElementById('registryBody');
+
+  const ratingTag = (r) => {
+    if (r === 'A' || r === 'A级') return '<span class="tag tag-a">A级</span>';
+    if (r === 'B' || r === 'B级') return '<span class="tag tag-b">B级</span>';
+    if (r === 'C' || r === 'C级') return '<span class="tag tag-c">C级</span>';
+    if (r === 'D' || r === 'D级') return '<span class="tag tag-d">D级</span>';
+    return '<span class="tag" style="background:#F5F5F5;color:#9E9E9E;">—</span>';
+  };
+  const statusTag = (s) => {
+    if (s === '使用中') return '<span class="tag tag-active">使用中</span>';
+    if (s === '停用' || s === '停止使用') return '<span class="tag tag-inactive">停用</span>';
+    if (s === '新增') return '<span class="tag tag-new">新增</span>';
+    return '<span class="tag" style="background:#F5F5F5;color:#9E9E9E;">' + s + '</span>';
+  };
+
+  tbody.innerHTML = filtered.map((s, i) => `<tr onclick="openSupplierDrawer(${suppliers.indexOf(s)})">
+    <td style="font-family:monospace;font-size:12px;color:var(--text-tertiary);">${s.id}</td>
+    <td style="font-weight:600;">${s.name}</td>
+    <td>${s.region}</td>
+    <td>${s.area}</td>
+    <td>${s.type}</td>
+    <td style="font-weight:600;">${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</td>
+    <td>${maskSensitive(s.markup)}</td>
+    <td>${s.ratio}</td>
+    <td>${ratingTag(s.rating)}</td>
+    <td>${statusTag(s.status)}</td>
+    <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openSupplierDrawer(${suppliers.indexOf(s)})">详情</button></td>
+  </tr>`).join('');
+
+  document.getElementById('tableCount').textContent = `共 ${filtered.length} 条记录`;
+}
+
+// Drawer
+function openSupplierDrawer(idx) {
+  const s = suppliers[idx];
+  if (!s) return;
+  document.getElementById('drawerTitle').textContent = s.name;
+  const body = document.getElementById('drawerBody');
+
+  // Build trend chart data
+  const trendData = s.trend || [];
+
+  body.innerHTML = `
+    <div class="drawer-section">
+      <h4>基本信息</h4>
+      <div class="drawer-info-grid">
+        <div class="drawer-info-item"><div class="dii-label">供应商ID</div><div class="dii-value">${s.id}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">大区 / 区域</div><div class="dii-value">${s.region} / ${s.area}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">公司类型</div><div class="dii-value">${s.type}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">启用状态</div><div class="dii-value">${s.status}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">合作起始</div><div class="dii-value">${s.startDate || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">联系人</div><div class="dii-value" style="font-size:12px;">${s.contact || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">资质证书</div><div class="dii-value" style="font-size:12px;">${s.cert || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">评级</div><div class="dii-value">${s.rating}</div></div>
+      </div>
+    </div>
+    <div class="drawer-section">
+      <h4>定价信息</h4>
+      <div class="drawer-info-grid">
+        <div class="drawer-info-item"><div class="dii-label">结算时薪</div><div class="dii-value" style="font-size:18px;font-weight:700;color:var(--primary);">${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">基本时薪</div><div class="dii-value">${maskSensitive(s.base ? s.base.toFixed(2) : '—')}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">Markup</div><div class="dii-value">${maskSensitive(s.markup)}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">用工占比</div><div class="dii-value">${s.ratio}</div></div>
+      </div>
+    </div>
+    <div class="drawer-section">
+      <h4>考核趋势（近6个月）</h4>
+      <div class="detail-chart" id="drawerTrendChart"></div>
+    </div>
+    <div class="drawer-section">
+      <h4>当期考核明细</h4>
+      <table class="mini-table">
+        <tr><th>指标</th><th>得分</th><th>状态</th></tr>
+        <tr><td>交付及时率</td><td>${s.metrics.delivery}%</td><td>${s.metrics.delivery >= 90 ? '🟢 优秀' : s.metrics.delivery >= 75 ? '🟡 正常' : '🔴 预警'}</td></tr>
+        <tr><td>质量合格率</td><td>${s.metrics.quality}%</td><td>${s.metrics.quality >= 90 ? '🟢 优秀' : s.metrics.quality >= 75 ? '🟡 正常' : '🔴 预警'}</td></tr>
+        <tr><td>人员稳定性</td><td>${s.metrics.stability}%</td><td>${s.metrics.stability >= 80 ? '🟢 优秀' : s.metrics.stability >= 65 ? '🟡 正常' : '🔴 预警'}</td></tr>
+        <tr><td>安全事故率</td><td>${s.metrics.safety}%</td><td>${s.metrics.safety >= 95 ? '🟢 优秀' : '🟡 正常'}</td></tr>
+        <tr><td>合规扣分</td><td>${s.metrics.compliance}</td><td>${s.metrics.compliance <= 2 ? '🟢 良好' : s.metrics.compliance <= 5 ? '🟡 一般' : '🔴 需关注'}</td></tr>
+      </table>
+    </div>
+    <div class="drawer-section">
+      <h4>相关预警事件</h4>
+      ${alerts.filter(a => a.supplier === s.name).length > 0 ?
+        alerts.filter(a => a.supplier === s.name).map(a => `
+          <div style="padding:10px 12px;background:${a.level==='red'?'#FFF5F5':a.level==='yellow'?'#FFFBEB':'#F0F7FF'};border-radius:6px;margin-bottom:8px;font-size:13px;">
+            <span class="tag tag-${a.level==='red'?'red':a.level==='yellow'?'yellow':'blue'}" style="margin-right:6px;">${a.level==='red'?'红色':a.level==='yellow'?'黄色':'蓝色'}</span>
+            ${a.title}
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">${a.time}</div>
+          </div>
+        `).join('') : '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0;">暂无预警事件</div>'
+      }
+    </div>
+  `;
+
+  document.getElementById('drawerOverlay').classList.add('show');
+  document.getElementById('drawer').classList.add('show');
+
+  // Render mini trend chart
+  setTimeout(() => {
+    if (pricingChartInstances.drawerTrend) pricingChartInstances.drawerTrend.dispose();
+    const chart = echarts.init(document.getElementById('drawerTrendChart'));
+    pricingChartInstances.drawerTrend = chart;
+    chart.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['交付及时率','质量合格率','人员稳定性'], bottom: 0, textStyle: { fontSize: 11 } },
+      grid: { top: 10, right: 20, bottom: 40, left: 40 },
+      xAxis: { type: 'category', data: trendData.map(t => t.month), axisLabel: { fontSize: 11 } },
+      yAxis: { type: 'value', min: 40, max: 100, axisLabel: { fontSize: 11 } },
+      series: [
+        { name: '交付及时率', type: 'line', data: trendData.map(t => t.delivery), smooth: true, lineStyle: { width: 2 }, itemStyle: { color: '#2E6BE5' } },
+        { name: '质量合格率', type: 'line', data: trendData.map(t => t.quality), smooth: true, lineStyle: { width: 2 }, itemStyle: { color: '#00B8A9' } },
+        { name: '人员稳定性', type: 'line', data: trendData.map(t => t.stability), smooth: true, lineStyle: { width: 2 }, itemStyle: { color: '#F5A623' } }
+      ]
+    });
+  }, 100);
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('show');
+  document.getElementById('drawer').classList.remove('show');
+}
+
+// ============================== Page 2: 供应商定价 ==============================
+
+function switchPricingTab(tab, evt) {
+  document.querySelectorAll('#pricingTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.pricing-panel').forEach(p => p.style.display = 'none');
+  if (evt && evt.target) evt.target.classList.add('active');
+  else document.querySelector('#pricingTabs .tab-btn').classList.add('active');
+  document.getElementById('pricing' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = 'block';
+  if (tab === 'bu') renderBUComparison();
+  if (tab === 'type') renderTypeComparison();
+  if (tab === 'supplier') renderSupplierCrossBU();
+}
+
+function renderPricingCharts() {
+  renderBUComparison();
+  populateSupplierSelect();
+}
+
+function renderBUComparison() {
+  // 按大区聚合平均结算时薪 (仅取可比的: 同货币区合并)
+  const regionData = {};
+  suppliers.filter(s => s.status !== '停用' && s.rate > 0).forEach(s => {
+    if (!regionData[s.region]) regionData[s.region] = [];
+    regionData[s.region].push(s);
+  });
+
+  // 计算Markup平均值
+  const regionMarkup = {};
+  Object.entries(regionData).forEach(([region, sups]) => {
+    const markups = sups.map(s => {
+      const m = parseFloat(s.markup);
+      return isNaN(m) ? 0 : m;
+    }).filter(m => m > 0);
+    regionMarkup[region] = markups.length ? Math.round(markups.reduce((a,b)=>a+b,0)/markups.length) : 0;
+  });
+
+  const regions = Object.keys(regionData);
+  const colors = ['#2E6BE5','#00B8A9','#D97706'];
+
+  if (pricingChartInstances.buavg) pricingChartInstances.buavg.dispose();
+  const chart = echarts.init(document.getElementById('chartBUavg'));
+  pricingChartInstances.buavg = chart;
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
+      const d = p[0];
+      return `<b>${d.name}</b><br/>平均Markup: ${d.value}%<br/>供应商数: ${regionData[d.name]?.length || 0}`;
+    }},
+    grid: { top: 30, right: 40, bottom: 60, left: 60 },
+    xAxis: { type: 'category', data: regions, axisLabel: { fontSize: 13, fontWeight: 600 } },
+    yAxis: { type: 'value', name: '平均Markup(%)', axisLabel: { formatter: '{value}%' } },
+    series: [{
+      type: 'bar',
+      data: regions.map((r, i) => ({
+        value: regionMarkup[r],
+        itemStyle: { color: colors[i % colors.length], borderRadius: [6, 6, 0, 0] }
+      })),
+      barWidth: '40%',
+      label: { show: true, position: 'top', formatter: '{c}%', fontWeight: 600 }
+    }]
+  });
+  chart.on('click', function(params) {
+    showBUDrillDown(params.name);
+  });
+
+  // Hide drill down on re-render
+  document.getElementById('buDrillDown').style.display = 'none';
+}
+
+function showBUDrillDown(region) {
+  const sups = suppliers.filter(s => s.region === region && s.status !== '停用' && s.rate > 0)
+    .sort((a, b) => {
+      const ma = parseFloat(a.markup) || 0;
+      const mb = parseFloat(b.markup) || 0;
+      return ma - mb;
+    });
+
+  document.getElementById('buDrillDown').style.display = 'block';
+  document.getElementById('buDrillTitle').textContent = `${region} — 供应商Markup排名`;
+
+  if (pricingChartInstances.budrill) pricingChartInstances.budrill.dispose();
+  const chart = echarts.init(document.getElementById('chartBUdrill'));
+  pricingChartInstances.budrill = chart;
+
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
+      const d = p[0];
+      const s = sups[d.dataIndex];
+      return `<b>${d.name}</b><br/>Markup: ${maskSensitive(d.value + '%')}<br/>结算时薪: ${maskSensitive(s.rate)}<br/>评级: ${s.rating}`;
+    }},
+    grid: { top: 20, right: 40, bottom: 80, left: 160 },
+    xAxis: { type: 'value', name: 'Markup(%)', axisLabel: { formatter: '{value}%' } },
+    yAxis: { type: 'category', data: sups.map(s => s.name.length > 20 ? s.name.slice(0,18) + '…' : s.name), axisLabel: { fontSize: 11 } },
+    series: [{
+      type: 'bar',
+      data: sups.map(s => ({
+        value: parseFloat(s.markup) || 0,
+        itemStyle: {
+          color: parseFloat(s.markup) > 45 ? '#E5484D' : parseFloat(s.markup) > 30 ? '#F5A623' : '#2EAD4B',
+          borderRadius: [0, 4, 4, 0]
+        }
+      })),
+      barWidth: '60%',
+      label: { show: true, position: 'right', formatter: '{c}%', fontSize: 11 }
+    }]
+  });
+}
+
+function renderTypeComparison() {
+  const types = {};
+  suppliers.filter(s => s.status !== '停用' && s.rate > 0).forEach(s => {
+    if (!types[s.type]) types[s.type] = [];
+    const m = parseFloat(s.markup);
+    if (!isNaN(m)) types[s.type].push(m);
+  });
+
+  const typeNames = Object.keys(types);
+  const avgMarkups = typeNames.map(t => Math.round(types[t].reduce((a,b)=>a+b,0)/types[t].length));
+  const maxMarkups = typeNames.map(t => Math.round(Math.max(...types[t])));
+  const minMarkups = typeNames.map(t => Math.round(Math.min(...types[t])));
+
+  if (pricingChartInstances.typeCompare) pricingChartInstances.typeCompare.dispose();
+  const chart = echarts.init(document.getElementById('chartTypeCompare'));
+  pricingChartInstances.typeCompare = chart;
+
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['平均Markup','最高Markup','最低Markup'], bottom: 0 },
+    grid: { top: 30, right: 40, bottom: 50, left: 60 },
+    xAxis: { type: 'category', data: typeNames, axisLabel: { fontSize: 13 } },
+    yAxis: { type: 'value', name: 'Markup(%)', axisLabel: { formatter: '{value}%' } },
+    series: [
+      { name: '平均Markup', type: 'bar', data: avgMarkups, itemStyle: { color: '#2E6BE5', borderRadius: [4,4,0,0] }, barGap: '10%' },
+      { name: '最高Markup', type: 'bar', data: maxMarkups, itemStyle: { color: '#E5484D', borderRadius: [4,4,0,0] } },
+      { name: '最低Markup', type: 'bar', data: minMarkups, itemStyle: { color: '#2EAD4B', borderRadius: [4,4,0,0] } }
+    ]
+  });
+}
+
+function populateSupplierSelect() {
+  const select = document.getElementById('supplierSelect');
+  // Find suppliers that appear in multiple areas (for cross-BU demo, we'll use all)
+  const multiAreaSuppliers = suppliers.filter(s => s.status !== '停用' && s.rate > 0);
+  select.innerHTML = multiAreaSuppliers.map((s, i) =>
+    `<option value="${suppliers.indexOf(s)}">${s.name} (${s.region} - ${s.area})</option>`
+  ).join('');
+}
+
+function renderSupplierCrossBU() {
+  const idx = parseInt(document.getElementById('supplierSelect').value);
+  const s = suppliers[idx];
+  if (!s) return;
+
+  document.getElementById('crossBUTitle').textContent = `${s.name} — 跨区域定价分析`;
+
+  // Simulate cross-region data for demo
+  const regions = ['加州区','新泽西区','亚特兰大区','英国区','捷克区','德国区'];
+  const baseRate = s.rate || 20;
+  const simRates = regions.map((r, i) => Math.round((baseRate * (0.85 + Math.random() * 0.35)) * 10) / 10);
+  const simMarkups = regions.map((r, i) => Math.round(15 + Math.random() * 40));
+
+  if (pricingChartInstances.crossBU) pricingChartInstances.crossBU.dispose();
+  const chart = echarts.init(document.getElementById('chartCrossBU'));
+  pricingChartInstances.crossBU = chart;
+
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Markup(%)'], bottom: 0 },
+    grid: { top: 30, right: 60, bottom: 50, left: 120 },
+    xAxis: { type: 'value', name: 'Markup(%)' },
+    yAxis: { type: 'category', data: regions, axisLabel: { fontSize: 12 } },
+    series: [{
+      name: 'Markup(%)',
+      type: 'bar',
+      data: simMarkups.map((m, i) => ({
+        value: m,
+        itemStyle: {
+          color: i === 0 ? '#2E6BE5' : i === 1 ? '#243B63' : i === 2 ? '#00B8A9' : i === 3 ? '#F5A623' : i === 4 ? '#E5484D' : '#0EA5E9',
+          borderRadius: [0, 4, 4, 0]
+        }
+      })),
+      label: { show: true, position: 'right', formatter: '{c}%', fontWeight: 600 }
+    }]
+  });
+}
+
+// ============================== Page 3: 供应商考核 ==============================
+function renderAssessment() {
+  const filtered = suppliers.filter(s => s.status !== '停用');
+  const tbody = document.getElementById('assessBody');
+
+  // Calculate percentile thresholds
+  const allMetrics = filtered.map(s => s.metrics);
+  const getPercentiles = (key) => {
+    const vals = allMetrics.map(m => m[key]).sort((a,b) => a-b);
+    const p20 = vals[Math.floor(vals.length * 0.2)] || 0;
+    const p80 = vals[Math.floor(vals.length * 0.8)] || 0;
+    return { p20, p80 };
+  };
+
+  const pDelivery = getPercentiles('delivery');
+  const pQuality = getPercentiles('quality');
+  const pStability = getPercentiles('stability');
+  const pSafety = getPercentiles('safety');
+  const pCompliance = getPercentiles('compliance');
+
+  function heatClass(val, p, invert) {
+    if (invert) {
+      if (val <= p.p20) return 'heat-top';
+      if (val >= p.p80) return 'heat-bad';
+    } else {
+      if (val >= p.p80) return 'heat-top';
+      if (val <= p.p20) return 'heat-bad';
+    }
+    if (!invert && val >= p.p80 * 0.9) return 'heat-good';
+    if (!invert && val <= p.p20 * 1.1) return 'heat-low';
+    return 'heat-mid';
+  }
+
+  function heatCell(val, p, invert, suffix) {
+    const cls = heatClass(val, p, invert);
+    const arrow = cls === 'heat-top' ? ' ↑' : cls === 'heat-bad' ? ' ↓' : '';
+    return `<span class="heat-cell ${cls}">${val}${suffix||'%'}${arrow}</span>`;
+  }
+
+  const ratingTag = (r) => {
+    if (r === 'A' || r === 'A级') return '<span class="tag tag-a">A级</span>';
+    if (r === 'B' || r === 'B级') return '<span class="tag tag-b">B级</span>';
+    if (r === 'C' || r === 'C级') return '<span class="tag tag-c">C级</span>';
+    if (r === 'D' || r === 'D级') return '<span class="tag tag-d">D级</span>';
+    return '<span class="tag" style="background:#F5F5F5;color:#9E9E9E;">—</span>';
+  };
+
+  tbody.innerHTML = filtered.sort((a,b) => b.composite - a.composite).map((s, i) => {
+    const m = s.metrics;
+    return `<tr>
+      <td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</td>
+      <td>${ratingTag(s.rating)}</td>
+      <td>${heatCell(m.delivery, pDelivery, false)}</td>
+      <td>${heatCell(m.quality, pQuality, false)}</td>
+      <td>${heatCell(m.stability, pStability, false)}</td>
+      <td>${heatCell(m.safety, pSafety, false)}</td>
+      <td>${heatCell(m.compliance, pCompliance, true, '')}</td>
+      <td style="font-weight:700;font-size:15px;">${s.composite}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();showAssessTrend(${suppliers.indexOf(s)})">趋势</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('assessDetail').style.display = 'none';
+}
+
+function showAssessTrend(idx) {
+  const s = suppliers[idx];
+  document.getElementById('assessDetail').style.display = 'block';
+  document.getElementById('assessDetailTitle').textContent = `${s.name} — 近6个月考核趋势`;
+
+  if (pricingChartInstances.assessTrend) pricingChartInstances.assessTrend.dispose();
+  const chart = echarts.init(document.getElementById('chartAssessTrend'));
+  pricingChartInstances.assessTrend = chart;
+
+  const trend = s.trend;
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['交付及时率','质量合格率','人员稳定性'], bottom: 0, textStyle: { fontSize: 12 } },
+    grid: { top: 30, right: 40, bottom: 50, left: 50 },
+    xAxis: { type: 'category', data: trend.map(t => t.month), boundaryGap: false },
+    yAxis: { type: 'value', min: 40, max: 100 },
+    series: [
+      { name: '交付及时率', type: 'line', data: trend.map(t => t.delivery), smooth: true, lineStyle: { width: 3 }, itemStyle: { color: '#2E6BE5' }, areaStyle: { color: 'rgba(46,107,229,0.08)' } },
+      { name: '质量合格率', type: 'line', data: trend.map(t => t.quality), smooth: true, lineStyle: { width: 3 }, itemStyle: { color: '#00B8A9' }, areaStyle: { color: 'rgba(0,184,169,0.08)' } },
+      { name: '人员稳定性', type: 'line', data: trend.map(t => t.stability), smooth: true, lineStyle: { width: 3 }, itemStyle: { color: '#F5A623' }, areaStyle: { color: 'rgba(245,166,35,0.08)' } }
+    ]
+  });
+
+  document.getElementById('assessDetail').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============================== Page 4: 引入供应商 ==============================
+document.getElementById('newRegion').addEventListener('change', function() {
+  const areaSelect = document.getElementById('newArea');
+  const areas = AREAS_MAP[this.value] || [];
+  areaSelect.innerHTML = areas.length ?
+    '<option value="">请选择</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('') :
+    '<option value="">请先选择大区</option>';
+  // Auto-generate ID
+  const newIdField = document.getElementById('newId');
+  newIdField.value = 'S' + String(Math.floor(Math.random() * 9000) + 1000).padStart(5, '0');
+});
+
+function simulateUpload() {
+  document.getElementById('uploadResult').style.display = 'block';
+}
+
+function submitNewSupplier() {
+  const name = document.getElementById('newName').value.trim();
+  const region = document.getElementById('newRegion').value;
+  const area = document.getElementById('newArea').value;
+  const type = document.getElementById('newType').value;
+  const rate = parseFloat(document.getElementById('newRate').value) || 0;
+  const base = parseFloat(document.getElementById('newBase').value) || 0;
+  const contact = document.getElementById('newContact').value;
+  const id = document.getElementById('newId').value;
+
+  if (!name) { showToast('请输入供应商名称'); return; }
+  if (!region) { showToast('请选择所属大区'); return; }
+  if (!area) { showToast('请选择所属区域'); return; }
+
+  const markup = base > 0 ? Math.round((rate - base) / base * 100) + '%' : '—';
+
+  const newSupplier = {
+    id: id || 'S' + String(Math.floor(Math.random() * 9000) + 1000),
+    name, region, area, type,
+    status: '新增',
+    rate, base, markup,
+    ratio: '0%',
+    rating: '—',
+    contact: contact || '—',
+    startDate: new Date().toISOString().slice(0, 7),
+    cert: '资质文件已上传（模拟）'
+  };
+  newSupplier.metrics = genAssessMetrics('B');
+  newSupplier.trend = genMonthlyTrend(newSupplier.metrics);
+  newSupplier.composite = Math.round((newSupplier.metrics.delivery * 0.3 + newSupplier.metrics.quality * 0.25 + newSupplier.metrics.stability * 0.2 + newSupplier.metrics.safety * 0.15 + (100 - newSupplier.metrics.compliance * 5) * 0.1) * 10) / 10;
+
+  suppliers.push(newSupplier);
+  showToast('供应商 "' + name + '" 已成功添加至名册！');
+  resetForm();
+
+  setTimeout(() => {
+    switchPage('registry');
+  }, 1200);
+}
+
+function resetForm() {
+  document.getElementById('newName').value = '';
+  document.getElementById('newId').value = '';
+  document.getElementById('newRegion').value = '';
+  document.getElementById('newArea').innerHTML = '<option value="">请先选择大区</option>';
+  document.getElementById('newType').value = '劳务';
+  document.getElementById('newRate').value = '';
+  document.getElementById('newBase').value = '';
+  document.getElementById('newContact').value = '';
+  document.getElementById('newNote').value = '';
+  document.getElementById('uploadResult').style.display = 'none';
+}
+
+// ============================== Page 5: 合规及预警 ==============================
+function renderAlerts() {
+  const levelFilter = document.getElementById('alertLevelFilter').value;
+  const statusFilter = document.getElementById('alertStatusFilter').value;
+
+  let filtered = alerts.filter(a => {
+    if (levelFilter && a.level !== levelFilter) return false;
+    if (statusFilter === 'pending' && a.status !== 'pending') return false;
+    if (statusFilter === 'resolved' && a.status !== 'resolved') return false;
+    return true;
+  });
+
+  // Update stats
+  document.getElementById('alertRed').textContent = alerts.filter(a => a.level === 'red' && a.status === 'pending').length;
+  document.getElementById('alertYellow').textContent = alerts.filter(a => a.level === 'yellow' && a.status === 'pending').length;
+  document.getElementById('alertBlue').textContent = alerts.filter(a => a.level === 'blue' && a.status === 'pending').length;
+  document.getElementById('alertResolved').textContent = alerts.filter(a => a.status === 'resolved').length;
+  document.getElementById('alertBadge').textContent = alerts.filter(a => a.status === 'pending').length;
+
+  const list = document.getElementById('alertList');
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><p>暂无预警信息</p></div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(a => {
+    const levelText = a.level === 'red' ? '红色预警' : a.level === 'yellow' ? '黄色预警' : '蓝色提醒';
+    const levelTag = a.level === 'red' ? 'tag-red' : a.level === 'yellow' ? 'tag-yellow' : 'tag-blue';
+    return `<div class="alert-item ${a.status === 'resolved' ? 'resolved' : ''}" style="${a.status === 'resolved' ? 'opacity:0.5;' : ''}">
+      <div class="alert-dot ${a.level}"></div>
+      <div class="alert-content">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+        <div class="alert-meta">
+          <span class="tag ${levelTag}">${levelText}</span>
+          <span style="font-size:12px;color:var(--text-tertiary);">供应商: ${a.supplier}</span>
+          <span style="font-size:12px;color:var(--text-tertiary);">${a.time}</span>
+        </div>
+      </div>
+      <div class="alert-actions">
+        ${a.status === 'pending' ?
+          `<button class="btn btn-sm btn-success" onclick="resolveAlert(${a.id})">标记处理</button>` :
+          `<span class="tag tag-green">已处理</span>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function resolveAlert(id) {
+  const alert = alerts.find(a => a.id === id);
+  if (alert) {
+    alert.status = 'resolved';
+    resolvedCount++;
+    showToast('预警已标记为已处理');
+    renderAlerts();
+  }
+}
+
+// ============================== Utility ==============================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============================== Init ==============================
+window.addEventListener('load', function() {
+  renderBUCards();
+  renderRegistryTable();
+  renderAlerts();
+});
+
+// Handle resize for ECharts
+window.addEventListener('resize', function() {
+  Object.values(pricingChartInstances).forEach(c => { if (c && c.resize) c.resize(); });
+});
+</script>
+</body>
+</html>
