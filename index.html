@@ -501,6 +501,9 @@ tbody tr:last-child td { border-bottom: none; }
     </div>
     <nav class="sidebar-nav">
       <div class="nav-label">管理中心</div>
+      <div class="nav-item" data-page="kanban" onclick="switchPage('kanban')">
+        <span>供应商看板</span>
+      </div>
       <div class="nav-item active" data-page="registry" onclick="switchPage('registry')">
         <span>供应商明细</span>
       </div>
@@ -552,6 +555,35 @@ tbody tr:last-child td { border-bottom: none; }
     <!-- Content Area -->
     <div class="content">
 
+      <!-- ============================== Page 0: 供应商看板 ============================== -->
+      <div class="page" id="page-kanban">
+        <div class="page-title">供应商看板</div>
+        <div class="page-desc">全集团供应商核心指标一览，按 BU / 国家 / 地区多维度呈现</div>
+
+        <div class="stat-cards" id="kanbanCards" style="margin-bottom:24px;"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div class="chart-card">
+            <div class="chart-title">各 BU 供应商数量分布</div>
+            <div id="kanbanBUChart" style="width:100%;height:300px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">各国家供应商数量分布</div>
+            <div id="kanbanCountryChart" style="width:100%;height:300px;"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div class="chart-card">
+            <div class="chart-title">各地区供应商分布 Top10</div>
+            <div id="kanbanAreaChart" style="width:100%;height:300px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">供应商评级分布</div>
+            <div id="kanbanRatingChart" style="width:100%;height:300px;"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ============================== Page 1: 供应商明细 ============================== -->
       <div class="page active" id="page-registry">
         <div class="page-title">供应商明细</div>
@@ -559,7 +591,7 @@ tbody tr:last-child td { border-bottom: none; }
 
         <!-- BU Stat Cards -->
         <div class="stat-cards-header">
-          <div style="font-size:14px;font-weight:700;color:var(--text-primary);">供应商数据概览</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);">供应商 BU 概览</div>
           <div class="month-selector">
             <button class="month-btn" onclick="switchMonth(this)">1月</button>
             <button class="month-btn" onclick="switchMonth(this)">2月</button>
@@ -575,21 +607,14 @@ tbody tr:last-child td { border-bottom: none; }
         <!-- Filter -->
         <div class="filter-bar">
           <span class="filter-label">筛选：</span>
-          <select id="filterRegion" onchange="renderRegistryTable()">
-            <option value="">全部大区</option>
-            <option value="美洲区">美洲区</option>
-            <option value="欧洲区">欧洲区</option>
-            <option value="亚太区">亚太区</option>
+          <select id="filterBU" onchange="onBUFilterChange()">
+            <option value="">全部 BU</option>
+          </select>
+          <select id="filterCountry" onchange="onCountryFilterChange()">
+            <option value="">全部国家</option>
           </select>
           <select id="filterArea" onchange="renderRegistryTable()">
-            <option value="">全部区域</option>
-          </select>
-          <select id="filterType" onchange="renderRegistryTable()">
-            <option value="">全部类型</option>
-            <option value="劳务">劳务</option>
-            <option value="卸柜">卸柜</option>
-            <option value="外包">外包</option>
-            <option value="保安">保安</option>
+            <option value="">全部地区</option>
           </select>
           <select id="filterStatus" onchange="renderRegistryTable()">
             <option value="">全部状态</option>
@@ -615,8 +640,9 @@ tbody tr:last-child td { border-bottom: none; }
                 <tr>
                   <th>供应商ID</th>
                   <th>供应商名称</th>
-                  <th>大区</th>
-                  <th>区域</th>
+                  <th>BU</th>
+                  <th>国家</th>
+                  <th>地区</th>
                   <th>公司类型</th>
                   <th>结算时薪</th>
                   <th>Markup</th>
@@ -650,13 +676,13 @@ tbody tr:last-child td { border-bottom: none; }
         <!-- BU Comparison -->
         <div id="pricingBU" class="pricing-panel">
           <div class="chart-box">
-            <div class="cb-title">各大区平均结算时薪对比</div>
-            <div class="cb-desc">按大区统计所有在用供应商的平均白班普工结算时薪（本币），点击柱子可下钻查看该区供应商报价排名</div>
+            <div class="cb-title">各 BU 平均结算时薪对比</div>
+            <div class="cb-desc">按 BU 统计所有在用供应商的平均白班普工结算时薪（本币），点击柱子可下钻查看该区供应商报价排名</div>
             <div class="chart-area" id="chartBUavg"></div>
           </div>
           <div class="chart-box" id="buDrillDown" style="display:none;">
             <div class="cb-title" id="buDrillTitle">供应商报价排名</div>
-            <div class="cb-desc">该大区下各供应商结算时薪由低到高排列</div>
+            <div class="cb-desc">该 BU 下各供应商结算时薪由低到高排列</div>
             <div class="chart-area" id="chartBUdrill"></div>
           </div>
         </div>
@@ -678,8 +704,8 @@ tbody tr:last-child td { border-bottom: none; }
             </select>
           </div>
           <div class="chart-box">
-            <div class="cb-title" id="crossBUTitle">供应商跨区域Markup对比</div>
-            <div class="cb-desc">展示选定供应商在各服务区域的Markup差异</div>
+            <div class="cb-title" id="crossBUTitle">供应商跨地区Markup对比</div>
+            <div class="cb-desc">展示选定供应商在各服务地区的Markup差异</div>
             <div class="chart-area" id="chartCrossBU"></div>
           </div>
         </div>
@@ -738,18 +764,18 @@ tbody tr:last-child td { border-bottom: none; }
               <input type="text" id="newId" placeholder="系统自动生成" readonly style="background:#F8F9FB;">
             </div>
             <div class="form-group">
-              <label>所属大区 <span style="color:var(--danger)">*</span></label>
+              <label>所属 BU <span style="color:var(--danger)">*</span></label>
               <select id="newRegion">
                 <option value="">请选择</option>
-                <option value="美洲区">美洲区</option>
-                <option value="欧洲区">欧洲区</option>
-                <option value="亚太区">亚太区</option>
+                <option value="FBU美洲">FBU美洲</option>
+                <option value="FBU欧洲">FBU欧洲</option>
+                <option value="FBU亚太">FBU亚太</option>
               </select>
             </div>
             <div class="form-group">
-              <label>所属区域 <span style="color:var(--danger)">*</span></label>
+              <label>所属地区 <span style="color:var(--danger)">*</span></label>
               <select id="newArea">
-                <option value="">请先选择大区</option>
+                <option value="">请先选择 BU</option>
               </select>
             </div>
             <div class="form-group">
@@ -867,9 +893,25 @@ tbody tr:last-child td { border-bottom: none; }
 // 基于FBU交付前台2026年劳务供应商真实数据结构生成的Mock数据集
 
 const AREAS_MAP = {
-  '美洲区': ['加州区','新泽西区','亚特兰大区','芝加哥区','萨凡纳区','达拉斯区','迈阿密区','休斯顿区','诺福克区','西雅图区','加拿大区','墨西哥区'],
-  '欧洲区': ['英国区','捷克区','法国区','德国区','波兰区','意大利区','西班牙区'],
-  '亚太区': ['澳洲区','日本区','韩国区']
+  'FBU美洲': ['加州区','新泽西区','亚特兰大区','芝加哥区','萨凡纳区','达拉斯区','迈阿密区','休斯顿区','诺福克区','西雅图区','加拿大区','墨西哥区'],
+  'FBU欧洲': ['英国区','捷克区','法国区','德国区','波兰区','意大利区','西班牙区'],
+  'FBU亚太': ['澳洲区','日本区','韩国区']
+};
+
+const BU_MAP = {
+  '美洲区': 'FBU美洲',
+  '欧洲区': 'FBU欧洲',
+  '亚太区': 'FBU亚太'
+};
+
+const COUNTRY_MAP = {
+  '加州区':'美国','新泽西区':'美国','亚特兰大区':'美国','芝加哥区':'美国',
+  '萨凡纳区':'美国','达拉斯区':'美国','迈阿密区':'美国','休斯顿区':'美国',
+  '诺福克区':'美国','西雅图区':'美国',
+  '加拿大区':'加拿大','墨西哥区':'墨西哥',
+  '英国区':'英国','捷克区':'捷克','法国区':'法国','德国区':'德国',
+  '波兰区':'波兰','意大利区':'意大利','西班牙区':'西班牙',
+  '澳洲区':'澳大利亚','日本区':'日本','韩国区':'韩国'
 };
 
 // ECharts实例管理（集中声明，避免TDZ问题）
@@ -957,8 +999,10 @@ let suppliers = [
   {id:'S000221K', name:'(주)씨에프씨', region:'亚太区', area:'韩国区', type:'劳务', status:'新增', rate:11500, base:9860, markup:'17%', ratio:'10%', rating:'—', contact:'KR Office', startDate:'2026-04', cert:'KR 파견법 허가 (申请中)'},
 ];
 
-// 为每个供应商生成考核指标
+// 为每个供应商添加 BU 和国家字段，并生成考核指标
 suppliers.forEach(s => {
+  s.bu = BU_MAP[s.region] || s.region;
+  s.country = COUNTRY_MAP[s.area] || '未知';
   const r = s.rating === '—' ? 'B' : s.rating;
   s.metrics = genAssessMetrics(r);
   s.trend = genMonthlyTrend(s.metrics);
@@ -1002,6 +1046,7 @@ function maskSensitive(val) {
 
 // ============================== Page Navigation ==============================
 const PAGE_TITLES = {
+  kanban: '供应商看板',
   registry: '供应商明细',
   pricing: '供应商定价',
   assessment: '供应商考核',
@@ -1009,6 +1054,7 @@ const PAGE_TITLES = {
   compliance: '合规及预警'
 };
 const PAGE_BREADCRUMBS = {
+  kanban: '全集团 / 供应商看板',
   registry: '全集团 / 供应商管理',
   pricing: '全集团 / 定价分析',
   assessment: '全集团 / 绩效考核',
@@ -1032,11 +1078,101 @@ function switchPage(page) {
 
 function renderCurrentPage() {
   switch (currentPage) {
+    case 'kanban': renderKanban(); break;
     case 'registry': renderBUCards(); renderRegistryTable(); break;
     case 'pricing': renderPricingCharts(); break;
     case 'assessment': renderAssessment(); break;
     case 'compliance': renderAlerts(); break;
   }
+}
+
+// ============================== Page 0: 供应商看板 ==============================
+let kanbanCharts = {};
+function renderKanban() {
+  // Stat cards
+  const bus = {};
+  suppliers.forEach(s => {
+    if (!bus[s.bu]) bus[s.bu] = { total: 0, active: 0, countries: new Set() };
+    bus[s.bu].total++;
+    if (s.status === '使用中' || s.status === '新增') bus[s.bu].active++;
+    bus[s.bu].countries.add(s.country);
+  });
+  const totalAll = suppliers.length;
+  const activeAll = suppliers.filter(s => s.status === '使用中' || s.status === '新增').length;
+  const allCountries = new Set(suppliers.map(s => s.country));
+  const allAreas = new Set(suppliers.map(s => s.area));
+
+  let cardHtml = `<div class="stat-card selected">
+    <div class="sc-label">全集团供应商</div><div class="sc-value">${totalAll}</div>
+    <div class="sc-sub">在用 ${activeAll} · ${allCountries.size} 国家 · ${allAreas.size} 地区</div>
+  </div>`;
+  Object.entries(bus).forEach(([bu, d]) => {
+    cardHtml += `<div class="stat-card"><div class="sc-label">${bu}</div><div class="sc-value">${d.total}</div>
+    <div class="sc-sub">在用 ${d.active} · ${d.countries.size} 国家</div></div>`;
+  });
+  document.getElementById('kanbanCards').innerHTML = cardHtml;
+
+  // BU chart
+  if (kanbanCharts.bu) kanbanCharts.bu.dispose();
+  kanbanCharts.bu = echarts.init(document.getElementById('kanbanBUChart'));
+  const buNames = Object.keys(bus);
+  const buTotals = buNames.map(b => bus[b].total);
+  const buActives = buNames.map(b => bus[b].active);
+  kanbanCharts.bu.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['总数','在用'], bottom: 0 },
+    grid: { top: 20, left: 40, right: 20, bottom: 40 },
+    xAxis: { type: 'category', data: buNames },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [
+      { name: '总数', type: 'bar', data: buTotals, itemStyle: { color: '#3A7BD5', borderRadius: [4,4,0,0] } },
+      { name: '在用', type: 'bar', data: buActives, itemStyle: { color: '#6BA3E8', borderRadius: [4,4,0,0] } }
+    ]
+  });
+
+  // Country chart
+  if (kanbanCharts.country) kanbanCharts.country.dispose();
+  kanbanCharts.country = echarts.init(document.getElementById('kanbanCountryChart'));
+  const countryMap = {};
+  suppliers.forEach(s => { countryMap[s.country] = (countryMap[s.country] || 0) + 1; });
+  const sortedCountries = Object.entries(countryMap).sort((a,b) => b[1]-a[1]);
+  kanbanCharts.country.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 10, left: 80, right: 30, bottom: 10 },
+    xAxis: { type: 'value', minInterval: 1 },
+    yAxis: { type: 'category', data: sortedCountries.map(c => c[0]).reverse() },
+    series: [{ type: 'bar', data: sortedCountries.map(c => c[1]).reverse(), itemStyle: { color: '#3A7BD5', borderRadius: [0,4,4,0] } }]
+  });
+
+  // Area chart (top 10)
+  if (kanbanCharts.area) kanbanCharts.area.dispose();
+  kanbanCharts.area = echarts.init(document.getElementById('kanbanAreaChart'));
+  const areaMap = {};
+  suppliers.forEach(s => { areaMap[s.area] = (areaMap[s.area] || 0) + 1; });
+  const sortedAreas = Object.entries(areaMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  kanbanCharts.area.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 10, left: 80, right: 30, bottom: 10 },
+    xAxis: { type: 'value', minInterval: 1 },
+    yAxis: { type: 'category', data: sortedAreas.map(a => a[0]).reverse() },
+    series: [{ type: 'bar', data: sortedAreas.map(a => a[1]).reverse(), itemStyle: { color: '#2E6BC0', borderRadius: [0,4,4,0] } }]
+  });
+
+  // Rating chart (pie)
+  if (kanbanCharts.rating) kanbanCharts.rating.dispose();
+  kanbanCharts.rating = echarts.init(document.getElementById('kanbanRatingChart'));
+  const ratingMap = {};
+  suppliers.forEach(s => { const r = s.rating === '—' ? '未评级' : s.rating + '级'; ratingMap[r] = (ratingMap[r] || 0) + 1; });
+  const colors = {'A级':'#27AE60','B级':'#3A7BD5','C级':'#F5A623','D级':'#E5484D','未评级':'#9E9E9E'};
+  kanbanCharts.rating.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { bottom: 0 },
+    series: [{
+      type: 'pie', radius: ['40%','65%'], center: ['50%','45%'],
+      data: Object.entries(ratingMap).map(([k,v]) => ({ name: k, value: v, itemStyle: { color: colors[k] || '#9E9E9E' } })),
+      label: { formatter: '{b}\n{c}家' }
+    }]
+  });
 }
 
 // ============================== Page 1: 供应商明细 ==============================
@@ -1051,66 +1187,100 @@ function switchMonth(btn) {
 function renderBUCards() {
   const monthFactors = {'1月':0.72,'2月':0.68,'3月':0.81,'4月':0.88,'5月':0.94,'6月':1.0,'累计':1.0};
   const factor = monthFactors[currentMonth] || 1.0;
-  const regions = {};
+  const bus = {};
   suppliers.forEach(s => {
-    if (!regions[s.region]) regions[s.region] = { total: 0, active: 0, areas: new Set() };
-    regions[s.region].total++;
-    if (s.status === '使用中' || s.status === '新增') regions[s.region].active++;
-    regions[s.region].areas.add(s.area);
+    if (!bus[s.bu]) bus[s.bu] = { total: 0, active: 0, countries: new Set(), areas: new Set() };
+    bus[s.bu].total++;
+    if (s.status === '使用中' || s.status === '新增') bus[s.bu].active++;
+    bus[s.bu].countries.add(s.country);
+    bus[s.bu].areas.add(s.area);
   });
   const totalAll = suppliers.length;
   const activeAll = suppliers.filter(s => s.status === '使用中' || s.status === '新增').length;
+  const allCountries = new Set(suppliers.map(s => s.country));
   const allAreas = new Set(suppliers.map(s => s.area));
   const fmt = (n) => currentMonth === '累计' ? n : Math.round(n * factor);
+  const curBU = document.getElementById('filterBU').value;
 
-  let html = `<div class="stat-card ${document.getElementById('filterRegion').value === '' ? 'selected' : ''}" onclick="filterByBU('')">
+  let html = `<div class="stat-card ${curBU === '' ? 'selected' : ''}" onclick="filterByBU('')">
     <div class="sc-label">全集团供应商${currentMonth !== '累计' ? ' ('+currentMonth+')' : ''}</div>
     <div class="sc-value">${fmt(totalAll)}</div>
-    <div class="sc-sub">在用 ${fmt(activeAll)} · 覆盖 ${allAreas.size} 个区域</div>
+    <div class="sc-sub">在用 ${fmt(activeAll)} · ${allCountries.size} 国家 · ${allAreas.size} 地区</div>
   </div>`;
 
-  Object.entries(regions).forEach(([region, data]) => {
-    const selected = document.getElementById('filterRegion').value === region;
-    html += `<div class="stat-card ${selected?'selected':''}" onclick="filterByBU('${region}')">
-      <div class="sc-label">${region}${currentMonth !== '累计' ? ' ('+currentMonth+')' : ''}</div>
+  Object.entries(bus).forEach(([bu, data]) => {
+    const selected = curBU === bu;
+    html += `<div class="stat-card ${selected?'selected':''}" onclick="filterByBU('${bu}')">
+      <div class="sc-label">${bu}${currentMonth !== '累计' ? ' ('+currentMonth+')' : ''}</div>
       <div class="sc-value">${fmt(data.total)}</div>
-      <div class="sc-sub">在用 ${fmt(data.active)} · ${data.areas.size} 个区域</div>
+      <div class="sc-sub">在用 ${fmt(data.active)} · ${data.countries.size} 国家 · ${data.areas.size} 地区</div>
     </div>`;
   });
   document.getElementById('buCards').innerHTML = html;
 
-  // Update area filter
-  const filterRegion = document.getElementById('filterRegion').value;
-  const areaSelect = document.getElementById('filterArea');
-  const currentArea = areaSelect.value;
-  const areas = filterRegion ? AREAS_MAP[filterRegion] || [] : Object.values(AREAS_MAP).flat();
-  areaSelect.innerHTML = '<option value="">全部区域</option>' + areas.map(a => `<option value="${a}" ${a===currentArea?'selected':''}>${a}</option>`).join('');
+  // Populate BU filter options (once)
+  const buSelect = document.getElementById('filterBU');
+  if (buSelect.options.length <= 1) {
+    Object.keys(bus).forEach(bu => {
+      const opt = document.createElement('option');
+      opt.value = bu; opt.textContent = bu;
+      buSelect.appendChild(opt);
+    });
+  }
+  buSelect.value = curBU;
+
+  // Cascade: BU → Country → Area
+  updateCascadingFilters();
 }
 
-function filterByBU(region) {
-  document.getElementById('filterRegion').value = region;
+function updateCascadingFilters() {
+  const selBU = document.getElementById('filterBU').value;
+  const countrySelect = document.getElementById('filterCountry');
+  const areaSelect = document.getElementById('filterArea');
+  const curCountry = countrySelect.value;
+  const curArea = areaSelect.value;
+
+  // Countries
+  const filtered = selBU ? suppliers.filter(s => s.bu === selBU) : suppliers;
+  const countries = [...new Set(filtered.map(s => s.country))].sort();
+  countrySelect.innerHTML = '<option value="">全部国家</option>' + countries.map(c => `<option value="${c}" ${c===curCountry?'selected':''}>${c}</option>`).join('');
+
+  // Areas
+  const selCountry = countrySelect.value;
+  const filtered2 = selCountry ? filtered.filter(s => s.country === selCountry) : filtered;
+  const areas = [...new Set(filtered2.map(s => s.area))].sort();
+  areaSelect.innerHTML = '<option value="">全部地区</option>' + areas.map(a => `<option value="${a}" ${a===curArea?'selected':''}>${a}</option>`).join('');
+}
+
+function onBUFilterChange() {
+  renderBUCards();
+  renderRegistryTable();
+}
+function onCountryFilterChange() {
+  updateCascadingFilters();
+  renderRegistryTable();
+}
+
+function filterByBU(bu) {
+  document.getElementById('filterBU').value = bu;
   renderBUCards();
   renderRegistryTable();
 }
 
 function getFilteredSuppliers() {
-  const region = document.getElementById('filterRegion').value;
+  const bu = document.getElementById('filterBU').value;
+  const country = document.getElementById('filterCountry').value;
   const area = document.getElementById('filterArea').value;
-  const type = document.getElementById('filterType').value;
   const status = document.getElementById('filterStatus').value;
   const rating = document.getElementById('filterRating').value;
   const search = document.getElementById('filterSearch').value.toLowerCase();
 
   return suppliers.filter(s => {
-    if (region && s.region !== region) return false;
+    if (bu && s.bu !== bu) return false;
+    if (country && s.country !== country) return false;
     if (area && s.area !== area) return false;
-    if (type && s.type !== type) return false;
     if (status && s.status !== status) return false;
-    if (rating && s.rating !== rating && !(rating === 'A' && s.rating === 'A级') && !(rating === 'B' && s.rating === 'B级') && !(rating === 'C' && s.rating === 'C级') && !(rating === 'D' && s.rating === 'D级')) {
-      // Also check with 级 suffix
-      const rMap = {'A':'A','B':'B','C':'C','D':'D'};
-      if (s.rating !== rating && s.rating !== rating + '级' && s.rating !== rating) return false;
-    }
+    if (rating && s.rating !== rating && s.rating !== rating + '级') return false;
     if (search && !s.name.toLowerCase().includes(search) && !s.id.toLowerCase().includes(search)) return false;
     return true;
   });
@@ -1137,7 +1307,8 @@ function renderRegistryTable() {
   tbody.innerHTML = filtered.map((s, i) => `<tr onclick="openSupplierDrawer(${suppliers.indexOf(s)})">
     <td style="font-family:monospace;font-size:12px;color:var(--text-tertiary);">${s.id}</td>
     <td style="font-weight:600;">${s.name}</td>
-    <td>${s.region}</td>
+    <td>${s.bu}</td>
+    <td>${s.country}</td>
     <td>${s.area}</td>
     <td>${s.type}</td>
     <td style="font-weight:600;">${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</td>
@@ -1166,7 +1337,7 @@ function openSupplierDrawer(idx) {
       <h4>基本信息</h4>
       <div class="drawer-info-grid">
         <div class="drawer-info-item"><div class="dii-label">供应商ID</div><div class="dii-value">${s.id}</div></div>
-        <div class="drawer-info-item"><div class="dii-label">大区 / 区域</div><div class="dii-value">${s.region} / ${s.area}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">BU / 国家 / 地区</div><div class="dii-value">${s.bu} / ${s.country} / ${s.area}</div></div>
         <div class="drawer-info-item"><div class="dii-label">公司类型</div><div class="dii-value">${s.type}</div></div>
         <div class="drawer-info-item"><div class="dii-label">启用状态</div><div class="dii-value">${s.status}</div></div>
         <div class="drawer-info-item"><div class="dii-label">合作起始</div><div class="dii-value">${s.startDate || '—'}</div></div>
@@ -1260,24 +1431,24 @@ function renderPricingCharts() {
 }
 
 function renderBUComparison() {
-  // 按大区聚合平均结算时薪 (仅取可比的: 同货币区合并)
-  const regionData = {};
+  // 按 BU 聚合平均结算时薪 (仅取可比的: 同货币区合并)
+  const buData = {};
   suppliers.filter(s => s.status !== '停用' && s.rate > 0).forEach(s => {
-    if (!regionData[s.region]) regionData[s.region] = [];
-    regionData[s.region].push(s);
+    if (!buData[s.bu]) buData[s.bu] = [];
+    buData[s.bu].push(s);
   });
 
   // 计算Markup平均值
-  const regionMarkup = {};
-  Object.entries(regionData).forEach(([region, sups]) => {
+  const buMarkup = {};
+  Object.entries(buData).forEach(([bu, sups]) => {
     const markups = sups.map(s => {
       const m = parseFloat(s.markup);
       return isNaN(m) ? 0 : m;
     }).filter(m => m > 0);
-    regionMarkup[region] = markups.length ? Math.round(markups.reduce((a,b)=>a+b,0)/markups.length) : 0;
+    buMarkup[bu] = markups.length ? Math.round(markups.reduce((a,b)=>a+b,0)/markups.length) : 0;
   });
 
-  const regions = Object.keys(regionData);
+  const bus = Object.keys(buData);
   const colors = ['#2E6BE5','#00B8A9','#D97706'];
 
   if (pricingChartInstances.buavg) pricingChartInstances.buavg.dispose();
@@ -1286,15 +1457,15 @@ function renderBUComparison() {
   chart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
       const d = p[0];
-      return `<b>${d.name}</b><br/>平均Markup: ${d.value}%<br/>供应商数: ${regionData[d.name]?.length || 0}`;
+      return `<b>${d.name}</b><br/>平均Markup: ${d.value}%<br/>供应商数: ${buData[d.name]?.length || 0}`;
     }},
     grid: { top: 30, right: 40, bottom: 60, left: 60 },
-    xAxis: { type: 'category', data: regions, axisLabel: { fontSize: 13, fontWeight: 600 } },
+    xAxis: { type: 'category', data: bus, axisLabel: { fontSize: 13, fontWeight: 600 } },
     yAxis: { type: 'value', name: '平均Markup(%)', axisLabel: { formatter: '{value}%' } },
     series: [{
       type: 'bar',
-      data: regions.map((r, i) => ({
-        value: regionMarkup[r],
+      data: bus.map((b, i) => ({
+        value: buMarkup[b],
         itemStyle: { color: colors[i % colors.length], borderRadius: [6, 6, 0, 0] }
       })),
       barWidth: '40%',
@@ -1309,8 +1480,8 @@ function renderBUComparison() {
   document.getElementById('buDrillDown').style.display = 'none';
 }
 
-function showBUDrillDown(region) {
-  const sups = suppliers.filter(s => s.region === region && s.status !== '停用' && s.rate > 0)
+function showBUDrillDown(bu) {
+  const sups = suppliers.filter(s => s.bu === bu && s.status !== '停用' && s.rate > 0)
     .sort((a, b) => {
       const ma = parseFloat(a.markup) || 0;
       const mb = parseFloat(b.markup) || 0;
@@ -1318,7 +1489,7 @@ function showBUDrillDown(region) {
     });
 
   document.getElementById('buDrillDown').style.display = 'block';
-  document.getElementById('buDrillTitle').textContent = `${region} — 供应商Markup排名`;
+  document.getElementById('buDrillTitle').textContent = `${bu} — 供应商Markup排名`;
 
   if (pricingChartInstances.budrill) pricingChartInstances.budrill.dispose();
   const chart = echarts.init(document.getElementById('chartBUdrill'));
@@ -1384,7 +1555,7 @@ function populateSupplierSelect() {
   // Find suppliers that appear in multiple areas (for cross-BU demo, we'll use all)
   const multiAreaSuppliers = suppliers.filter(s => s.status !== '停用' && s.rate > 0);
   select.innerHTML = multiAreaSuppliers.map((s, i) =>
-    `<option value="${suppliers.indexOf(s)}">${s.name} (${s.region} - ${s.area})</option>`
+    `<option value="${suppliers.indexOf(s)}">${s.name} (${s.bu} - ${s.country})</option>`
   ).join('');
 }
 
@@ -1393,13 +1564,13 @@ function renderSupplierCrossBU() {
   const s = suppliers[idx];
   if (!s) return;
 
-  document.getElementById('crossBUTitle').textContent = `${s.name} — 跨区域定价分析`;
+  document.getElementById('crossBUTitle').textContent = `${s.name} — 跨地区定价分析`;
 
-  // Simulate cross-region data for demo
-  const regions = ['加州区','新泽西区','亚特兰大区','英国区','捷克区','德国区'];
+  // Simulate cross-area data for demo
+  const areas = ['加州区','新泽西区','亚特兰大区','英国区','捷克区','德国区'];
   const baseRate = s.rate || 20;
-  const simRates = regions.map((r, i) => Math.round((baseRate * (0.85 + Math.random() * 0.35)) * 10) / 10);
-  const simMarkups = regions.map((r, i) => Math.round(15 + Math.random() * 40));
+  const simRates = areas.map((a, i) => Math.round((baseRate * (0.85 + Math.random() * 0.35)) * 10) / 10);
+  const simMarkups = areas.map((a, i) => Math.round(15 + Math.random() * 40));
 
   if (pricingChartInstances.crossBU) pricingChartInstances.crossBU.dispose();
   const chart = echarts.init(document.getElementById('chartCrossBU'));
@@ -1410,7 +1581,7 @@ function renderSupplierCrossBU() {
     legend: { data: ['Markup(%)'], bottom: 0 },
     grid: { top: 30, right: 60, bottom: 50, left: 120 },
     xAxis: { type: 'value', name: 'Markup(%)' },
-    yAxis: { type: 'category', data: regions, axisLabel: { fontSize: 12 } },
+    yAxis: { type: 'category', data: areas, axisLabel: { fontSize: 12 } },
     series: [{
       name: 'Markup(%)',
       type: 'bar',
@@ -1522,8 +1693,8 @@ document.getElementById('newRegion').addEventListener('change', function() {
   const areaSelect = document.getElementById('newArea');
   const areas = AREAS_MAP[this.value] || [];
   areaSelect.innerHTML = areas.length ?
-    '<option value="">请选择</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('') :
-    '<option value="">请先选择大区</option>';
+    '<option value="">请选择</option>' + areas.map(a => `<option value="${a}">${a}（${COUNTRY_MAP[a] || ''}）</option>`).join('') :
+    '<option value="">请先选择 BU</option>';
   // Auto-generate ID
   const newIdField = document.getElementById('newId');
   newIdField.value = 'S' + String(Math.floor(Math.random() * 9000) + 1000).padStart(5, '0');
@@ -1535,7 +1706,7 @@ function simulateUpload() {
 
 function submitNewSupplier() {
   const name = document.getElementById('newName').value.trim();
-  const region = document.getElementById('newRegion').value;
+  const bu = document.getElementById('newRegion').value;
   const area = document.getElementById('newArea').value;
   const type = document.getElementById('newType').value;
   const rate = parseFloat(document.getElementById('newRate').value) || 0;
@@ -1544,14 +1715,17 @@ function submitNewSupplier() {
   const id = document.getElementById('newId').value;
 
   if (!name) { showToast('请输入供应商名称'); return; }
-  if (!region) { showToast('请选择所属大区'); return; }
-  if (!area) { showToast('请选择所属区域'); return; }
+  if (!bu) { showToast('请选择所属 BU'); return; }
+  if (!area) { showToast('请选择所属地区'); return; }
 
   const markup = base > 0 ? Math.round((rate - base) / base * 100) + '%' : '—';
+  // Reverse map BU to region
+  const regionMap = {'FBU美洲':'美洲区','FBU欧洲':'欧洲区','FBU亚太':'亚太区'};
 
   const newSupplier = {
     id: id || 'S' + String(Math.floor(Math.random() * 9000) + 1000),
-    name, region, area, type,
+    name, region: regionMap[bu] || bu, bu, area, type,
+    country: COUNTRY_MAP[area] || '未知',
     status: '新增',
     rate, base, markup,
     ratio: '0%',
@@ -1577,7 +1751,7 @@ function resetForm() {
   document.getElementById('newName').value = '';
   document.getElementById('newId').value = '';
   document.getElementById('newRegion').value = '';
-  document.getElementById('newArea').innerHTML = '<option value="">请先选择大区</option>';
+  document.getElementById('newArea').innerHTML = '<option value="">请先选择 BU</option>';
   document.getElementById('newType').value = '劳务';
   document.getElementById('newRate').value = '';
   document.getElementById('newBase').value = '';
