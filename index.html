@@ -205,18 +205,19 @@ input, select, textarea { font-family: var(--font); outline: none; }
   flex-wrap: nowrap;
 }
 .stat-card {
-  background: #A6C4E8;
+  background: #3A7BD5;
   border-radius: 8px; padding: 12px 16px;
   cursor: pointer; transition: var(--transition);
   border: 1px solid transparent;
   min-width: 0; flex: 1; flex-shrink: 0;
+  color: #fff;
 }
 .stat-card::before { display: none; }
-.stat-card:hover { background: #92B5DE; transform: translateY(-1px); }
-.stat-card.selected { border-color: var(--primary); background: #8AAAD6; }
-.stat-card .sc-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
-.stat-card .sc-value { font-size: 22px; font-weight: 800; color: var(--navy); }
-.stat-card .sc-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+.stat-card:hover { background: #2E6BC0; transform: translateY(-1px); }
+.stat-card.selected { border-color: #1D4FA0; background: #2560B5; }
+.stat-card .sc-label { font-size: 11px; color: rgba(255,255,255,0.8); margin-bottom: 4px; font-weight: 600; }
+.stat-card .sc-value { font-size: 22px; font-weight: 800; color: #fff; }
+.stat-card .sc-sub { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 2px; }
 .stat-card .sc-trend { font-size: 12px; font-weight: 600; margin-top: 4px; }
 .stat-card .sc-trend.up { color: var(--success); }
 .stat-card .sc-trend.down { color: var(--danger); }
