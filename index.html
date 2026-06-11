@@ -185,25 +185,45 @@ input, select, textarea { font-family: var(--font); outline: none; }
 .page-desc { font-size: 13px; color: var(--text-tertiary); margin-bottom: 20px; }
 
 /* Stat Cards */
-.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-cards-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.month-selector {
+  display: flex; gap: 4px; align-items: center;
+}
+.month-btn {
+  padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); background: var(--card); border: 1px solid var(--border);
+  cursor: pointer; transition: var(--transition);
+}
+.month-btn:hover { background: var(--primary-light); color: var(--primary); }
+.month-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.stat-cards {
+  display: flex; gap: 10px; margin-bottom: 20px;
+  overflow-x: auto; padding-bottom: 4px;
+}
 .stat-card {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--navy-light) 100%);
-  border-radius: var(--radius); padding: 18px 20px;
-  box-shadow: 0 3px 12px rgba(30,61,122,0.2); cursor: pointer; transition: var(--transition);
-  border: none;
-  border-left: none;
-  position: relative;
-  color: #fff;
+  background: var(--primary-light);
+  border-radius: 8px; padding: 12px 16px;
+  cursor: pointer; transition: var(--transition);
+  border: 1px solid transparent;
+  min-width: 120px; flex-shrink: 0;
 }
 .stat-card::before { display: none; }
-.stat-card:hover { box-shadow: 0 6px 20px rgba(30,61,122,0.3); transform: translateY(-2px); }
-.stat-card.selected { box-shadow: 0 0 0 3px rgba(255,255,255,0.4), 0 6px 20px rgba(30,61,122,0.3); }
-.stat-card .sc-label { font-size: 12px; color: rgba(255,255,255,0.75); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; }
-.stat-card .sc-value { font-size: 28px; font-weight: 800; color: #FFFFFF; }
-.stat-card .sc-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+.stat-card:hover { background: #C8DBFA; transform: translateY(-1px); }
+.stat-card.selected { border-color: var(--primary); background: #B8D0F5; }
+.stat-card .sc-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
+.stat-card .sc-value { font-size: 22px; font-weight: 800; color: var(--navy); }
+.stat-card .sc-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
 .stat-card .sc-trend { font-size: 12px; font-weight: 600; margin-top: 4px; }
 .stat-card .sc-trend.up { color: var(--success); }
 .stat-card .sc-trend.down { color: var(--danger); }
+.stat-card-colored { color: #fff; }
+.stat-card-colored .sc-label { color: rgba(255,255,255,0.85); }
+.stat-card-colored .sc-value { color: #fff; }
+.stat-card-colored .sc-sub { color: rgba(255,255,255,0.75); }
+.stat-card-colored:hover { opacity: 0.92; transform: translateY(-1px); }
 
 /* Filter Bar */
 .filter-bar {
@@ -425,7 +445,7 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* Responsive */
 @media (max-width: 1400px) {
-  .stat-cards { grid-template-columns: repeat(3, 1fr); }
+  .stat-cards { flex-wrap: wrap; }
 }
 
 /* Scrollbar */
@@ -535,6 +555,18 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="page-desc">全集团劳务工供应商全景信息，支持多维度筛选与下钻分析</div>
 
         <!-- BU Stat Cards -->
+        <div class="stat-cards-header">
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);">供应商数据概览</div>
+          <div class="month-selector">
+            <button class="month-btn" onclick="switchMonth(this)">1月</button>
+            <button class="month-btn" onclick="switchMonth(this)">2月</button>
+            <button class="month-btn" onclick="switchMonth(this)">3月</button>
+            <button class="month-btn" onclick="switchMonth(this)">4月</button>
+            <button class="month-btn" onclick="switchMonth(this)">5月</button>
+            <button class="month-btn" onclick="switchMonth(this)">6月</button>
+            <button class="month-btn active" onclick="switchMonth(this)">累计</button>
+          </div>
+        </div>
         <div class="stat-cards" id="buCards"></div>
 
         <!-- Filter -->
@@ -769,23 +801,23 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="page-title">合规及预警</div>
         <div class="page-desc">风险监控中心，实时追踪供应商合规状态与预警事件</div>
 
-        <div class="stat-cards" style="grid-template-columns: repeat(4, 1fr); margin-bottom:24px;">
-          <div class="stat-card" style="background:linear-gradient(135deg, #C0392B, #E5484D);">
+        <div class="stat-cards" style="margin-bottom:24px;">
+          <div class="stat-card stat-card-colored" style="background:linear-gradient(135deg, #C0392B, #E5484D); flex:1;">
             <div class="sc-label">红色预警</div>
             <div class="sc-value" id="alertRed">3</div>
             <div class="sc-sub">需立即处理</div>
           </div>
-          <div class="stat-card" style="background:linear-gradient(135deg, #D97706, #F5A623);">
+          <div class="stat-card stat-card-colored" style="background:linear-gradient(135deg, #D97706, #F5A623); flex:1;">
             <div class="sc-label">黄色预警</div>
             <div class="sc-value" id="alertYellow">3</div>
             <div class="sc-sub">需关注跟进</div>
           </div>
-          <div class="stat-card" style="background:linear-gradient(135deg, #0284C7, #0EA5E9);">
+          <div class="stat-card stat-card-colored" style="background:linear-gradient(135deg, #0284C7, #0EA5E9); flex:1;">
             <div class="sc-label">蓝色提醒</div>
             <div class="sc-value" id="alertBlue">2</div>
             <div class="sc-sub">信息通知</div>
           </div>
-          <div class="stat-card" style="background:linear-gradient(135deg, #15803D, #36B37E);">
+          <div class="stat-card stat-card-colored" style="background:linear-gradient(135deg, #15803D, #36B37E); flex:1;">
             <div class="sc-label">已处理</div>
             <div class="sc-value" id="alertResolved">0</div>
             <div class="sc-sub">本月已解决</div>
@@ -1005,7 +1037,17 @@ function renderCurrentPage() {
 }
 
 // ============================== Page 1: 供应商明细 ==============================
+let currentMonth = '累计';
+function switchMonth(btn) {
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMonth = btn.textContent;
+  renderBUCards();
+}
+
 function renderBUCards() {
+  const monthFactors = {'1月':0.72,'2月':0.68,'3月':0.81,'4月':0.88,'5月':0.94,'6月':1.0,'累计':1.0};
+  const factor = monthFactors[currentMonth] || 1.0;
   const regions = {};
   suppliers.forEach(s => {
     if (!regions[s.region]) regions[s.region] = { total: 0, active: 0, areas: new Set() };
@@ -1016,20 +1058,20 @@ function renderBUCards() {
   const totalAll = suppliers.length;
   const activeAll = suppliers.filter(s => s.status === '使用中' || s.status === '新增').length;
   const allAreas = new Set(suppliers.map(s => s.area));
+  const fmt = (n) => currentMonth === '累计' ? n : Math.round(n * factor);
 
   let html = `<div class="stat-card ${document.getElementById('filterRegion').value === '' ? 'selected' : ''}" onclick="filterByBU('')">
-    <div class="sc-label">全集团供应商</div>
-    <div class="sc-value">${totalAll}</div>
-    <div class="sc-sub">在用 ${activeAll} · 覆盖 ${allAreas.size} 个区域</div>
+    <div class="sc-label">全集团供应商${currentMonth !== '累计' ? ' ('+currentMonth+')' : ''}</div>
+    <div class="sc-value">${fmt(totalAll)}</div>
+    <div class="sc-sub">在用 ${fmt(activeAll)} · 覆盖 ${allAreas.size} 个区域</div>
   </div>`;
 
-  const icons = {'美洲区':'','欧洲区':'','亚太区':''};
   Object.entries(regions).forEach(([region, data]) => {
     const selected = document.getElementById('filterRegion').value === region;
     html += `<div class="stat-card ${selected?'selected':''}" onclick="filterByBU('${region}')">
-      <div class="sc-label">${region}</div>
-      <div class="sc-value">${data.total}</div>
-      <div class="sc-sub">在用 ${data.active} · ${data.areas.size} 个区域</div>
+      <div class="sc-label">${region}${currentMonth !== '累计' ? ' ('+currentMonth+')' : ''}</div>
+      <div class="sc-value">${fmt(data.total)}</div>
+      <div class="sc-sub">在用 ${fmt(data.active)} · ${data.areas.size} 个区域</div>
     </div>`;
   });
   document.getElementById('buCards').innerHTML = html;
