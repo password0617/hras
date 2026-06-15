@@ -668,7 +668,7 @@ tbody tr:last-child td { border-bottom: none; }
     </nav>
     <div class="sidebar-footer">
       <div style="margin-bottom:4px;">FBU/GUS/WX/GEU 交付前台管理系统</div>
-      <div>v2.7.0 · 数据更新于 2026-06-12</div>
+      <div>v2.8.0 · 数据更新于 2026-06-15</div>
     </div>
   </aside>
 
@@ -847,24 +847,35 @@ tbody tr:last-child td { border-bottom: none; }
 
         <!-- BU Comparison -->
         <div id="pricingBU" class="pricing-panel">
+          <div id="buSummaryCards" style="display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap;"></div>
           <div class="chart-box">
-            <div class="cb-title">各 BU 平均结算时薪对比</div>
-            <div class="cb-desc">按 BU 统计所有在用供应商的平均白班普工结算时薪（本币），点击柱子可下钻查看该区供应商报价排名</div>
+            <div class="cb-title">各 BU 平均Markup对比</div>
+            <div class="cb-desc">按 BU 统计所有在用供应商的平均Markup（%），点击柱子可下钻查看该区供应商报价排名</div>
             <div class="chart-area" id="chartBUavg"></div>
           </div>
           <div class="chart-box" id="buDrillDown" style="display:none;">
             <div class="cb-title" id="buDrillTitle">供应商报价排名</div>
-            <div class="cb-desc">该 BU 下各供应商结算时薪由低到高排列</div>
-            <div class="chart-area" id="chartBUdrill"></div>
+            <div class="cb-desc">该 BU 下各供应商Markup由低到高排列</div>
+            <div class="chart-area" id="chartBUdrill" style="height:400px;"></div>
+            <div class="table-wrapper" style="margin-top:16px;box-shadow:none;">
+              <div class="table-scroll" id="buDrillTable" style="max-height:400px;overflow-y:auto;"></div>
+            </div>
           </div>
         </div>
 
         <!-- Type Comparison -->
         <div id="pricingType" class="pricing-panel" style="display:none;">
           <div class="chart-box">
-            <div class="cb-title">不同工种类型供应商Markup对比</div>
+            <div class="cb-title">不同公司类型供应商Markup对比</div>
             <div class="cb-desc">对比劳务、卸柜、外包、保安等不同公司类型供应商的Markup水平</div>
             <div class="chart-area" id="chartTypeCompare"></div>
+          </div>
+          <div class="chart-box" style="margin-top:18px;">
+            <div class="cb-title">GUS 多工种报价矩阵</div>
+            <div class="cb-desc">各GUS供应商在不同工种下的Markup(%)与时薪明细</div>
+            <div class="table-wrapper" style="box-shadow:none;">
+              <div class="table-scroll" id="gusJobTypeTable" style="max-height:500px;overflow:auto;"></div>
+            </div>
           </div>
         </div>
 
@@ -880,6 +891,7 @@ tbody tr:last-child td { border-bottom: none; }
             <div class="cb-desc">展示选定供应商在各服务地区的Markup差异</div>
             <div class="chart-area" id="chartCrossBU"></div>
           </div>
+          <div id="crossBUDetailCards" style="display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;"></div>
         </div>
       </div>
 
@@ -2216,6 +2228,32 @@ function closeDrawer() {
 
 // ============================== Page 2: 供应商定价 ==============================
 
+// Helper: get numeric markup for any supplier (returns percentage number)
+function getMarkupPct(s) {
+  if (!s || s.status === '停用') return null;
+  // WX: use full_markup from cert
+  if (s.bu_line === 'WX') return s.wxData?.full_markup ?? null;
+  // GEU: use fee_rate
+  if (s.bu_line === 'GEU') return s.geuData?.fee_rate ?? null;
+  // FBU / GUS: parse markup string
+  const m = parseFloat(s.markup);
+  if (!isNaN(m) && m > 0) return m;
+  // Fallback: calculate from rate/base
+  if (s.rate && s.base && s.base > 0) return Math.round((s.rate - s.base) / s.base * 1000) / 10;
+  return null;
+}
+
+// Helper: get display rate (for WX, return the quote; for others return settlement rate)
+function getDisplayRate(s) {
+  return s.rate;
+}
+
+// Helper: currency symbol
+function getCurrencySym(s) {
+  if (s.bu_line === 'WX') return s.wxData?.currency || '';
+  return '';
+}
+
 function switchPricingTab(tab, evt) {
   document.querySelectorAll('#pricingTabs .tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.pricing-panel').forEach(p => p.style.display = 'none');
@@ -2232,17 +2270,16 @@ function switchPricingTab(tab, evt) {
 }
 
 function renderPricingCharts() {
-  try {
-    renderBUComparison();
-  } catch(e) {
+  try { renderBUComparison(); } catch(e) {
     console.error('renderBUComparison error:', e);
     const el = document.getElementById('chartBUavg');
     if (el) el.innerHTML = '<div style="padding:20px;color:#E5484D;">BU对比图表加载失败: ' + e.message + '</div>';
   }
-  try {
-    populateSupplierSelect();
-  } catch(e) {
+  try { populateSupplierSelect(); } catch(e) {
     console.error('populateSupplierSelect error:', e);
+  }
+  try { renderTypeComparison(); } catch(e) {
+    console.error('renderTypeComparison error:', e);
   }
 }
 
@@ -2254,18 +2291,14 @@ function renderBUComparison() {
     buData[s.bu].push(s);
   });
 
-  // 计算Markup平均值
   const buMarkup = {};
   Object.entries(buData).forEach(([bu, sups]) => {
-    const markups = sups.map(s => {
-      const m = parseFloat(s.markup);
-      return isNaN(m) ? 0 : m;
-    }).filter(m => m > 0);
-    buMarkup[bu] = markups.length ? Math.round(markups.reduce((a,b)=>a+b,0)/markups.length) : 0;
+    const markups = sups.map(s => getMarkupPct(s)).filter(m => m != null && m > 0);
+    buMarkup[bu] = markups.length ? Math.round(markups.reduce((a,b)=>a+b,0)/markups.length*10)/10 : 0;
   });
 
-  const bus = Object.keys(buData);
-  const colors = ['#2E6BE5','#00B8A9','#D97706'];
+  const bus = Object.keys(buData).sort((a,b) => (buMarkup[b]||0) - (buMarkup[a]||0));
+  const colors = ['#2E6BE5','#E5484D','#00B8A9','#F5A623','#243B63','#0EA5E9','#8B5CF6','#EC4899'];
 
   if (pricingChartInstances.buavg) pricingChartInstances.buavg.dispose();
   const chartEl = document.getElementById('chartBUavg');
@@ -2278,12 +2311,27 @@ function renderBUComparison() {
     return;
   }
 
+  // Summary cards
+  const avgAll = bus.length ? Math.round(Object.values(buMarkup).reduce((a,b)=>a+b,0)/bus.length*10)/10 : 0;
+  const summaryHtml = bus.map((bu, i) => {
+    const count = buData[bu].length;
+    const markup = buMarkup[bu] || 0;
+    return `<div style="flex:1;min-width:160px;background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-left:4px solid ${colors[i%colors.length]};">
+      <div style="font-size:12px;color:#8896a4;">${bu}</div>
+      <div style="font-size:24px;font-weight:700;color:${colors[i%colors.length]};">${markup}%</div>
+      <div style="font-size:11px;color:#999;">${count}家供应商</div>
+    </div>`;
+  }).join('');
+  const summaryEl = document.getElementById('buSummaryCards');
+  if (summaryEl) summaryEl.innerHTML = summaryHtml;
+
   chart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
       const d = p[0];
-      return `<b>${d.name}</b><br/>平均Markup: ${d.value}%<br/>供应商数: ${buData[d.name]?.length || 0}`;
+      const count = buData[d.name]?.length || 0;
+      return `<b>${d.name}</b><br/>平均Markup: ${d.value}%<br/>供应商数: ${count}家<br/><span style="color:#999;font-size:11px;">点击可下钻查看排名</span>`;
     }},
-    grid: { top: 30, right: 40, bottom: 60, left: 60 },
+    grid: { top: 30, right: 40, bottom: 60, left: 80 },
     xAxis: { type: 'category', data: bus, axisLabel: { fontSize: 13, fontWeight: 600 } },
     yAxis: { type: 'value', name: '平均Markup(%)', axisLabel: { formatter: '{value}%' } },
     series: [{
@@ -2296,24 +2344,17 @@ function renderBUComparison() {
       label: { show: true, position: 'top', formatter: '{c}%', fontWeight: 600 }
     }]
   });
-  chart.on('click', function(params) {
-    showBUDrillDown(params.name);
-  });
-
-  // Hide drill down on re-render
+  chart.on('click', function(params) { showBUDrillDown(params.name); });
   document.getElementById('buDrillDown').style.display = 'none';
 }
 
 function showBUDrillDown(bu) {
   const sups = suppliers.filter(s => s.bu === bu && s.status !== '停用' && s.rate > 0)
-    .sort((a, b) => {
-      const ma = parseFloat(a.markup) || 0;
-      const mb = parseFloat(b.markup) || 0;
-      return ma - mb;
-    });
+    .map(s => ({ ...s, markupPct: getMarkupPct(s) }))
+    .sort((a, b) => (a.markupPct || 0) - (b.markupPct || 0));
 
   document.getElementById('buDrillDown').style.display = 'block';
-  document.getElementById('buDrillTitle').textContent = `${bu} — 供应商Markup排名`;
+  document.getElementById('buDrillTitle').textContent = `${bu} — 供应商Markup排名（${sups.length}家）`;
 
   if (pricingChartInstances.budrill) pricingChartInstances.budrill.dispose();
   const drillEl = document.getElementById('chartBUdrill');
@@ -2325,38 +2366,67 @@ function showBUDrillDown(bu) {
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
       const d = p[0];
       const s = sups[d.dataIndex];
-      return `<b>${d.name}</b><br/>Markup: ${maskSensitive(d.value + '%')}<br/>结算时薪: ${maskSensitive(s.rate)}<br/>评级: ${s.rating}`;
+      const currency = getCurrencySym(s);
+      return `<b>${d.name}</b><br/>Markup: ${d.value}%<br/>报价: ${s.rate}${currency ? ' ' + currency : ''}<br/>底价: ${s.base || '—'}${currency ? ' ' + currency : ''}<br/>评级: ${s.rating || '—'}`;
     }},
-    grid: { top: 20, right: 40, bottom: 80, left: 160 },
+    grid: { top: 20, right: 60, bottom: 30, left: 180 },
     xAxis: { type: 'value', name: 'Markup(%)', axisLabel: { formatter: '{value}%' } },
-    yAxis: { type: 'category', data: sups.map(s => s.name.length > 20 ? s.name.slice(0,18) + '…' : s.name), axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'category', data: sups.map(s => s.name.length > 22 ? s.name.slice(0,20) + '…' : s.name), axisLabel: { fontSize: 11 } },
     series: [{
       type: 'bar',
       data: sups.map(s => ({
-        value: parseFloat(s.markup) || 0,
+        value: s.markupPct || 0,
         itemStyle: {
-          color: parseFloat(s.markup) > 45 ? '#E5484D' : parseFloat(s.markup) > 30 ? '#F5A623' : '#2EAD4B',
+          color: (s.markupPct||0) > 80 ? '#E5484D' : (s.markupPct||0) > 40 ? '#F5A623' : '#2EAD4B',
           borderRadius: [0, 4, 4, 0]
         }
       })),
-      barWidth: '60%',
+      barWidth: '65%',
       label: { show: true, position: 'right', formatter: '{c}%', fontSize: 11 }
     }]
   });
+
+  // Also render detail table
+  const tableHtml = sups.map(s => {
+    const currency = getCurrencySym(s);
+    const mp = s.markupPct != null ? s.markupPct + '%' : '—';
+    const color = (s.markupPct||0) > 80 ? '#E5484D' : (s.markupPct||0) > 40 ? '#F5A623' : '#2EAD4B';
+    return `<tr>
+      <td style="font-weight:600;">${s.name}</td>
+      <td>${s.area || '—'}</td>
+      <td class="num-cell">${s.rate}${currency ? ' <span style="color:#999;font-size:11px;">' + currency + '</span>' : ''}</td>
+      <td class="num-cell">${s.base || '—'}${currency ? ' <span style="color:#999;font-size:11px;">' + currency + '</span>' : ''}</td>
+      <td class="num-cell" style="font-weight:700;color:${color};">${mp}</td>
+      <td>${s.ratio || '—'}</td>
+      <td><span class="tag tag-${(s.rating||'').toLowerCase()}">${s.rating || '—'}</span></td>
+    </tr>`;
+  }).join('');
+  const drillTableEl = document.getElementById('buDrillTable');
+  if (drillTableEl) {
+    drillTableEl.innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr>
+      <th style="text-align:left;padding:8px 12px;border-bottom:2px solid #e5e7eb;">供应商</th>
+      <th style="text-align:left;padding:8px 12px;border-bottom:2px solid #e5e7eb;">区域</th>
+      <th style="text-align:right;padding:8px 12px;border-bottom:2px solid #e5e7eb;">报价</th>
+      <th style="text-align:right;padding:8px 12px;border-bottom:2px solid #e5e7eb;">底价</th>
+      <th style="text-align:right;padding:8px 12px;border-bottom:2px solid #e5e7eb;">Markup</th>
+      <th style="text-align:right;padding:8px 12px;border-bottom:2px solid #e5e7eb;">占比</th>
+      <th style="text-align:center;padding:8px 12px;border-bottom:2px solid #e5e7eb;">评级</th>
+    </tr></thead><tbody>${tableHtml}</tbody></table>`;
+  }
 }
 
 function renderTypeComparison() {
   const types = {};
   suppliers.filter(s => s.status !== '停用' && s.rate > 0).forEach(s => {
     if (!types[s.type]) types[s.type] = [];
-    const m = parseFloat(s.markup);
-    if (!isNaN(m)) types[s.type].push(m);
+    const m = getMarkupPct(s);
+    if (m != null && m > 0) types[s.type].push({ markup: m, supplier: s });
   });
 
-  const typeNames = Object.keys(types);
-  const avgMarkups = typeNames.map(t => Math.round(types[t].reduce((a,b)=>a+b,0)/types[t].length));
-  const maxMarkups = typeNames.map(t => Math.round(Math.max(...types[t])));
-  const minMarkups = typeNames.map(t => Math.round(Math.min(...types[t])));
+  const typeNames = Object.keys(types).filter(t => types[t].length > 0);
+  const avgMarkups = typeNames.map(t => Math.round(types[t].reduce((a,b)=>a+b.markup,0)/types[t].length*10)/10);
+  const maxMarkups = typeNames.map(t => Math.round(Math.max(...types[t].map(x=>x.markup))*10)/10);
+  const minMarkups = typeNames.map(t => Math.round(Math.min(...types[t].map(x=>x.markup))*10)/10);
 
   if (pricingChartInstances.typeCompare) pricingChartInstances.typeCompare.dispose();
   const typeEl = document.getElementById('chartTypeCompare');
@@ -2365,22 +2435,67 @@ function renderTypeComparison() {
   pricingChartInstances.typeCompare = chart;
 
   chart.setOption({
-    tooltip: { trigger: 'axis' },
+    tooltip: { trigger: 'axis', formatter: function(p) {
+      let html = `<b>${p[0].name}</b>`;
+      p.forEach(d => { html += `<br/>${d.seriesName}: ${d.value}%`; });
+      const type = p[0].name;
+      const count = types[type]?.length || 0;
+      html += `<br/><span style="color:#999;font-size:11px;">共${count}家供应商</span>`;
+      return html;
+    }},
     legend: { data: ['平均Markup','最高Markup','最低Markup'], bottom: 0 },
     grid: { top: 30, right: 40, bottom: 50, left: 60 },
     xAxis: { type: 'category', data: typeNames, axisLabel: { fontSize: 13 } },
     yAxis: { type: 'value', name: 'Markup(%)', axisLabel: { formatter: '{value}%' } },
     series: [
-      { name: '平均Markup', type: 'bar', data: avgMarkups, itemStyle: { color: '#2E6BE5', borderRadius: [4,4,0,0] }, barGap: '10%' },
-      { name: '最高Markup', type: 'bar', data: maxMarkups, itemStyle: { color: '#E5484D', borderRadius: [4,4,0,0] } },
-      { name: '最低Markup', type: 'bar', data: minMarkups, itemStyle: { color: '#2EAD4B', borderRadius: [4,4,0,0] } }
+      { name: '平均Markup', type: 'bar', data: avgMarkups, itemStyle: { color: '#2E6BE5', borderRadius: [4,4,0,0] }, barGap: '10%', label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10 } },
+      { name: '最高Markup', type: 'bar', data: maxMarkups, itemStyle: { color: '#E5484D', borderRadius: [4,4,0,0] }, label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10 } },
+      { name: '最低Markup', type: 'bar', data: minMarkups, itemStyle: { color: '#2EAD4B', borderRadius: [4,4,0,0] }, label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10 } }
     ]
   });
+
+  // GUS multi-job pricing table
+  const gusSuppliers = suppliers.filter(s => s.bu_line === 'GUS' && s.status !== '停用' && s.certObj?.pricing?.length > 0);
+  const gusJobEl = document.getElementById('gusJobTypeTable');
+  if (gusJobEl) {
+    if (gusSuppliers.length === 0) {
+      gusJobEl.innerHTML = '<div style="padding:20px;color:#999;text-align:center;">暂无GUS多工种报价数据</div>';
+    } else {
+      // Collect all unique job types
+      const allJobs = new Set();
+      gusSuppliers.forEach(s => s.certObj.pricing.forEach(j => allJobs.add(j.type)));
+      const jobList = [...allJobs].sort();
+
+      let tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>';
+      tableHtml += '<th style="text-align:left;padding:8px;border-bottom:2px solid #e5e7eb;position:sticky;left:0;background:#f9fafb;z-index:1;">供应商</th>';
+      jobList.forEach(j => { tableHtml += `<th style="text-align:center;padding:6px 8px;border-bottom:2px solid #e5e7eb;white-space:nowrap;">${j}</th>`; });
+      tableHtml += '</tr></thead><tbody>';
+
+      gusSuppliers.forEach(s => {
+        const jobMap = {};
+        s.certObj.pricing.forEach(j => { jobMap[j.type] = j; });
+        tableHtml += `<tr><td style="padding:6px 8px;border-bottom:1px solid #f0f0f0;font-weight:600;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;">${s.name}</td>`;
+        jobList.forEach(j => {
+          const jd = jobMap[j];
+          tableHtml += `<td style="padding:4px 8px;border-bottom:1px solid #f0f0f0;text-align:center;">`;
+          if (jd) {
+            tableHtml += `<div style="font-weight:600;">${jd.markup || '—'}%</div>`;
+            tableHtml += `<div style="font-size:10px;color:#999;">${jd.rate || '—'}</div>`;
+          } else {
+            tableHtml += '<span style="color:#ccc;">—</span>';
+          }
+          tableHtml += '</td>';
+        });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody></table>';
+      gusJobEl.innerHTML = tableHtml;
+    }
+  }
 }
 
 function populateSupplierSelect() {
   const select = document.getElementById('supplierSelect');
-  // Group by name, find suppliers that genuinely appear in multiple areas/BUs
   const nameMap = {};
   suppliers.forEach((s, i) => {
     if (s.status === '停用' || !s.name) return;
@@ -2394,7 +2509,8 @@ function populateSupplierSelect() {
       const uniqueBUs = new Set(entries.map(e => e.bu_line));
       return uniqueAreas.size > 1 || uniqueBUs.size > 1;
     })
-    .map(([name, entries]) => ({ name, entries }));
+    .map(([name, entries]) => ({ name, entries }))
+    .sort((a,b) => b.entries.length - a.entries.length);
 
   window._multiAreaSuppliers = multiArea;
 
@@ -2416,45 +2532,86 @@ function renderSupplierCrossBU() {
   const { name, entries } = multiArea[idx];
   document.getElementById('crossBUTitle').textContent = `${name} — 跨地区定价分析`;
 
-  // Build real chart data from actual supplier records
+  // Build chart data and detail cards
   const labels = [];
   const values = [];
+  const detailCards = [];
   const colors = ['#2E6BE5','#E5484D','#00B8A9','#F5A623','#243B63','#0EA5E9','#8B5CF6','#EC4899'];
-  let valueType = 'Markup(%)';
 
   entries.forEach((entry, i) => {
     const s = suppliers[entry.idx];
-    let val = 0;
+    const markup = getMarkupPct(s);
+    const val = markup || 0;
+    const currency = getCurrencySym(s);
+    const buLabel = `${entry.area}（${entry.bu_line}）`;
 
-    if (s.bu_line === 'GEU') {
-      val = s.geuData?.fee_rate || 0;
-      valueType = '费率(%)';
-    } else if (s.bu_line === 'WX') {
-      val = s.rate || 0;
-      valueType = '报价';
-    } else {
-      const m = parseFloat(s.markup);
-      if (!isNaN(m) && m > 0) {
-        val = m;
-      } else if (s.rate && s.base && s.base > 0) {
-        val = Math.round((s.rate - s.base) / s.base * 100);
-      }
-    }
-
-    labels.push(`${entry.area}（${entry.bu_line}）`);
+    labels.push(buLabel);
     values.push({
       value: val,
-      itemStyle: {
-        color: colors[i % colors.length],
-        borderRadius: [0, 4, 4, 0]
-      }
+      itemStyle: { color: colors[i % colors.length], borderRadius: [0, 4, 4, 0] }
+    });
+
+    // Build detail card for each region
+    let cardContent = '';
+    if (s.bu_line === 'WX') {
+      cardContent = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+          <div><span style="color:#8896a4;">报价：</span><b>${s.rate} ${currency}</b></div>
+          <div><span style="color:#8896a4;">最低时薪：</span>${s.base} ${currency}</div>
+          <div><span style="color:#8896a4;">雇主成本：</span>${s.wxData?.employer_cost != null ? (s.wxData.employer_cost*100).toFixed(1)+'%' : '—'}</div>
+          <div><span style="color:#8896a4;">Markup(1+2)：</span><b style="color:#E5484D;">${s.wxData?.full_markup != null ? s.wxData.full_markup+'%' : '—'}</b></div>
+          <div><span style="color:#8896a4;">供应商占比：</span>${s.ratio || '—'}</div>
+          <div><span style="color:#8896a4;">考核权重：</span>${s.wxData?.assessment_weight != null ? (s.wxData.assessment_weight*100).toFixed(1)+'%' : '—'}</div>
+        </div>`;
+    } else if (s.bu_line === 'GUS' && s.certObj?.pricing?.length > 0) {
+      const pricing = s.certObj.pricing;
+      const jobRows = pricing.slice(0, 6).map(j =>
+        `<tr><td style="padding:2px 6px;font-weight:600;">${j.type}</td><td style="padding:2px 6px;text-align:right;">${j.rate || '—'}</td><td style="padding:2px 6px;text-align:right;font-weight:600;color:#E5484D;">${j.markup || '—'}%</td></tr>`
+      ).join('');
+      const moreJobs = pricing.length > 6 ? `<div style="color:#999;font-size:10px;margin-top:4px;">+${pricing.length - 6}个工种...</div>` : '';
+      cardContent = `
+        <div style="font-size:12px;margin-bottom:6px;">
+          <span style="color:#8896a4;">架构：</span>${pricing[0]?.structure || '—'} |
+          <span style="color:#8896a4;">计价：</span>${pricing[0]?.method || '—'}
+        </div>
+        <table style="width:100%;font-size:11px;border-collapse:collapse;">
+          <thead><tr><th style="text-align:left;padding:2px 6px;color:#8896a4;border-bottom:1px solid #eee;">工种</th><th style="text-align:right;padding:2px 6px;color:#8896a4;border-bottom:1px solid #eee;">时薪</th><th style="text-align:right;padding:2px 6px;color:#8896a4;border-bottom:1px solid #eee;">Markup</th></tr></thead>
+          <tbody>${jobRows}</tbody>
+        </table>${moreJobs}`;
+    } else if (s.bu_line === 'GEU') {
+      cardContent = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+          <div><span style="color:#8896a4;">费率：</span><b>${s.geuData?.fee_rate || '—'}%</b></div>
+          <div><span style="color:#8896a4;">仓库：</span>${s.geuData?.warehouse || '—'}</div>
+          <div><span style="color:#8896a4;">OA流程号：</span>${s.geuData?.oa_process || '—'}</div>
+          <div><span style="color:#8896a4;">库存等级：</span>${s.geuData?.inventory_level || '—'}</div>
+        </div>`;
+    } else {
+      // FBU
+      cardContent = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+          <div><span style="color:#8896a4;">结算时薪：</span><b>${s.rate ? s.rate.toFixed(1) : '—'}</b></div>
+          <div><span style="color:#8896a4;">基本时薪：</span>${s.base ? s.base.toFixed(2) : '—'}</div>
+          <div><span style="color:#8896a4;">Markup：</span><b style="color:#E5484D;">${s.markup || '—'}</b></div>
+          <div><span style="color:#8896a4;">用工占比：</span>${s.ratio || '—'}</div>
+          <div><span style="color:#8896a4;">评级：</span><span class="tag tag-${(s.rating||'').toLowerCase()}">${s.rating || '—'}</span></div>
+          <div><span style="color:#8896a4;">状态：</span><span class="tag tag-${s.status==='使用中'?'active':'inactive'}">${s.status}</span></div>
+        </div>`;
+    }
+
+    detailCards.push({
+      label: buLabel,
+      color: colors[i % colors.length],
+      markup: markup != null ? markup + '%' : '—',
+      bu_line: entry.bu_line,
+      content: cardContent
     });
   });
 
-  // Update description with value type
   document.querySelector('#pricingSupplier .cb-desc').textContent =
-    `展示选定供应商在各服务地区的${valueType}差异（真实数据）`;
+    `展示选定供应商在各服务地区的定价差异（共${entries.length}个区域）`;
 
+  // Render chart
   if (pricingChartInstances.crossBU) pricingChartInstances.crossBU.dispose();
   const crossEl = document.getElementById('chartCrossBU');
   if (!crossEl) return;
@@ -2462,18 +2619,37 @@ function renderSupplierCrossBU() {
   pricingChartInstances.crossBU = chart;
 
   chart.setOption({
-    tooltip: { trigger: 'axis' },
-    legend: { data: [valueType], bottom: 0 },
-    grid: { top: 30, right: 60, bottom: 50, left: 160 },
-    xAxis: { type: 'value', name: valueType },
+    tooltip: { trigger: 'axis', formatter: function(p) {
+      const d = p[0];
+      const card = detailCards[d.dataIndex];
+      return `<b>${d.name}</b><br/>Markup: ${card.markup}`;
+    }},
+    legend: { data: ['Markup(%)'], bottom: 0 },
+    grid: { top: 30, right: 60, bottom: 50, left: 180 },
+    xAxis: { type: 'value', name: 'Markup(%)', axisLabel: { formatter: '{value}%' } },
     yAxis: { type: 'category', data: labels, axisLabel: { fontSize: 12 } },
     series: [{
-      name: valueType,
+      name: 'Markup(%)',
       type: 'bar',
       data: values,
-      label: { show: true, position: 'right', formatter: '{c}', fontWeight: 600 }
+      barWidth: '50%',
+      label: { show: true, position: 'right', formatter: '{c}%', fontWeight: 600 }
     }]
   });
+
+  // Render detail cards below chart
+  const cardsEl = document.getElementById('crossBUDetailCards');
+  if (cardsEl) {
+    cardsEl.innerHTML = detailCards.map(c => `
+      <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-left:4px solid ${c.color};min-width:260px;flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:700;font-size:14px;">${c.label}</div>
+          <div style="font-size:18px;font-weight:800;color:${c.color};">${c.markup}</div>
+        </div>
+        ${c.content}
+      </div>
+    `).join('');
+  }
 }
 
 // ============================== Page 3: 供应商考核 ==============================
