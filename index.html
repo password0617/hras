@@ -1742,19 +1742,22 @@ function renderWXKanban(el) {
   const rates = active.map(s => s.rate).filter(v => v != null && v > 0);
   const bases = active.map(s => s.base).filter(v => v != null && v > 0);
   const profits = active.map(s => s.wxData?.supplier_profit).filter(v => v != null);
-  const markups = active.map(s => { const m = parseFloat(s.markup); return isNaN(m) ? null : m; }).filter(v => v != null);
+  const markups = active.map(s => s.wxData?.full_markup).filter(v => v != null);
+  const employerCosts = active.map(s => s.wxData?.employer_cost).filter(v => v != null);
 
   const cards = [
     { label:'平均报价', val:avg(rates), sub:`${rates.length}家有数据`, color:'#E65100' },
     { label:'平均最低时薪', val:avg(bases), sub:`${bases.length}家有数据`, color:'#2E6BE5' },
-    { label:'平均雇主成本', val:markups.length ? avg(markups).toFixed(1) : '—', sub:`${markups.length}家有数据`, color:'#00B8A9' },
+    { label:'平均Markup', val:markups.length ? avg(markups) + '%' : '—', sub:`${markups.length}家有数据`, color:'#00B8A9' },
     { label:'平均供应商获利', val:profits.length ? avg(profits).toFixed(1) : '—', sub:`${profits.length}家有数据`, color:'#27AE60' }
   ].map(c => `<div class="ks-card" style="border-left-color:${c.color};"><div class="ks-label">${c.label}</div><div class="ks-value" style="color:${c.color};">${c.val}</div><div class="ks-sub">${c.sub}</div></div>`).join('');
 
   // Cost structure table
   const costRows = active.sort((a,b) => (b.rate||0)-(a.rate||0)).map(s => {
     const profit = s.wxData?.supplier_profit;
-    return `<tr><td style="font-weight:600;">${s.name}</td><td>${s.country}</td><td class="num-cell">${s.rate != null ? s.rate : '—'}</td><td class="num-cell">${s.base != null ? s.base : '—'}</td><td class="num-cell">${s.markup || '—'}</td><td class="num-cell">${profit != null ? profit : '—'}</td><td class="num-cell">${s.ratio || '—'}</td></tr>`;
+    const ec = s.wxData?.employer_cost;
+    const fm = s.wxData?.full_markup;
+    return `<tr><td style="font-weight:600;">${s.name}</td><td>${s.country}</td><td class="num-cell">${s.rate != null ? s.rate : '—'}</td><td class="num-cell">${s.base != null ? s.base : '—'}</td><td class="num-cell">${ec != null ? (ec*100).toFixed(1)+'%' : '—'}</td><td class="num-cell">${fm != null ? fm+'%' : '—'}</td><td class="num-cell">${profit != null ? profit : '—'}</td><td class="num-cell">${s.ratio || '—'}</td></tr>`;
   }).join('');
 
   // Monthly ratio trend data
@@ -1773,7 +1776,7 @@ function renderWXKanban(el) {
     <div class="kanban-summary">${cards}</div>
     <div class="kanban-section">
       <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">供应商成本结构对比<span>按报价从高到低排列</span></div>
-      <table class="kanban-table"><thead><tr><th>供应商</th><th>国家</th><th>报价</th><th>最低时薪</th><th>雇主成本</th><th>供应商获利</th><th>占比</th></tr></thead><tbody>${costRows}</tbody></table>
+      <table class="kanban-table"><thead><tr><th>供应商</th><th>国家</th><th>报价</th><th>最低时薪</th><th>雇主成本</th><th>Markup(1+2)</th><th>供应商获利</th><th>占比</th></tr></thead><tbody>${costRows}</tbody></table>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
       <div class="kanban-section" style="margin-bottom:0;">
@@ -2035,7 +2038,7 @@ function renderRegistryTable() {
     <td>${s.area}</td>
     <td>${s.type}</td>
     <td style="font-weight:600;">${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</td>
-    <td>${maskSensitive(s.markup)}</td>
+    <td>${s.bu_line === 'WX' ? (s.wxData?.full_markup != null ? s.wxData.full_markup + '%' : '—') : maskSensitive(s.markup)}</td>
     <td>${s.ratio}</td>
     <td>${ratingTag(s.rating)}</td>
     <td>${statusTag(s.status)}</td>
@@ -2083,10 +2086,12 @@ function openSupplierDrawer(idx) {
         ${s.bu_line === 'WX' ? `
           <div class="drawer-info-item"><div class="dii-label">报价（操作员）</div><div class="dii-value" style="font-size:18px;font-weight:700;color:var(--primary);">${s.rate != null ? s.rate : '—'} ${s.wxData?.currency || ''}</div></div>
           <div class="drawer-info-item"><div class="dii-label">法定最低时薪</div><div class="dii-value">${s.base != null ? s.base : '—'} ${s.wxData?.currency || ''}</div></div>
-          <div class="drawer-info-item"><div class="dii-label">雇主成本</div><div class="dii-value">${s.markup != null ? s.markup : '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">雇主成本</div><div class="dii-value">${s.wxData?.employer_cost != null ? (s.wxData.employer_cost * 100).toFixed(1) + '%' : '—'}</div></div>
           <div class="drawer-info-item"><div class="dii-label">供应商获利</div><div class="dii-value">${s.wxData?.supplier_profit != null ? s.wxData.supplier_profit : '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">Markup（1+2）</div><div class="dii-value" style="font-weight:700;color:var(--accent, #e65100);">${s.wxData?.full_markup != null ? s.wxData.full_markup + '%' : '—'}</div></div>
           <div class="drawer-info-item"><div class="dii-label">劳包供应商占比</div><div class="dii-value">${s.ratio || '—'}</div></div>
           <div class="drawer-info-item"><div class="dii-label">考核权重</div><div class="dii-value">${s.wxData?.assessment_weight != null ? (s.wxData.assessment_weight * 100).toFixed(1) + '%' : '—'}</div></div>
+          ${s.wxData?.notes ? `<div class="drawer-info-item" style="grid-column:1/-1;"><div class="dii-label">备注</div><div class="dii-value" style="font-size:12px;color:var(--text-secondary);">${s.wxData.notes}</div></div>` : ''}
         ` : s.bu_line === 'GEU' ? `
           <div class="drawer-info-item"><div class="dii-label">费率（Fee Rate）</div><div class="dii-value" style="font-size:18px;font-weight:700;color:var(--primary);">${s.geuData?.fee_rate != null && s.geuData.fee_rate > 0 ? s.geuData.fee_rate + '%' : '—'}</div></div>
           <div class="drawer-info-item"><div class="dii-label">仓库</div><div class="dii-value">${s.geuData?.warehouse || '—'}</div></div>
@@ -2983,7 +2988,7 @@ function renderDataMgmtTable() {
       <td>${s.region}</td><td>${s.area}</td><td>${s.type}</td>
       <td><span class="tag tag-${s.status==='使用中'?'active':s.status==='停用'?'inactive':'new'}">${s.status}</span></td>
       <td>${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</td>
-      <td>${maskSensitive(s.markup)}</td>
+      <td>${s.bu_line === 'WX' ? (s.wxData?.full_markup != null ? s.wxData.full_markup + '%' : '—') : maskSensitive(s.markup)}</td>
       <td><span class="tag tag-${(s.rating||'').toLowerCase()}">${s.rating}</span></td>
       <td>
         ${canEditThis ? `<button class="btn btn-sm btn-outline" onclick="showEditSupplierModal('${s.id}')">编辑</button>` : ''}
