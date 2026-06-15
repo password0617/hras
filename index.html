@@ -3030,6 +3030,12 @@ async function renderUserMgmt() {
     if (!_userCache.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#999;">暂无用户数据</td></tr>'; return; }
     const roleLabels = { admin: '管理员', regional_manager: '区域经理', user: '普通用户' };
     tbody.innerHTML = _userCache.map(u => {
+      const isPending = !u.is_active && (!u.bu_lines || u.bu_lines.length === 0);
+      const statusHtml = u.is_active
+        ? '<span class="status-dot active"></span>正常'
+        : isPending
+          ? '<span class="status-dot" style="background:#F5A623;"></span><span style="color:#E65100;font-weight:600;">待开通</span>'
+          : '<span class="status-dot inactive"></span>已禁用';
       const editBadge = u.role === 'regional_manager'
         ? (u.edit_permission
           ? '<span class="tag" style="background:#E8F5E9;color:#2E7D32;margin-left:4px;">可编辑</span>'
@@ -3037,19 +3043,21 @@ async function renderUserMgmt() {
         : u.role === 'admin'
           ? '<span class="tag" style="background:#E8F5E9;color:#2E7D32;margin-left:4px;">全权限</span>'
           : '';
+      const actionBtns = isPending
+        ? `<button class="btn btn-sm" style="background:#2E6BE5;color:#fff;" onclick="showActivateUserModal('${u.id}')">开通</button>
+           <button class="btn btn-sm btn-danger" onclick="deletePendingUser('${u.id}')">删除</button>`
+        : `<button class="btn btn-sm btn-outline" onclick="showEditUserModal('${u.id}')">编辑</button>
+           ${u.is_active ? `<button class="btn btn-sm btn-danger" onclick="disableUser('${u.id}')">禁用</button>` : `<button class="btn btn-sm btn-success" onclick="enableUser('${u.id}')">启用</button>`}`;
       return `<tr>
       <td><strong>${u.name}</strong></td>
       <td style="font-size:12px;color:#888;">${u.feishu_user_id || '—'}</td>
       <td>${u.email || '—'}</td>
       <td><span class="role-badge ${u.role}">${roleLabels[u.role] || u.role}</span>${editBadge}</td>
       <td>${(u.regions || []).join(', ') || '—'}</td>
-      <td>${(u.bu_lines || ['FBU','GUS','WX','GEU']).map(b => `<span class="tag" style="background:${b==='FBU'?'#EEF3FA':b==='GUS'?'#E8F5E9':b==='WX'?'#FFF3E0':'#F3E5F5'};color:${b==='FBU'?'#2E6BE5':b==='GUS'?'#2E7D32':b==='WX'?'#E65100':'#7B1FA2'};">${b}</span>`).join(' ')}</td>
-      <td><span class="status-dot ${u.is_active ? 'active' : 'inactive'}"></span>${u.is_active ? '正常' : '已禁用'}</td>
+      <td>${(u.bu_lines || []).length > 0 ? u.bu_lines.map(b => `<span class="tag" style="background:${b==='FBU'?'#EEF3FA':b==='GUS'?'#E8F5E9':b==='WX'?'#FFF3E0':'#F3E5F5'};color:${b==='FBU'?'#2E6BE5':b==='GUS'?'#2E7D32':b==='WX'?'#E65100':'#7B1FA2'};">${b}</span>`).join(' ') : '—'}</td>
+      <td>${statusHtml}</td>
       <td style="font-size:12px;">${u.created_at ? new Date(u.created_at).toLocaleDateString('zh-CN') : '—'}</td>
-      <td>
-        <button class="btn btn-sm btn-outline" onclick="showEditUserModal('${u.id}')">编辑</button>
-        ${u.is_active ? `<button class="btn btn-sm btn-danger" onclick="disableUser('${u.id}')">禁用</button>` : `<button class="btn btn-sm btn-success" onclick="enableUser('${u.id}')">启用</button>`}
-      </td>
+      <td>${actionBtns}</td>
     </tr>`;
     }).join('');
   } catch (e) { showToast('加载用户列表失败'); }
@@ -3182,6 +3190,67 @@ async function enableUser(id) {
     await fetch('/api/users/' + id, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: true }) });
     showToast('用户已启用'); renderUserMgmt();
   } catch (e) { showToast('操作失败'); }
+}
+
+function showActivateUserModal(id) {
+  const u = _userCache.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('modalTitle').textContent = '开通用户: ' + u.name;
+  document.getElementById('modalBody').innerHTML = `
+    <div style="background:#f0f4ff;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;">
+      <div><strong>飞书ID：</strong>${u.feishu_user_id}</div>
+      <div><strong>邮箱：</strong>${u.email || '—'}</div>
+      <div><strong>申请时间：</strong>${u.created_at ? new Date(u.created_at).toLocaleString('zh-CN') : '—'}</div>
+    </div>
+    <div class="form-group"><label>角色</label><select id="mActRole" onchange="toggleEditPermVisibility()">
+      <option value="user">普通用户</option>
+      <option value="regional_manager">区域经理</option>
+      <option value="admin">管理员</option>
+    </select></div>
+    <div class="form-group"><label>负责区域</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        <label><input type="checkbox" class="mActRegionCheck" value="美洲区"> 美洲区</label>
+        <label><input type="checkbox" class="mActRegionCheck" value="欧洲区"> 欧洲区</label>
+        <label><input type="checkbox" class="mActRegionCheck" value="亚太区"> 亚太区</label>
+      </div>
+    </div>
+    <div class="form-group" id="editPermGroup" style="display:none;">
+      <label>编辑权限</label>
+      <div style="margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="mActEditPerm"> 允许该用户编辑其负责区域的供应商数据</label>
+      </div>
+    </div>
+    <div class="form-group"><label>业务线权限</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        <label><input type="checkbox" class="mActBUCheck" value="FBU" checked> FBU</label>
+        <label><input type="checkbox" class="mActBUCheck" value="GUS" checked> GUS</label>
+        <label><input type="checkbox" class="mActBUCheck" value="WX" checked> WX</label>
+        <label><input type="checkbox" class="mActBUCheck" value="GEU" checked> GEU</label>
+      </div>
+    </div>`;
+  document.getElementById('modalSaveBtn').onclick = () => activateUser(id);
+  document.getElementById('editModal').classList.add('show');
+}
+
+async function activateUser(id) {
+  const regions = Array.from(document.querySelectorAll('.mActRegionCheck:checked')).map(c => c.value);
+  const buLines = Array.from(document.querySelectorAll('.mActBUCheck:checked')).map(c => c.value);
+  const role = document.getElementById('mActRole').value;
+  const editPerm = role === 'regional_manager' ? (document.getElementById('mActEditPerm')?.checked || false) : false;
+  const body = { role, regions, bu_lines: buLines, is_active: true, edit_permission: editPerm };
+  try {
+    const res = await fetch('/api/users/' + id, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error((await res.json()).error);
+    closeModal(); showToast('用户已开通，可重新登录使用系统'); renderUserMgmt();
+  } catch (e) { showToast('开通失败: ' + e.message); }
+}
+
+async function deletePendingUser(id) {
+  if (!confirm('确定删除该待开通用户？删除后该用户需重新申请。')) return;
+  try {
+    await fetch('/api/users/' + id, { method: 'DELETE', credentials: 'include' });
+    showToast('已删除'); renderUserMgmt();
+  } catch (e) { showToast('删除失败'); }
 }
 
 // --- Data Management ---
