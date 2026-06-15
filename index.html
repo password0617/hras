@@ -1239,6 +1239,13 @@ function enrichSuppliers() {
     }
     s.country = COUNTRY_MAP[s.area] || s.area || '未知';
 
+    // Parse cert JSON universally (FBU monthly markup, GUS pricing, WX/GEU metadata)
+    s.certObj = null;
+    if (s.cert) {
+      try { s.certObj = typeof s.cert === 'string' ? JSON.parse(s.cert) : s.cert; }
+      catch(e) { s.certObj = null; }
+    }
+
     // Parse WX metadata from cert field
     if (s.bu_line === 'WX' && s.cert) {
       try { s.wxData = typeof s.cert === 'string' ? JSON.parse(s.cert) : s.cert; }
@@ -2058,7 +2065,7 @@ function openSupplierDrawer(idx) {
         <div class="drawer-info-item"><div class="dii-label">启用状态</div><div class="dii-value">${s.status}</div></div>
         <div class="drawer-info-item"><div class="dii-label">合作起始</div><div class="dii-value">${s.startDate || '—'}</div></div>
         <div class="drawer-info-item"><div class="dii-label">联系人</div><div class="dii-value" style="font-size:12px;">${s.contact || '—'}</div></div>
-        <div class="drawer-info-item"><div class="dii-label">资质证书</div><div class="dii-value" style="font-size:12px;">${s.cert || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">资质证书</div><div class="dii-value" style="font-size:12px;">${s.certObj?.pricing ? s.certObj.pricing.length + '个工种报价' : s.certObj?.monthly_markup ? '月度Markup数据' : (typeof s.cert === 'string' && s.cert.length > 50 ? '—' : (s.cert || '—'))}</div></div>
         <div class="drawer-info-item"><div class="dii-label">评级</div><div class="dii-value">${s.rating}</div></div>
         ${s.gus_assessment?.qualification ? `
         <div class="drawer-info-item"><div class="dii-label">公司注册</div><div class="dii-value">${s.gus_assessment.qualification.registration || '—'}</div></div>
@@ -2095,6 +2102,38 @@ function openSupplierDrawer(idx) {
         `}
       </div>
     </div>
+    ${s.certObj?.pricing && s.certObj.pricing.length > 0 ? `
+    <div class="drawer-section">
+      <h4>多工种报价明细 <span style="font-size:11px;color:var(--text-tertiary);font-weight:normal;margin-left:6px;">数据来源：${s.certObj.pricing_source || '—'} · ${s.certObj.pricing_updated || ''}</span></h4>
+      <div style="overflow-x:auto;">
+        <table class="mini-table" style="min-width:100%;">
+          <thead><tr>
+            <th style="white-space:nowrap;">工种</th>
+            <th style="white-space:nowrap;">时薪</th>
+            <th style="white-space:nowrap;">Markup</th>
+            <th style="white-space:nowrap;">架构/站点</th>
+            <th style="white-space:nowrap;">计价</th>
+            <th style="white-space:nowrap;">OT倍率</th>
+          </tr></thead>
+          <tbody>
+            ${s.certObj.pricing.map(j => {
+              const rateNum = parseFloat(j.rate);
+              const markupNum = parseFloat(j.markup);
+              const markupDisplay = markupNum < 1 && markupNum > 0 ? (markupNum * 100).toFixed(1) + '%' : j.markup || '—';
+              return '<tr>' +
+                '<td style="font-weight:600;">' + (j.type || '—') + '</td>' +
+                '<td style="color:var(--primary);font-weight:600;">' + (!isNaN(rateNum) && rateNum > 1 ? '$' + rateNum.toFixed(2) : j.rate || '—') + '</td>' +
+                '<td>' + markupDisplay + '</td>' +
+                '<td style="font-size:12px;">' + (j.structure || '—') + '</td>' +
+                '<td>' + (j.method || '—') + '</td>' +
+                '<td>' + (j.ot || '—') + '</td>' +
+              '</tr>';
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    ` : ''}
     ${s.bu_line === 'WX' && s.wxData?.monthly_ratios ? `
     <div class="drawer-section">
       <h4>月度供应商占比变化（2026年）</h4>
