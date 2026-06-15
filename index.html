@@ -1325,12 +1325,15 @@ let currentUser = null; // { id, name, role, regions, avatar_url }
 let isCHO = true; // Kept for backward compatibility, set based on role
 // Role-based permission functions
 function canEdit() {
-  return currentUser && (currentUser.role === 'admin' || currentUser.role === 'regional_manager');
+  if (!currentUser) return false;
+  if (currentUser.role === 'admin') return true;
+  if (currentUser.role === 'regional_manager') return !!currentUser.edit_permission;
+  return false;
 }
 function canEditRegion(region) {
   if (!currentUser) return false;
   if (currentUser.role === 'admin') return true;
-  if (currentUser.role === 'regional_manager') return (currentUser.regions || []).includes(region);
+  if (currentUser.role === 'regional_manager') return !!currentUser.edit_permission && (currentUser.regions || []).includes(region);
   return false;
 }
 function canManageUsers() {
@@ -1338,9 +1341,12 @@ function canManageUsers() {
 }
 function applyRolePermissions() {
   const roleLabels = { admin: '系统管理员', regional_manager: '区域经理', user: '普通用户' };
+  const regionStr = (currentUser.regions || []).join('、');
   const roleDescs = {
     admin: '全系统管理权限',
-    regional_manager: (currentUser.regions || []).join('、') + ' 数据管理权限',
+    regional_manager: regionStr
+      ? (currentUser.edit_permission ? regionStr + ' 数据管理权限' : regionStr + ' 只读权限（编辑未开通）')
+      : (currentUser.edit_permission ? '数据管理权限' : '只读权限（编辑未开通）'),
     user: '数据只读访问权限'
   };
   // Update header
@@ -3023,11 +3029,19 @@ async function renderUserMgmt() {
     const tbody = document.getElementById('userTableBody');
     if (!_userCache.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#999;">暂无用户数据</td></tr>'; return; }
     const roleLabels = { admin: '管理员', regional_manager: '区域经理', user: '普通用户' };
-    tbody.innerHTML = _userCache.map(u => `<tr>
+    tbody.innerHTML = _userCache.map(u => {
+      const editBadge = u.role === 'regional_manager'
+        ? (u.edit_permission
+          ? '<span class="tag" style="background:#E8F5E9;color:#2E7D32;margin-left:4px;">可编辑</span>'
+          : '<span class="tag" style="background:#FFF3E0;color:#E65100;margin-left:4px;">只读</span>')
+        : u.role === 'admin'
+          ? '<span class="tag" style="background:#E8F5E9;color:#2E7D32;margin-left:4px;">全权限</span>'
+          : '';
+      return `<tr>
       <td><strong>${u.name}</strong></td>
       <td style="font-size:12px;color:#888;">${u.feishu_user_id || '—'}</td>
       <td>${u.email || '—'}</td>
-      <td><span class="role-badge ${u.role}">${roleLabels[u.role] || u.role}</span></td>
+      <td><span class="role-badge ${u.role}">${roleLabels[u.role] || u.role}</span>${editBadge}</td>
       <td>${(u.regions || []).join(', ') || '—'}</td>
       <td>${(u.bu_lines || ['FBU','GUS','WX','GEU']).map(b => `<span class="tag" style="background:${b==='FBU'?'#EEF3FA':b==='GUS'?'#E8F5E9':b==='WX'?'#FFF3E0':'#F3E5F5'};color:${b==='FBU'?'#2E6BE5':b==='GUS'?'#2E7D32':b==='WX'?'#E65100':'#7B1FA2'};">${b}</span>`).join(' ')}</td>
       <td><span class="status-dot ${u.is_active ? 'active' : 'inactive'}"></span>${u.is_active ? '正常' : '已禁用'}</td>
@@ -3036,7 +3050,8 @@ async function renderUserMgmt() {
         <button class="btn btn-sm btn-outline" onclick="showEditUserModal('${u.id}')">编辑</button>
         ${u.is_active ? `<button class="btn btn-sm btn-danger" onclick="disableUser('${u.id}')">禁用</button>` : `<button class="btn btn-sm btn-success" onclick="enableUser('${u.id}')">启用</button>`}
       </td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
   } catch (e) { showToast('加载用户列表失败'); }
 }
 
@@ -3046,13 +3061,24 @@ function showAddUserModal() {
     <div class="form-group"><label>飞书用户ID</label><input id="mFeishuId" type="text" placeholder="飞书 open_id"></div>
     <div class="form-group"><label>姓名</label><input id="mUserName" type="text"></div>
     <div class="form-group"><label>邮箱</label><input id="mUserEmail" type="text"></div>
-    <div class="form-group"><label>角色</label><select id="mUserRole"><option value="user">普通用户</option><option value="regional_manager">区域经理</option><option value="admin">管理员</option></select></div>
+    <div class="form-group"><label>角色</label><select id="mUserRole" onchange="toggleEditPermVisibility()">
+      <option value="user">普通用户</option>
+      <option value="regional_manager">区域经理</option>
+      <option value="admin">管理员</option>
+    </select></div>
     <div class="form-group"><label>负责区域（区域经理选择）</label>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
         <label><input type="checkbox" class="mRegionCheck" value="美洲区"> 美洲区</label>
         <label><input type="checkbox" class="mRegionCheck" value="欧洲区"> 欧洲区</label>
         <label><input type="checkbox" class="mRegionCheck" value="亚太区"> 亚太区</label>
       </div>
+    </div>
+    <div class="form-group" id="editPermGroup" style="display:none;">
+      <label>编辑权限</label>
+      <div style="margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="mEditPerm"> 允许该用户编辑其负责区域的供应商数据</label>
+      </div>
+      <div style="font-size:11px;color:#999;margin-top:4px;">普通用户无编辑权限，管理员默认可编辑所有数据</div>
     </div>
     <div class="form-group"><label>业务线权限</label>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
@@ -3066,16 +3092,27 @@ function showAddUserModal() {
   document.getElementById('editModal').classList.add('show');
 }
 
+function toggleEditPermVisibility() {
+  const role = document.getElementById('mUserRole')?.value || document.getElementById('mEditRole')?.value;
+  const group = document.getElementById('editPermGroup') || document.getElementById('editPermGroupEdit');
+  if (group) {
+    group.style.display = role === 'regional_manager' ? 'block' : 'none';
+  }
+}
+
 async function saveNewUser() {
   const regions = Array.from(document.querySelectorAll('.mRegionCheck:checked')).map(c => c.value);
   const buLines = Array.from(document.querySelectorAll('.mBUCheck:checked')).map(c => c.value);
+  const role = document.getElementById('mUserRole').value;
+  const editPerm = role === 'regional_manager' ? (document.getElementById('mEditPerm')?.checked || false) : false;
   const body = {
     feishu_user_id: document.getElementById('mFeishuId').value.trim(),
     name: document.getElementById('mUserName').value.trim(),
     email: document.getElementById('mUserEmail').value.trim(),
-    role: document.getElementById('mUserRole').value,
+    role: role,
     regions: regions,
-    bu_lines: buLines
+    bu_lines: buLines,
+    edit_permission: editPerm
   };
   if (!body.feishu_user_id || !body.name) { showToast('请填写飞书ID和姓名'); return; }
   try {
@@ -3091,7 +3128,7 @@ function showEditUserModal(id) {
   const roleLabels = { admin: '管理员', regional_manager: '区域经理', user: '普通用户' };
   document.getElementById('modalTitle').textContent = '编辑用户: ' + u.name;
   document.getElementById('modalBody').innerHTML = `
-    <div class="form-group"><label>角色</label><select id="mEditRole">
+    <div class="form-group"><label>角色</label><select id="mEditRole" onchange="toggleEditPermVisibility()">
       <option value="user" ${u.role==='user'?'selected':''}>普通用户</option>
       <option value="regional_manager" ${u.role==='regional_manager'?'selected':''}>区域经理</option>
       <option value="admin" ${u.role==='admin'?'selected':''}>管理员</option>
@@ -3102,6 +3139,13 @@ function showEditUserModal(id) {
         <label><input type="checkbox" class="mEditRegionCheck" value="欧洲区" ${(u.regions||[]).includes('欧洲区')?'checked':''}> 欧洲区</label>
         <label><input type="checkbox" class="mEditRegionCheck" value="亚太区" ${(u.regions||[]).includes('亚太区')?'checked':''}> 亚太区</label>
       </div>
+    </div>
+    <div class="form-group" id="editPermGroupEdit" style="display:${u.role==='regional_manager'?'block':'none'};">
+      <label>编辑权限</label>
+      <div style="margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="mEditPermEdit" ${u.edit_permission?'checked':''}> 允许该用户编辑其负责区域的供应商数据</label>
+      </div>
+      <div style="font-size:11px;color:#999;margin-top:4px;">普通用户无编辑权限，管理员默认可编辑所有数据</div>
     </div>
     <div class="form-group"><label>业务线权限</label>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
@@ -3115,7 +3159,9 @@ function showEditUserModal(id) {
 async function saveEditUser(id) {
   const regions = Array.from(document.querySelectorAll('.mEditRegionCheck:checked')).map(c => c.value);
   const buLines = Array.from(document.querySelectorAll('.mEditBUCheck:checked')).map(c => c.value);
-  const body = { role: document.getElementById('mEditRole').value, regions, bu_lines: buLines };
+  const role = document.getElementById('mEditRole').value;
+  const editPerm = role === 'regional_manager' ? (document.getElementById('mEditPermEdit')?.checked || false) : false;
+  const body = { role, regions, bu_lines: buLines, edit_permission: editPerm };
   try {
     const res = await fetch('/api/users/' + id, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (!res.ok) throw new Error((await res.json()).error);
