@@ -227,6 +227,24 @@ input, select, textarea { font-family: var(--font); outline: none; }
 .stat-card-colored .sc-sub { color: rgba(255,255,255,0.75); }
 .stat-card-colored:hover { opacity: 0.92; transform: translateY(-1px); }
 
+/* BU Filter */
+.bu-filter {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+  padding: 8px 16px; background: #fff; border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--border);
+}
+.bu-filter-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.bu-filter-btn {
+  padding: 6px 16px; border-radius: 6px; border: 1px solid var(--border);
+  background: #fff; color: var(--text-primary); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+}
+.bu-filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.bu-filter-btn.active {
+  background: var(--primary); color: #fff; border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(67,97,238,0.25);
+}
+
 /* Kanban Page Styles */
 .kanban-summary {
   display: flex; gap: 12px; margin-bottom: 24px;
@@ -532,9 +550,77 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* Tooltip override */
 .custom-tooltip { max-width: 260px; font-size: 12px; }
+
+/* ============================== Login Overlay ============================== */
+.login-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #1E3D7A 0%, #2E6BE5 50%, #00B8A9 100%);
+  z-index: 10000; display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.login-card {
+  background: rgba(255,255,255,0.95); border-radius: 16px; padding: 48px 40px;
+  text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-width: 400px; width: 90%; backdrop-filter: blur(10px);
+}
+.login-card .login-logo {
+  width: 64px; height: 64px; margin: 0 auto 16px;
+  background: linear-gradient(135deg, #2E6BE5, #00B8A9);
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 800; letter-spacing: 1px;
+  box-shadow: 0 4px 16px rgba(46,107,229,0.4);
+}
+.login-card h2 { font-size: 22px; font-weight: 700; color: #1E3D7A; margin-bottom: 8px; }
+.login-card p { font-size: 14px; color: #4A5568; margin-bottom: 28px; line-height: 1.6; }
+.login-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 36px; border-radius: 10px; font-size: 15px; font-weight: 600;
+  background: linear-gradient(135deg, #3370FF, #2E6BE5); color: #fff;
+  border: none; cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(46,107,229,0.35);
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,107,229,0.45); }
+.login-btn svg { width: 20px; height: 20px; }
+
+/* ============================== Admin Pages ============================== */
+.admin-section { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; border: 1px solid #ECEEF3; }
+.admin-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.admin-header h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.admin-filters { display: flex; gap: 10px; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F0F2F5; flex-wrap: wrap; }
+.admin-filters select, .admin-filters input { padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; }
+.role-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.role-badge.admin { background: #FFEBEE; color: #C62828; }
+.role-badge.regional_manager { background: #E3F2FD; color: #1565C0; }
+.role-badge.user { background: #E8F5E9; color: #2E7D32; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.status-dot.active { background: #36B37E; }
+.status-dot.inactive { background: #E5484D; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,20,35,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card); border-radius: 12px; width: 520px; max-width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
 </style>
 </head>
 <body>
+<!-- Login Overlay -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">HRAS</div>
+    <h2>全球劳务工供应商管理平台</h2>
+    <p>请使用飞书账号登录后访问系统</p>
+    <button class="login-btn" onclick="location.href='/api/auth/login'">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.834 4.378A1 1 0 0 1 4.79 3H12a9 9 0 0 1 0 18H4.79a1 1 0 0 1-.956-1.294L5.41 15H4a1 1 0 0 1-.86-1.51l2.82-4.62-2.126-4.5ZM12 5a7 7 0 0 0 0 14h5.76l-1.3 4.24A1 1 0 0 0 17.42 24H20a1 1 0 0 0 .87-1.49L18.4 18H20a1 1 0 0 0 .87-1.49l-1.57-2.76 1.57-2.76A1 1 0 0 0 20 10h-1.6l2.47-4.51A1 1 0 0 0 20 4h-2.58a1 1 0 0 0-.87.51L15.24 7H12Z"/></svg>
+      飞书账号登录
+    </button>
+  </div>
+</div>
+
 
 <div class="app">
   <!-- ============================== Sidebar ============================== -->
@@ -545,7 +631,7 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="logo-brand">HRAS</div>
       </div>
       <div class="logo-title">全球劳务工供应商管理平台</div>
-      <div class="logo-sub">FBU交付前台管理系统</div>
+      <div class="logo-sub">FBU/GUS/WX/GEU 交付前台管理系统</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-label">管理中心</div>
@@ -567,11 +653,21 @@ tbody tr:last-child td { border-bottom: none; }
       </div>
       <div class="nav-item" data-page="compliance" onclick="switchPage('compliance')">
         <span>合规及预警</span>
-        <span class="badge" id="alertBadge">8</span>
+        <span class="badge" id="alertBadge" style="display:none;">0</span>
+      </div>
+      <div class="nav-label nav-admin-only" style="margin-top:12px;display:none;">系统管理</div>
+      <div class="nav-item nav-admin-only" data-page="user-mgmt" onclick="switchPage('user-mgmt')" style="display:none;">
+        <span>用户管理</span>
+      </div>
+      <div class="nav-item nav-admin-only" data-page="data-mgmt" onclick="switchPage('data-mgmt')" style="display:none;">
+        <span>数据管理</span>
+      </div>
+      <div class="nav-item nav-admin-only" data-page="audit-logs" onclick="switchPage('audit-logs')" style="display:none;">
+        <span>操作日志</span>
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="margin-bottom:4px;">FBU 交付前台管理系统</div>
+      <div style="margin-bottom:4px;">FBU/GUS/WX/GEU 交付前台管理系统</div>
       <div>v2.7.0 · 数据更新于 2026-06-12</div>
     </div>
   </aside>
@@ -585,18 +681,17 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="header-breadcrumb" id="headerBreadcrumb">全集团 / 供应商看板</div>
       </div>
       <div class="header-right">
-        <div class="role-switch">
-          <span>CHO权限</span>
-          <div class="toggle" id="roleToggle" onclick="toggleRole()"></div>
-          <span id="roleLabel" style="font-size:12px;color:var(--primary);font-weight:600;">全量数据</span>
+        <div class="role-switch" id="roleDisplay">
+          <span id="roleBadge"></span>
         </div>
         <div class="user-info">
-          <div class="user-avatar">CHO</div>
+          <div class="user-avatar" id="userAvatar">?</div>
           <div>
-            <div class="user-name">集团CHO</div>
-            <div class="user-role">全集团数据访问权限</div>
+            <div class="user-name" id="userName">加载中...</div>
+            <div class="user-role" id="userRoleText">正在验证身份</div>
           </div>
         </div>
+        <button class="btn btn-sm btn-outline" onclick="doLogout()" style="margin-left:4px;">退出</button>
       </div>
     </header>
 
@@ -608,17 +703,30 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="page-title">供应商看板</div>
         <div class="page-desc">全集团供应商核心指标一览，按 BU / 国家 / 地区多维度结构化呈现</div>
 
+        <!-- BU Line Filter -->
+        <div class="bu-filter" id="buFilter">
+          <span class="bu-filter-label">业务线：</span>
+          <button class="bu-filter-btn active" data-bu="all" onclick="switchBU('all')">全部</button>
+          <button class="bu-filter-btn" data-bu="FBU" onclick="switchBU('FBU')">FBU</button>
+          <button class="bu-filter-btn" data-bu="GUS" onclick="switchBU('GUS')">GUS</button>
+          <button class="bu-filter-btn" data-bu="WX" onclick="switchBU('WX')">WX</button>
+          <button class="bu-filter-btn" data-bu="GEU" onclick="switchBU('GEU')">GEU</button>
+        </div>
+
         <!-- Summary Row -->
         <div class="kanban-summary" id="kanbanSummary"></div>
 
         <!-- Section 1: BU -->
-        <div class="kanban-section">
+        <div class="kanban-section" id="kanbanSectionBU">
           <div class="kanban-section-header">一、各 BU 供应商数量<span>按业务单元统计</span></div>
           <table class="kanban-table" id="kanbanBUTable">
             <thead><tr><th>BU</th><th>供应商总数</th><th>在用</th><th>停用</th><th>新增</th><th>在用率</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
+
+        <!-- BU-Specific Kanban Sections (shown when a specific BU is selected) -->
+        <div id="buSpecificKanban" style="display:none;"></div>
 
         <!-- Section 2: Country -->
         <div class="kanban-section">
@@ -639,7 +747,7 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
 
         <!-- Section 4: BU Usage -->
-        <div class="kanban-section">
+        <div class="kanban-section" id="kanbanSectionUsage">
           <div class="kanban-section-header">四、各 BU 使用情况<span>在用 vs 停用 vs 新增</span></div>
           <table class="kanban-table" id="kanbanUsageTable">
             <thead><tr><th>BU</th><th>在用</th><th>停用</th><th>新增</th><th>使用率</th><th>状态分布</th></tr></thead>
@@ -722,7 +830,7 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
         <div style="padding:12px 16px;font-size:12px;color:var(--text-tertiary);display:flex;justify-content:space-between;align-items:center;">
           <span id="tableCount">共 0 条记录</span>
-          <span>数据基于 2026年 FBU交付前台劳务供应商更新表 + 法国区2025年补充数据</span>
+          <span>数据基于 2026年 FBU/GUS/WX/GEU交付前台劳务供应商更新表</span>
         </div>
       </div>
 
@@ -935,9 +1043,95 @@ tbody tr:last-child td { border-bottom: none; }
         <div id="alertList"></div>
       </div>
 
-    </div><!-- end content -->
+    <!-- Admin: User Management -->
+<div class="page" id="page-user-mgmt">
+  <div class="page-title">用户管理</div>
+  <div class="page-desc">管理系统用户账户、角色和权限分配</div>
+  <div class="admin-section">
+    <div class="admin-header">
+      <h3>用户列表</h3>
+      <button class="btn btn-primary btn-sm" onclick="showAddUserModal()">+ 添加用户</button>
+    </div>
+    <div class="table-scroll">
+      <table id="userTable">
+        <thead><tr><th>姓名</th><th>飞书ID</th><th>邮箱</th><th>角色</th><th>负责区域</th><th>业务线权限</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+        <tbody id="userTableBody"><tr><td colspan="9" style="text-align:center;padding:40px;color:#999;">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: Data Management -->
+<div class="page" id="page-data-mgmt">
+  <div class="page-title">数据管理</div>
+  <div class="page-desc">管理供应商数据（新增/编辑/删除）</div>
+  <div class="admin-section">
+    <div class="admin-header">
+      <h3>供应商数据</h3>
+      <button class="btn btn-primary btn-sm" onclick="showAddSupplierModal()">+ 新增供应商</button>
+    </div>
+    <div class="admin-filters">
+      <select id="dmFilterBU" onchange="renderDataMgmtTable()"><option value="">全部业务线</option><option value="FBU">FBU</option><option value="GUS">GUS</option></select>
+      <select id="dmFilterRegion" onchange="renderDataMgmtTable()"><option value="">全部大区</option><option value="美洲区">美洲区</option><option value="欧洲区">欧洲区</option><option value="亚太区">亚太区</option></select>
+      <input type="text" id="dmSearch" placeholder="搜索供应商名称..." oninput="renderDataMgmtTable()" style="flex:1;min-width:200px;">
+    </div>
+    <div class="table-scroll" style="max-height:600px;overflow-y:auto;">
+      <table id="dataMgmtTable">
+        <thead><tr><th>ID</th><th>名称</th><th>业务线</th><th>大区</th><th>地区</th><th>类型</th><th>状态</th><th>结算时薪</th><th>Markup</th><th>评级</th><th>操作</th></tr></thead>
+        <tbody id="dataMgmtBody"><tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">加载中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: Audit Logs -->
+<div class="page" id="page-audit-logs">
+  <div class="page-title">操作日志</div>
+  <div class="page-desc">系统操作审计记录和登录历史</div>
+  <div class="tabs" id="logTabs">
+    <button class="tab-btn active" onclick="switchLogTab('audit')">操作日志</button>
+    <button class="tab-btn" onclick="switchLogTab('login')">登录记录</button>
+  </div>
+  <div class="admin-section" id="auditLogSection">
+    <div class="admin-filters">
+      <select id="logActionFilter" onchange="loadAuditLogs()">
+        <option value="">全部操作</option>
+        <option value="login">登录</option><option value="logout">登出</option>
+        <option value="supplier.create">新增供应商</option><option value="supplier.update">编辑供应商</option><option value="supplier.delete">删除供应商</option>
+        <option value="user.create">新增用户</option><option value="user.update">编辑用户</option><option value="user.disable">禁用用户</option>
+      </select>
+      <input type="text" id="logUserFilter" placeholder="搜索用户名..." oninput="loadAuditLogs()" style="width:160px;">
+    </div>
+    <div class="table-scroll">
+      <table><thead><tr><th>时间</th><th>用户</th><th>操作</th><th>对象类型</th><th>对象ID</th><th>详情</th><th>IP</th></tr></thead>
+      <tbody id="auditLogBody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#999;">加载中...</td></tr></tbody></table>
+    </div>
+    <div id="auditLogPagination" style="padding:12px 20px;display:flex;gap:8px;justify-content:center;"></div>
+  </div>
+  <div class="admin-section" id="loginLogSection" style="display:none;">
+    <div class="table-scroll">
+      <table><thead><tr><th>时间</th><th>用户</th><th>状态</th><th>原因</th><th>IP</th></tr></thead>
+      <tbody id="loginLogBody"><tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">加载中...</td></tr></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="modalTitle">编辑</h3><span style="cursor:pointer;font-size:20px;" onclick="closeModal()">&times;</span></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="saveModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end content -->
   </div><!-- end main -->
 </div><!-- end app -->
+
 
 <!-- Drawer -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
@@ -957,9 +1151,12 @@ tbody tr:last-child td { border-bottom: none; }
 // 基于FBU交付前台2026年劳务供应商真实数据结构生成的Mock数据集
 
 const AREAS_MAP = {
-  'FBU美洲': ['加州区','新泽西区','亚特兰大区','芝加哥区','萨凡纳区','达拉斯区','迈阿密区','休斯顿区','诺福克区','西雅图区','加拿大区','墨西哥区'],
+  'FBU美洲': ['加州区','新泽西区','亚特兰大区','芝加哥区','萨凡纳区','达拉斯区','迈阿密区','休斯顿区','诺福克区（撤仓）','西雅图区','加拿大区','墨西哥区'],
   'FBU欧洲': ['英国区','捷克区','法国区','德国区','波兰区','意大利区','西班牙区'],
-  'FBU亚太': ['澳洲区','日本区','韩国区']
+  'FBU亚太': ['澳洲区','日本区','韩国区'],
+  'GUS美洲': ['美西大区','佛州区','纽约区','芝加华区','德州区','亚特兰大区'],
+  'WX欧洲': ['英国','西班牙','荷兰','丹麦','匈牙利','意大利','比利时','法国'],
+  'GEU欧洲': ['荷兰区','意大利区','法国区']
 };
 
 const BU_MAP = {
@@ -968,14 +1165,34 @@ const BU_MAP = {
   '亚太区': 'FBU亚太'
 };
 
+const GUS_BU_MAP = {
+  '美洲区': 'GUS美洲'
+};
+
+const WX_BU_MAP = {
+  '英国': 'WX欧洲', '西班牙': 'WX欧洲', '荷兰': 'WX欧洲', '丹麦': 'WX欧洲',
+  '匈牙利': 'WX欧洲', '意大利': 'WX欧洲', '比利时': 'WX欧洲', '法国': 'WX欧洲'
+};
+
+const GEU_BU_MAP = {
+  '荷兰': 'GEU欧洲', '意大利': 'GEU欧洲', '法国': 'GEU欧洲'
+};
+
+// Current BU filter state
+let currentBUFilter = 'all'; // 'all', 'FBU', 'GUS', 'WX', 'GEU'
+
 const COUNTRY_MAP = {
   '加州区':'美国','新泽西区':'美国','亚特兰大区':'美国','芝加哥区':'美国',
   '萨凡纳区':'美国','达拉斯区':'美国','迈阿密区':'美国','休斯顿区':'美国',
-  '诺福克区':'美国','西雅图区':'美国',
+  '诺福克区（撤仓）':'美国','西雅图区':'美国',
   '加拿大区':'加拿大','墨西哥区':'墨西哥',
   '英国区':'英国','捷克区':'捷克','法国区':'法国','德国区':'德国',
   '波兰区':'波兰','意大利区':'意大利','西班牙区':'西班牙',
-  '澳洲区':'澳大利亚','日本区':'日本','韩国区':'韩国'
+  '澳洲区':'澳大利亚','日本区':'日本','韩国区':'韩国',
+  '美西大区':'美国','佛州区':'美国','纽约区':'美国','芝加华区':'美国','德州区':'美国',
+  '英国':'英国','西班牙':'西班牙','荷兰':'荷兰','丹麦':'丹麦',
+  '匈牙利':'匈牙利','比利时':'比利时','法国':'法国',
+  '荷兰区':'荷兰','意大利区':'意大利','法国区':'法国'
 };
 
 // ECharts实例管理（集中声明，避免TDZ问题）
@@ -1004,279 +1221,139 @@ function genMonthlyTrend(base) {
   }));
 }
 
-// 主数据源 - 基于 FBU交付前台2026年劳务供应商更新表 + 法国区2025年补充数据
-let suppliers = [
-  {id:'S000132', name:'HRA Recruitment Services', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.1, base:12.71, markup:'27%', ratio:'72%', rating:'A', contact:'', startDate:'2022-05', cert:''},
-  {id:'S000013', name:'FT Recruitment', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.2, base:12.71, markup:'27%', ratio:'7%', rating:'B', contact:'', startDate:'2020-11', cert:''},
-  {id:'S000011', name:'SD4U', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.2, base:12.71, markup:'27%', ratio:'2%', rating:'B', contact:'', startDate:'2020-06', cert:''},
-  {id:'S000007', name:'Kenect', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.14, base:12.71, markup:'27%', ratio:'14%', rating:'B', contact:'', startDate:'2018-06', cert:''},
-  {id:'S000274', name:'Jobsworth Recruitment Solutions Limited', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.14, base:12.71, markup:'27%', ratio:'4%', rating:'B', contact:'', startDate:'2024-11', cert:''},
-  {id:'S000331', name:'Employment of London Limited', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:15.33, base:12.71, markup:'21%', ratio:'0%', rating:'—', contact:'', startDate:'2026-04', cert:''},
-  {id:'S000289', name:'STAFFZILLA LTD', region:'欧洲区', area:'英国区', type:'劳务', status:'使用中', rate:16.2, base:12.71, markup:'27%', ratio:'2%', rating:'A', contact:'', startDate:'2024-04', cert:''},
-  {id:'S000059', name:'Workforce staffing', region:'欧洲区', area:'英国区', type:'劳务', status:'停用', rate:16.3, base:12.71, markup:'33%', ratio:'0%', rating:'C', contact:'', startDate:'2021-12', cert:''},
-  {id:'S000192', name:'FILKOPI Agency s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:255.0, base:175.0, markup:'46%', ratio:'27%', rating:'B', contact:'', startDate:'2023-08', cert:''},
-  {id:'S000175', name:'Armz HR', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:270.0, base:175.0, markup:'54%', ratio:'23%', rating:'B', contact:'Oleksander Starytskyi 00380976844535 Aleksandr@rikumela.cz', startDate:'2022-09', cert:''},
-  {id:'S000098', name:'PERSONALEK Plus', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:270.0, base:175.0, markup:'54%', ratio:'8%', rating:'C', contact:'', startDate:'2024-04', cert:''},
-  {id:'S000225', name:'WIW', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:260.0, base:175.0, markup:'49%', ratio:'1%', rating:'C', contact:'', startDate:'2024-06', cert:''},
-  {id:'S000005', name:'KAMO GROUP S.R.O （外包）', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:230.0, base:175.0, markup:'31%', ratio:'3%', rating:'B', contact:'', startDate:'2023-10', cert:''},
-  {id:'S000265', name:'Ridivisa s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:265.0, base:175.0, markup:'51%', ratio:'5%', rating:'B', contact:'', startDate:'2024-09', cert:''},
-  {id:'S000266', name:'Wildenborch s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:270.0, base:175.0, markup:'54%', ratio:'16%', rating:'C', contact:'Stanislav Snagovskyi 720067080 wildenborch@email.cz', startDate:'2024-09', cert:''},
-  {id:'S000295', name:'Massive ovation s.r.o.（KAMO）', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:285.0, base:175.0, markup:'63%', ratio:'1%', rating:'C', contact:'联系人名称:Surmachevskyi 联系人电话:770138311 联系人邮箱:kamo.rvt@seznam.cz', startDate:'2025-05', cert:''},
-  {id:'S000301', name:'klan Agency s.r.o', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:250.0, base:175.0, markup:'43%', ratio:'0%', rating:'C', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000310', name:'Easy Jobs s.r.o', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:250.0, base:175.0, markup:'43%', ratio:'1%', rating:'—', contact:'', startDate:'2025-08', cert:''},
-  {id:'S000309', name:'AWA PARTNERS International s.r.o', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:250.0, base:175.0, markup:'43%', ratio:'0%', rating:'—', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000317', name:'Středoevropská pracovní agentura s.r.o', region:'欧洲区', area:'捷克区', type:'劳务', status:'使用中', rate:260.0, base:175.0, markup:'49%', ratio:'0%', rating:'—', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000260', name:'Tarat Security s.r.o.', region:'欧洲区', area:'捷克区', type:'保安', status:'使用中', rate:220.0, base:175.0, markup:'—', ratio:'2%', rating:'—', contact:'Sladek Pavel 720020000 taratsecurity@seznam.cz', startDate:'2024-07', cert:''},
-  {id:'S000210', name:'Boroleos （外包)', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-09', cert:''},
-  {id:'S000315', name:'Qubo Logistics s.r.o.', region:'欧洲区', area:'捷克区', type:'卸柜', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-09', cert:''},
-  {id:'S000311', name:'C.S.I. Head s.r.o.', region:'欧洲区', area:'捷克区', type:'卸柜', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-08', cert:''},
-  {id:'S000284', name:'AVD Work  s.r.o. （外包）', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000275', name:'M&M staffing s.r.o. (外包)', region:'欧洲区', area:'捷克区', type:'卸柜', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'Jandik 773142495 m.kricner@seznam.cz', startDate:'2024-11', cert:''},
-  {id:'S000226', name:'ConLogistic s.r.o. (外包)', region:'欧洲区', area:'捷克区', type:'卸柜', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'Aleksandr Kondratenko 00420776629430 i.orsag@workintense.cz', startDate:'2024-03', cert:''},
-  {id:'S000296', name:'FILKOPI SUPPORT s.r.o. （外包）', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000003', name:'Vormor  ( Haiyuan 外包 )', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-09', cert:''},
-  {id:'S000003', name:'Haiyuan 外包 -- 装卸柜 （Praha）外包', region:'欧洲区', area:'捷克区', type:'卸柜', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-09', cert:''},
-  {id:'S000283', name:'Hangist s.r.o. （外包）', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2024-08', cert:''},
-  {id:'S000003', name:'HAIYUAN S.R.O', region:'欧洲区', area:'捷克区', type:'卸柜', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'B', contact:'', startDate:'2023-09', cert:''},
-  {id:'S000294', name:'LINDO Trade s.r.o. (外包)', region:'欧洲区', area:'捷克区', type:'外包', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000290', name:'Orgikh s.r.o. （Lovosice）外包', region:'欧洲区', area:'捷克区', type:'卸柜', status:'使用中', rate:0, base:175.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000282', name:'OK WORK PERSON s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'停用', rate:270.0, base:175.0, markup:'54%', ratio:'6%', rating:'B', contact:'Oleh Tun 777438836 okworkperson@post.cz', startDate:'2025-02', cert:''},
-  {id:'S000280', name:'WISSVOLL', region:'欧洲区', area:'捷克区', type:'劳务', status:'停用', rate:270.0, base:175.0, markup:'54%', ratio:'0%', rating:'—', contact:'Michal Andrijcuk 608175571 wissvoll@seznam.cz', startDate:'2025-02', cert:''},
-  {id:'S000187', name:'Workintense personální agentura', region:'欧洲区', area:'捷克区', type:'劳务', status:'停用', rate:0, base:175.0, markup:'46%', ratio:'1%', rating:'C', contact:'', startDate:'2023-04', cert:''},
-  {id:'S000304', name:'JOBS AGENTUR s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'停用', rate:250.0, base:175.0, markup:'43%', ratio:'1%', rating:'—', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000267', name:'Nedham Consulting s.r.o./  GlobalWork s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'停用', rate:260.0, base:175.0, markup:'49%', ratio:'0%', rating:'C', contact:'', startDate:'2024-10', cert:''},
-  {id:'S000268', name:'ANEXwork personal s.r.o.', region:'欧洲区', area:'捷克区', type:'劳务', status:'停用', rate:250.0, base:175.0, markup:'43%', ratio:'6%', rating:'C', contact:'Vasyl Yanyk 773142495 vasyl@mmstaffing.eu', startDate:'2024-10', cert:''},
-  {id:'S000033', name:'PLANETT', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:20.19, base:12.31, markup:'64%', ratio:'23%', rating:'A', contact:'', startDate:'2023-08', cert:''},
-  {id:'S000176', name:'ADEQUAT', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:20.68, base:12.31, markup:'68%', ratio:'14%', rating:'B', contact:'', startDate:'2022-09', cert:''},
-  {id:'S000032', name:'ERGALIS', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:21.54, base:12.31, markup:'75%', ratio:'3%', rating:'D', contact:'', startDate:'2023-12', cert:''},
-  {id:'S000285', name:'GROUPE SOVITRAT', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:20.68, base:12.31, markup:'68%', ratio:'48%', rating:'B', contact:'', startDate:'2024-04', cert:''},
-  {id:'S000140', name:'PARTNAIRE', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:20.55, base:12.31, markup:'67%', ratio:'8%', rating:'B', contact:'', startDate:'2024-08', cert:''},
-  {id:'S000129', name:'Manpower', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:20.68, base:12.31, markup:'68%', ratio:'2%', rating:'B', contact:'', startDate:'2024-11', cert:''},
-  {id:'S000270', name:'DERICHEBOURG', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:19.71, base:12.31, markup:'64%', ratio:'1%', rating:'C', contact:'', startDate:'2024-11', cert:''},
-  {id:'S000269', name:'CRIT', region:'欧洲区', area:'法国区', type:'劳务', status:'停用', rate:21.03, base:12.31, markup:'75%', ratio:'0%', rating:'—', contact:'', startDate:'2024-11', cert:''},
-  {id:'S000314', name:'INTERACTION', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:20.19, base:12.31, markup:'64%', ratio:'0%', rating:'—', contact:'', startDate:'2025-08', cert:''},
-  {id:'S000321', name:'ACTUAL GROUP', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:20.68, base:12.31, markup:'68%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000030', name:'ADECCO', region:'欧洲区', area:'法国区', type:'劳务', status:'停用', rate:22.41, base:12.02, markup:'86%', ratio:'1%', rating:'B', contact:'', startDate:'2023-02', cert:''},
-  {id:'S000191', name:'TimePartner Personalmanagement GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.72, base:14.96, markup:'79%', ratio:'7%', rating:'B', contact:'Frau Jankovic<1702483900><s.jankovic@lianos.de>', startDate:'2023-08', cert:''},
-  {id:'S000327', name:'Gohar Gmbh (原Lianos)', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.72, base:14.96, markup:'79%', ratio:'0%', rating:'—', contact:'', startDate:'2026-03', cert:''},
-  {id:'S000020', name:'HP Personalmanagement', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.93, base:14.96, markup:'80%', ratio:'6%', rating:'B', contact:'Herr Fejza Shpend 0174 2039969 Fejza, Shpend <s.fejza@timepartner.com> Frau Anja Lörken 15125044915 Frau Manuela Pecks 1707089583', startDate:'2021-02', cert:''},
-  {id:'S000086', name:'Top Job Zeitarbeit GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.93, base:14.96, markup:'80%', ratio:'2%', rating:'B', contact:'Herr Sandi Mehmedovic +49 162 9039318 Herr Azad Kulaksiz: +49 172 2356039  sa.mehmedovic@hp-personalmanagement.de f.mehmedovic@hp-personalmanagement.de a.kulaksiz@hp-personalmanagement.de info@hp-personalmanagement.de', startDate:'2021-10', cert:''},
-  {id:'S000110', name:'Kötter', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.93, base:14.96, markup:'80%', ratio:'3%', rating:'B', contact:'', startDate:'2020-09', cert:''},
-  {id:'S000153', name:'Hely', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.63, base:14.96, markup:'78%', ratio:'3%', rating:'B', contact:'Mönchengladbach:  Herr Jost: +49 172 2788600 Whatsapp: +49 1511 2277993   Euskirchen:  Frau Buket Salman: 01732788080   Frau Narman: +49 173 2788258 Büro Düsseldorf für Wülfrath: Herr Wochele und Frau Kriesch 01707630416   Axel.Jost@KOETTER.DE (Mönchengladbach)     nadia.narman@koetter.de (Euskirchen) Buket.Salman@koetter.de (Euskirchen) marc.wochele@koetter.de (Düsseldorf: Wülfrath) laura.kriesch@koetter.de (Düsseldorf: Wülfrath)', startDate:'2022-08', cert:''},
-  {id:'S000261', name:'ProQuality', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.82, base:14.96, markup:'79%', ratio:'6%', rating:'B', contact:'Herr Hoang Dat Ly 01732789578 <hoangdat.ly@helypersonal.de>  Herr Dennis Hegert  0173 2790082<dennis.hegert@helypersonal.de>', startDate:'2024-07', cert:''},
-  {id:'S000299', name:'Persus Personal GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.85, base:14.96, markup:'79%', ratio:'1%', rating:'B', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000300', name:'LeXpersonal GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.78, base:14.96, markup:'79%', ratio:'2%', rating:'B', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000316', name:'Nivux Estate e.Kfm', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.63, base:14.96, markup:'78%', ratio:'0%', rating:'—', contact:'', startDate:'2025-10', cert:''},
-  {id:'S000276', name:'Go4prime（TopJobs 24 GmbH）', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.7, base:14.96, markup:'78%', ratio:'16%', rating:'B', contact:'', startDate:'2025-02', cert:''},
-  {id:'S000279', name:'Armz GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.48, base:14.96, markup:'77%', ratio:'9%', rating:'C', contact:'', startDate:'2025-01', cert:''},
-  {id:'S000293', name:'OLP GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:26.18, base:14.96, markup:'75%', ratio:'1%', rating:'C', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000178', name:'AMA Service UG 安保', region:'欧洲区', area:'德国区', type:'保安', status:'使用中', rate:20.0, base:14.96, markup:'—', ratio:'3%', rating:'—', contact:'Herr Grimmek (Geschäftsführer) Herr Grote: +49 1516 2450469 Frau Abu-Sabbah: +49 172 1432788', startDate:'2022-11', cert:''},
-  {id:'S000182', name:'EWIG POWER', region:'欧洲区', area:'德国区', type:'卸柜', status:'使用中', rate:0, base:14.96, markup:'—', ratio:'1%', rating:'C', contact:'Ján Husák <+421 908414354><husak@barola.eu> Marián Jurčišin  <+421 918 835 364><jurcisin.barola@gmail.com>', startDate:'2022-11', cert:''},
-  {id:'S000294', name:'LINDO Trade s.r.o.', region:'欧洲区', area:'德国区', type:'劳务', status:'使用中', rate:0, base:14.96, markup:'—', ratio:'0%', rating:'B', contact:'联系人名称:Elena Niki 联系人电话:774576994 联系人邮箱:609815423@seznam.cz', startDate:'2025-05', cert:''},
-  {id:'S000264', name:'Lianos Personalmanagement GmbH', region:'欧洲区', area:'德国区', type:'劳务', status:'停用', rate:26.72, base:14.96, markup:'79%', ratio:'38%', rating:'A', contact:'Radu Vincu Flavius  <017660862334><info@ensav.info><info@ensav-personal.de>', startDate:'2024-09', cert:''},
-  {id:'S000287', name:'DK Global', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.5, base:31.4, markup:'32%', ratio:'7%', rating:'B', contact:'Deependra Khattri 690650653 deependra@dkrecruitmentspzoo.com', startDate:'2023-10', cert:''},
-  {id:'S000259', name:'Prowork', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.5, base:31.4, markup:'32%', ratio:'1%', rating:'C', contact:'Volodymyr 793582088 proworkapt@gmail.com', startDate:'2023-11', cert:''},
-  {id:'S000207', name:'Niden Service Sp. z o.o.', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.2, base:31.4, markup:'31%', ratio:'5%', rating:'C', contact:'Adam 519077917 a.arendarski@niden.pl', startDate:'2023-10', cert:''},
-  {id:'S000206', name:'Zenith Zone Sp. z o.o.', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.9, base:31.4, markup:'33%', ratio:'12%', rating:'C', contact:'michal 605784602 michal@sen-co.pl', startDate:'2023-10', cert:''},
-  {id:'S000212', name:'Dreman Sp. z o.o.', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.5, base:31.4, markup:'32%', ratio:'6%', rating:'C', contact:'Tomasz 732524474 tomasz.karczynski@dreman.eu', startDate:'2023-09', cert:''},
-  {id:'S000201', name:'ATLAS WORK SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.5, base:31.4, markup:'32%', ratio:'4%', rating:'C', contact:'Kyryro 576144194 kyrylo.pankov@atlaswork.pl', startDate:'2023-09', cert:''},
-  {id:'S000196', name:'Gi Group sp. z o.o.', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.5, base:31.4, markup:'32%', ratio:'4%', rating:'C', contact:'Damian 508009883 Damian.Miecznikowski@gigroup.com', startDate:'2023-07', cert:''},
-  {id:'S000249', name:'Gremi (Figer)', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.58, base:31.4, markup:'32%', ratio:'18%', rating:'B', contact:'Aneta 731603768 a.stanuchiewicz@gremi-personal.com', startDate:'2023-12', cert:''},
-  {id:'S000323', name:'PWP NIAGARA HREBENIUKOV SPÓŁKA JAWNA', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:40.49, base:31.4, markup:'29%', ratio:'6%', rating:'B', contact:'Kornel Ptaszek 732532901 hr.wsparcie.pwp@pwpholding.pl', startDate:'2025-02', cert:''},
-  {id:'S000278', name:'VOKS Service', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.5, base:31.4, markup:'32%', ratio:'4%', rating:'C', contact:'Marta Zawadzka 48696636003 marta.zawadzka@voksservice.com', startDate:'2025-01', cert:''},
-  {id:'S000288', name:'Global Solution', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:40.7, base:31.4, markup:'30%', ratio:'7%', rating:'B', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000286', name:'EWLIT(Work-up sp. z o.o. sp. k.)', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:41.5, base:31.4, markup:'32%', ratio:'8%', rating:'C', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000297', name:'Eurojob-West', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:40.5, base:31.4, markup:'29%', ratio:'1%', rating:'C', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000298', name:'Tez sp z o.o.', region:'欧洲区', area:'波兰区', type:'劳务', status:'使用中', rate:40.2, base:31.4, markup:'28%', ratio:'2%', rating:'C', contact:'', startDate:'2025-05', cert:''},
-  {id:'S000292', name:'PS Solutions', region:'欧洲区', area:'波兰区', type:'劳务', status:'停用', rate:0, base:31.4, markup:'—', ratio:'6%', rating:'C', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000291', name:'HERE2HIRE', region:'欧洲区', area:'波兰区', type:'劳务', status:'停用', rate:0, base:31.4, markup:'—', ratio:'1%', rating:'C', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000210', name:'Personnel(Human Support)', region:'欧洲区', area:'波兰区', type:'劳务', status:'停用', rate:0, base:31.4, markup:'32%', ratio:'5%', rating:'B', contact:'Marcin 574520360 cmarcin.ziora@personnelservice.pl', startDate:'2023-12', cert:''},
-  {id:'S000250', name:'TURBO JOB SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ', region:'欧洲区', area:'波兰区', type:'劳务', status:'停用', rate:0, base:31.4, markup:'—', ratio:'4%', rating:'C', contact:'Antoni 575418288 dragan@agency-turbojob.com', startDate:'2023-09', cert:''},
-  {id:'S000221', name:'FWS SERVICE Sp. z o.o.', region:'欧洲区', area:'波兰区', type:'劳务', status:'停用', rate:0, base:31.4, markup:'—', ratio:'0%', rating:'—', contact:'Aryur kuca 723303018 artur.kuca@ewl.com.pl', startDate:'2024-03', cert:''},
-  {id:'S000306', name:'ADECCO ITALIA S.P.A.', region:'欧洲区', area:'意大利区', type:'劳务', status:'使用中', rate:20.41, base:11.5, markup:'77%', ratio:'100%', rating:'—', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000313', name:'ATTAL GROUP S.p.A.', region:'欧洲区', area:'意大利区', type:'劳务', status:'使用中', rate:19.1, base:11.5, markup:'66%', ratio:'0%', rating:'—', contact:'', startDate:'2025-10', cert:''},
-  {id:'S000337', name:'SYNERGIE', region:'欧洲区', area:'意大利区', type:'劳务', status:'使用中', rate:19.93, base:11.5, markup:'78%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000335', name:'ZARA GRUPPO LOGISTICA', region:'欧洲区', area:'意大利区', type:'卸柜', status:'使用中', rate:0, base:11.2, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000334', name:'MJA', region:'欧洲区', area:'意大利区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000302', name:'FASTER EMPLEO ETT S.A.', region:'欧洲区', area:'西班牙区', type:'劳务', status:'使用中', rate:19.69, base:13.17, markup:'50%', ratio:'9%', rating:'—', contact:'', startDate:'2025-05', cert:''},
-  {id:'S000303', name:'FLEXIPLAN ETT S.A.', region:'欧洲区', area:'西班牙区', type:'劳务', status:'使用中', rate:20.08, base:13.17, markup:'52%', ratio:'91%', rating:'—', contact:'', startDate:'2025-05', cert:''},
-  {id:'S000319', name:'ZHENHUAN LIN', region:'欧洲区', area:'西班牙区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000322', name:'TRANSMUND LOGISTIC, S.L.U', region:'欧洲区', area:'西班牙区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000329', name:'VINEXCE, S.L', region:'欧洲区', area:'西班牙区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000017', name:'DX-悉尼（悉尼）', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:33.3, base:24.95, markup:'33%', ratio:'18%', rating:'—', contact:'', startDate:'2023-05', cert:''},
-  {id:'S000087', name:'ZT Resources Pty Ltd（悉尼）', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:34.93, base:24.95, markup:'40%', ratio:'9%', rating:'—', contact:'', startDate:'2023-02', cert:''},
-  {id:'S000084', name:'Ninth Resources Pty Ltd（墨尔本）', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:42.27, base:24.95, markup:'69%', ratio:'27%', rating:'—', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000175', name:'LW MGT PTY LTD（悉尼）', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:34.3, base:24.95, markup:'37%', ratio:'30%', rating:'—', contact:'', startDate:'2025-08', cert:''},
-  {id:'S000185', name:'Australian SRM Pty Ltd（悉尼）', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:34.3, base:24.95, markup:'37%', ratio:'1%', rating:'—', contact:'', startDate:'2025-09', cert:''},
-  {id:'', name:'4JS CRYSTAL PTY LTD', region:'亚太区', area:'澳洲区', type:'劳务', status:'使用中', rate:33.3, base:24.95, markup:'33%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000040', name:'OZHRM-悉尼（卸柜）', region:'亚太区', area:'澳洲区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2021-10', cert:''},
-  {id:'S000125', name:'株式会社バリューアップ', region:'亚太区', area:'日本区', type:'劳务', status:'使用中', rate:1450.0, base:1163.0, markup:'25%', ratio:'68%', rating:'—', contact:'', startDate:'2023-06', cert:''},
-  {id:'', name:'子豊株式会社', region:'亚太区', area:'日本区', type:'劳务', status:'使用中', rate:1200.0, base:1163.0, markup:'3%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000168', name:'株式会社 i HOLON', region:'亚太区', area:'日本区', type:'劳务', status:'使用中', rate:1450.0, base:1163.0, markup:'25%', ratio:'13%', rating:'—', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000173', name:'株式会社YOSHI MOTO', region:'亚太区', area:'日本区', type:'劳务', status:'使用中', rate:1350.0, base:1163.0, markup:'16%', ratio:'14%', rating:'—', contact:'', startDate:'2025-07', cert:''},
-  {id:'', name:'株式会社オ-テイ-シ-', region:'亚太区', area:'日本区', type:'劳务', status:'使用中', rate:1450.0, base:1163.0, markup:'25%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000172', name:'株式会社 NEWARE', region:'亚太区', area:'日本区', type:'劳务', status:'停用', rate:1550.0, base:1163.0, markup:'—', ratio:'5%', rating:'—', contact:'', startDate:'2025-01', cert:''},
-  {id:'S000187', name:'주식회사 진성기업', region:'亚太区', area:'韩国区', type:'劳务', status:'使用中', rate:15435.0, base:10320.0, markup:'50%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000202', name:'(주)씨에프씨', region:'亚太区', area:'韩国区', type:'劳务', status:'使用中', rate:15291.0, base:10320.0, markup:'48%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000116', name:'Citi Staffing', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'—', ratio:'41%', rating:'B', contact:'', startDate:'2024-03', cert:''},
-  {id:'S000018', name:'Prompt Priority INC', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'29%', ratio:'5%', rating:'B', contact:'', startDate:'2021-07', cert:''},
-  {id:'S000037', name:'Workforce Priority INC', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'29%', ratio:'4%', rating:'B', contact:'', startDate:'2021-09', cert:''},
-  {id:'S000038', name:'Fairway Staffing Service', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'29%', ratio:'12%', rating:'A', contact:'', startDate:'2021-09', cert:''},
-  {id:'S000042', name:'Grande Staffing', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'28%', ratio:'11%', rating:'B', contact:'', startDate:'2021-10', cert:''},
-  {id:'S000059', name:'Alpha Vii', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'30%', ratio:'0%', rating:'B', contact:'', startDate:'2021-11', cert:''},
-  {id:'S000117', name:'Voyage Employer Services', region:'美洲区', area:'加州区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'—', ratio:'24%', rating:'B', contact:'', startDate:'2024-04', cert:''},
-  {id:'S000183', name:'Elite Placement Solutions P.O.C', region:'美洲区', area:'加州区', type:'劳务', status:'新增', rate:0, base:17.5, markup:'29%', ratio:'1%', rating:'—', contact:'', startDate:'2025-09', cert:''},
-  {id:'S000197', name:'OSI Staffing Inc.', region:'美洲区', area:'加州区', type:'劳务', status:'新增', rate:0, base:17.5, markup:'30%', ratio:'3%', rating:'—', contact:'', startDate:'2025-12', cert:''},
-  {id:'S000095', name:'Jovagu Unloading LLC', region:'美洲区', area:'加州区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-05', cert:''},
-  {id:'S000064', name:'Independent Lumper Services Inc.', region:'美洲区', area:'加州区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2022-01', cert:''},
-  {id:'S000148', name:'Adecco', region:'美洲区', area:'加州区', type:'劳务', status:'停用', rate:0, base:17.0, markup:'—', ratio:'1%', rating:'—', contact:'', startDate:'45726', cert:''},
-  {id:'S000130', name:'Core Staffing Solutions', region:'美洲区', area:'加州区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2024-09', cert:''},
-  {id:'S000019', name:'Ultra Personnel', region:'美洲区', area:'加州区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2021-05', cert:''},
-  {id:'S000012', name:'Cosmoplitan Staffing Service', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'29%', ratio:'1%', rating:'C', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000013', name:'Grande Solutions LLc', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'25%', ratio:'60%', rating:'A', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000024', name:'Central Agency LLc', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'26%', ratio:'26%', rating:'A', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000027', name:'Quantum Staffing Group LLC', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'26%', ratio:'4%', rating:'B', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000025', name:'Lyneer Staffing Solutions', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'29%', ratio:'6%', rating:'B', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000196', name:'Apex Staffing Solution Inc.', region:'美洲区', area:'新泽西区', type:'劳务', status:'新增', rate:0, base:16.0, markup:'35%', ratio:'1%', rating:'—', contact:'', startDate:'2025-11', cert:''},
-  {id:'S000205', name:'MKA Staffing LLC', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'25%', ratio:'0%', rating:'—', contact:'', startDate:'2/21/26', cert:''},
-  {id:'S000207', name:'On Target Staffing LLC.', region:'美洲区', area:'新泽西区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'26%', ratio:'0%', rating:'—', contact:'', startDate:'3/19/26', cert:''},
-  {id:'S000062', name:'EMEC Staffing Services', region:'美洲区', area:'新泽西区', type:'劳务', status:'停用', rate:0, base:16.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2022-03', cert:''},
-  {id:'S000097', name:'Bonilla&Santos LLC', region:'美洲区', area:'新泽西区', type:'卸柜', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-09', cert:''},
-  {id:'S000086', name:'Homesea Containers U.S. LLC', region:'美洲区', area:'新泽西区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-01', cert:''},
-  {id:'S000034', name:'Reliable Moving Serviece LLc', region:'美洲区', area:'新泽西区', type:'卸柜', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'肖茂-(267) 207-9202', startDate:'2022-12', cert:''},
-  {id:'S000033', name:'Global Lumpers Services LLC', region:'美洲区', area:'新泽西区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000156', name:'Strategic Staffing Solutions Corp.', region:'美洲区', area:'新泽西区', type:'劳务', status:'新增', rate:0, base:15.75, markup:'27%', ratio:'3%', rating:'B', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000181', name:'Loja Lumper Services LLC', region:'美洲区', area:'新泽西区', type:'卸柜', status:'新增', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-09', cert:''},
-  {id:'S000124', name:'Staffing Alternatives', region:'美洲区', area:'新泽西区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2024-04', cert:''},
-  {id:'S000208', name:'Agus Bautista LLC', region:'美洲区', area:'新泽西区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2026-03', cert:''},
-  {id:'S000057', name:'Rekaeya Consulting LLC', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'17%', ratio:'29%', rating:'B', contact:'Juan 404-973-8033 jabg@rekaeya.com', startDate:'2023-03', cert:''},
-  {id:'S000047', name:'Solid USA Consulting LLC', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'19%', ratio:'3%', rating:'B', contact:'Lucas 412-515-6384 lucas@solid.consulting', startDate:'2021-12', cert:''},
-  {id:'S000003', name:'VHC Cleaning and Painting Company LLC', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'20%', ratio:'13%', rating:'C', contact:'Victor 470-303-1643 victorhc17@icloud.com', startDate:'2021-03', cert:''},
-  {id:'S000138', name:'G&N Multiservices', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'18%', ratio:'11%', rating:'B', contact:'', startDate:'2025-02', cert:''},
-  {id:'S000145', name:'GYM Services LLC', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'18%', ratio:'16%', rating:'B', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000151', name:'One Place Best', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'18%', ratio:'1%', rating:'B', contact:'', startDate:'2025-05', cert:''},
-  {id:'S000178', name:'Imperial Workforce LLC', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:17.7, base:15.0, markup:'20%', ratio:'15%', rating:'B', contact:'', startDate:'2025-08', cert:''},
-  {id:'S000179', name:'Meriland Labor Solution', region:'美洲区', area:'亚特兰大区', type:'劳务', status:'使用中', rate:17.7, base:15.0, markup:'19%', ratio:'1%', rating:'B', contact:'', startDate:'2025-08', cert:''},
-  {id:'S000118', name:'Guadalajara Service LLC', region:'美洲区', area:'亚特兰大区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'B', contact:'Ubaldo 470-594-9626 ubaldoavalos77@gmail.com', startDate:'2024-04', cert:''},
-  {id:'S000101', name:'I&S Warehousing Services LLC', region:'美洲区', area:'亚特兰大区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'B', contact:'Sergio 404-308-5087 vsegio223@gmail.com', startDate:'2023-10', cert:''},
-  {id:'S000109', name:'FORCENATION INC. - 美中', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'17%', ratio:'28%', rating:'B', contact:'Yesid emyforcenation@gmail.com 773-739-1633', startDate:'2024-02', cert:''},
-  {id:'S000060', name:'Solid-美中', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'19%', ratio:'5%', rating:'B', contact:'Lucas lucas@solid.consulting 412-515-6384', startDate:'2022-01', cert:''},
-  {id:'S000128', name:'(GA)Golden Group', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'20%', ratio:'76%', rating:'C', contact:'robert.2033@yahoo.com CC: lidyanenih@goldengroupservices.com robertandika@goldengroupservices.com danioktavio@yahoo.com hanz.goldengroupservices@gmail.com', startDate:'2025-05', cert:''},
-  {id:'S000115', name:'Grande Solutions Staffing - 美中', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'18%', ratio:'0%', rating:'B', contact:'Handy handy@grandesolutionsstaffing.com 951-227-2256', startDate:'2024-09', cert:''},
-  {id:'S000049', name:'Minute Men-美中', region:'美洲区', area:'芝加哥区', type:'卸柜', status:'停用', rate:0, base:0, markup:'18%', ratio:'0%', rating:'—', contact:'', startDate:'2022-12', cert:''},
-  {id:'S000157', name:'Pro Staffing Inc', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'18%', ratio:'21%', rating:'B', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000158', name:'Pro Staff Hire Solution', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'20%', ratio:'10%', rating:'B', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000150', name:'CHI - Executive Recruiting Center LLC', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'19%', ratio:'2%', rating:'C', contact:'', startDate:'2025-05', cert:''},
-  {id:'S000180', name:'Imperial Workforce', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'20%', ratio:'8%', rating:'B', contact:'', startDate:'2025-09', cert:''},
-  {id:'S000186', name:'Tribe Staffing', region:'美洲区', area:'芝加哥区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'23%', ratio:'12%', rating:'—', contact:'', startDate:'2025-09', cert:''},
-  {id:'S000147', name:'(GA)Masis Staffing Solutions', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'停用', rate:0, base:0, markup:'22%', ratio:'1%', rating:'—', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000217', name:'Staffing Alternatives', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:16.0, base:0, markup:'22%', ratio:'0%', rating:'—', contact:'', startDate:'2026-05', cert:''},
-  {id:'S000209', name:'Imperial Workforce', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'20%', ratio:'0%', rating:'—', contact:'', startDate:'2026-03', cert:''},
-  {id:'S000199', name:'SHR', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:16.0, base:16.0, markup:'24%', ratio:'0%', rating:'—', contact:'', startDate:'2026-01', cert:''},
-  {id:'S000128', name:'(GA)Golden Group', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'26%', ratio:'76%', rating:'A', contact:'', startDate:'2024-08', cert:''},
-  {id:'S000132', name:'(GA)Executive Recruiting Center LLC', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'停用', rate:0, base:16.0, markup:'20%', ratio:'0%', rating:'C', contact:'', startDate:'2024-11', cert:''},
-  {id:'S000163', name:'(GA) Be Hired Staffing LLC', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'22%', ratio:'10%', rating:'B', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000164', name:'(GA) Pro Staff Hire Inc.', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'停用', rate:0, base:16.0, markup:'22%', ratio:'1%', rating:'B', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000184', name:'QC MANAGEMENT, LLC', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'24%', ratio:'13%', rating:'—', contact:'', startDate:'2025-09', cert:''},
-  {id:'S000108', name:'(GA)JM Global Lumper Services', region:'美洲区', area:'萨凡纳区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-10', cert:''},
-  {id:'S000105', name:'(GA)Workforce Enterprises', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-09', cert:''},
-  {id:'S000123', name:'(GA)Grande Solutions', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'8%', rating:'—', contact:'meylina@grandesolutionsstaffing.com  CC:  Charlie Kaligis <charlie@grandesolutionsstaffing.com>、 Adrian Pr <adrian@grandesolutionsstaffing.com>', startDate:'2024-06', cert:''},
-  {id:'S000112', name:'(GA)Jibe Staffing', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'alanier@jibestaffing.com CC:  Savannah <savannahbranch@jibestaffing.com>、 Justin Frederick <jfrederick@jibestaffing.com>、 Martin Irvin <mirvin@jibestaffing.com>、 Valida Garrett <vgarrett@jibestaffing.com>', startDate:'2023-12', cert:''},
-  {id:'S000129', name:'(GA)Solid', region:'美洲区', area:'萨凡纳区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'Lucas Pamplona <lucas@solid.consulting> CC: Vladimir Torrealba <vladimir.torrealba@slahr.com>,  Valeria Oliveira <valeria.oliveira@slahr.com>,', startDate:'2024-08', cert:''},
-  {id:'S000111', name:'(Dallas)Priority Workforce', region:'美洲区', area:'达拉斯区', type:'劳务', status:'停用', rate:0, base:13.0, markup:'—', ratio:'3%', rating:'—', contact:'', startDate:'2023-09', cert:''},
-  {id:'S000215', name:'Citistaff Solutions', region:'美洲区', area:'达拉斯区', type:'劳务', status:'使用中', rate:0, base:13.0, markup:'23%', ratio:'45%', rating:'B', contact:'', startDate:'2026-05', cert:''},
-  {id:'S000106', name:'(Dallas)JJ STAFFING', region:'美洲区', area:'达拉斯区', type:'劳务', status:'停用', rate:0, base:13.0, markup:'—', ratio:'40%', rating:'—', contact:'', startDate:'2023-10', cert:''},
-  {id:'S000171', name:'(Dallas)DREAMJOB LLC', region:'美洲区', area:'达拉斯区', type:'劳务', status:'使用中', rate:7.25, base:15.47, markup:'19%', ratio:'23%', rating:'B', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000111', name:'(Dallas)Priority Workforce', region:'美洲区', area:'达拉斯区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'11%', rating:'—', contact:'Jennifer Perez', startDate:'', cert:''},
-  {id:'S000144', name:'(Dallas)Hector Hernandez - Olimar Jerez ( Loyalty Staffing Service LLC)', region:'美洲区', area:'达拉斯区', type:'劳务', status:'使用中', rate:7.25, base:15.99, markup:'21%', ratio:'32%', rating:'B', contact:'', startDate:'2025-03', cert:''},
-  {id:'S000122', name:'(Miami)Grande Solutions LLC', region:'美洲区', area:'迈阿密区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'24%', ratio:'84%', rating:'—', contact:'', startDate:'2024-05', cert:''},
-  {id:'S000126', name:'(Miami）Rekaeya Consulting LLC', region:'美洲区', area:'迈阿密区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'20%', ratio:'16%', rating:'—', contact:'', startDate:'2024-09', cert:''},
-  {id:'S000133', name:'Quantum Solutions Services LLC', region:'美洲区', area:'休斯顿区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'23%', ratio:'4%', rating:'B', contact:'Diana 3234254734', startDate:'2024-11', cert:''},
-  {id:'S000142', name:'Galarza Recruitment Firm', region:'美洲区', area:'休斯顿区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'18%', ratio:'20%', rating:'A', contact:'Alex 9514152388', startDate:'2025-02', cert:''},
-  {id:'S000201', name:'Staff X', region:'美洲区', area:'休斯顿区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'18%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000140', name:'XL Pro Consulting Group, LLC', region:'美洲区', area:'休斯顿区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'19%', ratio:'35%', rating:'A', contact:'Libby 8328021115', startDate:'2025-02', cert:''},
-  {id:'S000135', name:'Solid USA Consulting', region:'美洲区', area:'休斯顿区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'20%', ratio:'40%', rating:'B', contact:'LUCAS PAMPLONA-4125156384', startDate:'2024-11', cert:''},
-  {id:'S000174', name:'Venti Personnel Inc', region:'美洲区', area:'休斯顿区', type:'劳务', status:'使用中', rate:0, base:16.0, markup:'21%', ratio:'1%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S000195', name:'ACA TEAM LLC', region:'美洲区', area:'休斯顿区', type:'卸柜', status:'使用中', rate:0, base:16.0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-11', cert:''},
-  {id:'S000134', name:'JJ STAFFING', region:'美洲区', area:'休斯顿区', type:'劳务', status:'停用', rate:0, base:16.0, markup:'23%', ratio:'0%', rating:'—', contact:'', startDate:'2024-11', cert:''},
-  {id:'S000135', name:'Solid USA Consulting', region:'美洲区', area:'诺福克区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'21%', ratio:'40%', rating:'—', contact:'Lucas 4125156384; lucas@solid.consulting', startDate:'2025-05', cert:''},
-  {id:'S000169', name:'Rekaeya Consulting LLC', region:'美洲区', area:'诺福克区', type:'劳务', status:'使用中', rate:0, base:15.0, markup:'22%', ratio:'0%', rating:'—', contact:'Juan 404-973-8033 jabg@rekaeya.com', startDate:'2025-07', cert:''},
-  {id:'S000166', name:'THOMAS LUMPING', region:'美洲区', area:'诺福克区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000176', name:'Express Services Inc DBA Express Employment Professionals', region:'美洲区', area:'诺福克区', type:'劳务', status:'使用中', rate:18.75, base:15.0, markup:'25%', ratio:'100%', rating:'—', contact:'', startDate:'2025-08', cert:''},
-  {id:'S000146', name:'Executive Recruiting Center Corp.', region:'美洲区', area:'西雅图区', type:'劳务', status:'使用中', rate:0, base:18.0, markup:'20%', ratio:'95%', rating:'—', contact:'', startDate:'2025-04', cert:''},
-  {id:'S000160', name:'Swipejobs LLC', region:'美洲区', area:'西雅图区', type:'劳务', status:'使用中', rate:0, base:18.0, markup:'28%', ratio:'5%', rating:'—', contact:'', startDate:'2025-06', cert:''},
-  {id:'', name:'JM Global Lumper Services LLC', region:'美洲区', area:'西雅图区', type:'卸柜', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'Jose Martinez CEO 787-316-4011', startDate:'2025-05', cert:''},
-  {id:'TPS6622', name:'Express Lumpers', region:'美洲区', area:'西雅图区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'Mehul Sharma 778-242-5175', startDate:'2025-12', cert:''},
-  {id:'S000114', name:'Goldstar Consulting', region:'美洲区', area:'加拿大区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'8%', ratio:'35%', rating:'A', contact:'Andy 647-281-8283', startDate:'2024-02', cert:''},
-  {id:'S000076', name:'First Talent International Inc', region:'美洲区', area:'加拿大区', type:'劳务', status:'使用中', rate:0, base:22.0, markup:'18%', ratio:'3%', rating:'D', contact:'', startDate:'2023-10', cert:''},
-  {id:'S000137', name:'Global HR', region:'美洲区', area:'加拿大区', type:'劳务', status:'使用中', rate:0, base:17.5, markup:'5%', ratio:'32%', rating:'A', contact:'', startDate:'2025-01', cert:''},
-  {id:'S000154', name:'DC STAFFING SOLUTIONS INC.', region:'美洲区', area:'加拿大区', type:'劳务', status:'使用中', rate:0, base:18.05, markup:'5%', ratio:'26%', rating:'B', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000165', name:'CROSS MERGE SERVICES INC.', region:'美洲区', area:'加拿大区', type:'劳务', status:'使用中', rate:0, base:18.05, markup:'5%', ratio:'6%', rating:'B', contact:'', startDate:'2025-07', cert:''},
-  {id:'S000153', name:'Alliance Container Services', region:'美洲区', area:'加拿大区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2025-06', cert:''},
-  {id:'S000099', name:'YES Staffing Solutions LTD', region:'美洲区', area:'加拿大区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2023-08', cert:''},
-  {id:'S000136', name:'Alfa Employment', region:'美洲区', area:'加拿大区', type:'劳务', status:'停用', rate:0, base:17.2, markup:'—', ratio:'0%', rating:'—', contact:'team@alfaemployment.com Aamir', startDate:'2024-11', cert:''},
-  {id:'S000113', name:'1000692944 ONTARIO INC.雅琳', region:'美洲区', area:'加拿大区', type:'劳务', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'2024-01', cert:''},
-  {id:'/', name:'ESLOPSA SA DE CV', region:'美洲区', area:'墨西哥区', type:'卸柜', status:'使用中', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'/', cert:''},
-  {id:'/', name:'JOSE RAMSES OROPEZA MUNGUIA', region:'美洲区', area:'墨西哥区', type:'卸柜', status:'停用', rate:0, base:0, markup:'—', ratio:'0%', rating:'—', contact:'', startDate:'/', cert:''},
-  {id:'S00400', name:'Job&Talent', region:'欧洲区', area:'法国区', type:'劳务', status:'使用中', rate:19.48, base:11.88, markup:'64%', ratio:'0%', rating:'—', contact:'', startDate:'2023-08', cert:''},
-  {id:'S00401', name:'I-interim', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:21.55, base:11.65, markup:'85%', ratio:'0%', rating:'—', contact:'', startDate:'2024-03', cert:''},
-  {id:'S00402', name:'BELHER', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:21.55, base:11.65, markup:'89%', ratio:'0%', rating:'—', contact:'', startDate:'2024-01', cert:''},
-  {id:'S00403', name:'Flex interim', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:21.66, base:11.52, markup:'89%', ratio:'0%', rating:'—', contact:'', startDate:'2023-06', cert:''},
-  {id:'S00404', name:'ANYU i2m', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:21.38, base:12.12, markup:'80%', ratio:'0%', rating:'—', contact:'', startDate:'2022-11', cert:''},
-  {id:'S00405', name:'Sup-interim', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:20.91, base:11.88, markup:'76%', ratio:'0%', rating:'—', contact:'', startDate:'2023-12', cert:''},
-  {id:'S00406', name:'Staffmatch', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:19.96, base:11.88, markup:'68%', ratio:'0%', rating:'—', contact:'', startDate:'2024-11', cert:''},
-  {id:'S00407', name:'Startpeople', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:19.96, base:11.88, markup:'68%', ratio:'0%', rating:'—', contact:'', startDate:'2024-04', cert:''},
-  {id:'S00408', name:'ANYU i2m（巴黎）', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:21.38, base:11.88, markup:'80%', ratio:'0%', rating:'—', contact:'', startDate:'2024-01', cert:''},
-  {id:'S00409', name:'START PEOPLE', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:19.36, base:11.88, markup:'63%', ratio:'0%', rating:'—', contact:'', startDate:'2024-01', cert:''},
-  {id:'S00410', name:'PRORATIS', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:20.79, base:11.88, markup:'75%', ratio:'0%', rating:'—', contact:'', startDate:'2024-06', cert:''},
-  {id:'S00411', name:'Job and talent', region:'欧洲区', area:'法国区', type:'外包', status:'使用中', rate:19.6, base:11.88, markup:'65%', ratio:'0%', rating:'—', contact:'', startDate:'2024-01', cert:''},
-  {id:'S00412', name:'RAS INTERIM', region:'欧洲区', area:'法国区', type:'外包', status:'新增', rate:20.08, base:11.88, markup:'69%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''},
-  {id:'S00413', name:'Kel Work', region:'欧洲区', area:'法国区', type:'外包', status:'新增', rate:20.55, base:11.88, markup:'73%', ratio:'0%', rating:'—', contact:'', startDate:'', cert:''}
-];
+// 主数据源 - 从 Supabase 动态加载
+let suppliers = [];
 
-// 为每个供应商添加 BU 和国家字段，并生成考核指标
-suppliers.forEach(s => {
-  s.bu = BU_MAP[s.region] || s.region;
-  s.country = COUNTRY_MAP[s.area] || '未知';
-  const r = s.rating === '—' ? 'B' : s.rating;
-  s.metrics = genAssessMetrics(r);
-  s.trend = genMonthlyTrend(s.metrics);
-  s.composite = Math.round((s.metrics.delivery * 0.3 + s.metrics.quality * 0.25 + s.metrics.stability * 0.2 + s.metrics.safety * 0.15 + (100 - s.metrics.compliance * 5) * 0.1) * 10) / 10;
-});
+// 为每个供应商添加 BU 和国家字段，和考核指标
+function enrichSuppliers() {
+  suppliers.forEach(s => {
+    // BU mapping based on business line
+    if (s.bu_line === 'GUS') {
+      s.bu = GUS_BU_MAP[s.region] || ('GUS' + s.region);
+    } else if (s.bu_line === 'WX') {
+      s.bu = WX_BU_MAP[s.region] || ('WX' + s.region);
+    } else if (s.bu_line === 'GEU') {
+      s.bu = GEU_BU_MAP[s.region] || ('GEU' + s.region);
+    } else {
+      s.bu = BU_MAP[s.region] || s.region;
+    }
+    s.country = COUNTRY_MAP[s.area] || s.area || '未知';
 
-// 预警数据
-let alerts = [
-  {id:1, level:'red', title:'PERSONALEK Plus 资质即将到期', desc:'该供应商劳务派遣证将于2026-06-25到期，剩余不足15天，请尽快跟进续期事宜。', supplier:'PERSONALEK Plus', time:'2026-06-10', status:'pending'},
-  {id:2, level:'red', title:'Workforce staffing 考核低于阈值', desc:'该供应商最近一期交付及时率仅65.2%，低于80%预警线，建议启动供应商改善计划。', supplier:'Workforce staffing', time:'2026-06-09', status:'pending'},
-  {id:3, level:'red', title:'Grande Solutions LLc 合同纠纷', desc:'收到该供应商关于新泽西区合同条款争议函件，涉及加价比例未达协议约定。', supplier:'Grande Solutions LLc', time:'2026-06-08', status:'pending'},
-  {id:4, level:'yellow', title:'WIW  Markup异常偏高', desc:'该供应商捷克区Markup达49%，显著高于区域平均水平，建议约谈协商。', supplier:'WIW', time:'2026-06-07', status:'pending'},
-  {id:5, level:'yellow', title:'Armz HR 人员稳定性下降', desc:'近3个月人员流失率从12%升至23%，需关注人员管理能力。', supplier:'Armz HR', time:'2026-06-06', status:'pending'},
-  {id:6, level:'yellow', title:'Prompt Priority INC 合同即将到期', desc:'该供应商框架合同将于2026-07-15到期，请提前安排续签。', supplier:'Prompt Priority INC', time:'2026-06-05', status:'pending'},
-  {id:7, level:'blue', title:'(주)씨에프씨 新供应商入职完成', desc:'韩国区新引入供应商已完成注册，资质文件审核中，预计一周内完成。', supplier:'(주)씨에프씨', time:'2026-06-04', status:'pending'},
-  {id:8, level:'blue', title:'HRA Recruitment 年检报告已提交', desc:'英国区年度合规审查报告已收到，各项指标达标。', supplier:'HRA Recruitment Services', time:'2026-06-03', status:'pending'},
-];
+    // Parse WX metadata from cert field
+    if (s.bu_line === 'WX' && s.cert) {
+      try { s.wxData = typeof s.cert === 'string' ? JSON.parse(s.cert) : s.cert; }
+      catch(e) { s.wxData = null; }
+    }
+
+    // Parse GEU metadata from cert field
+    if (s.bu_line === 'GEU' && s.cert) {
+      try { s.geuData = typeof s.cert === 'string' ? JSON.parse(s.cert) : s.cert; }
+      catch(e) { s.geuData = null; }
+    }
+
+    // WX suppliers: no assessment metrics (different business model)
+    if (s.bu_line === 'WX') {
+      s.metrics = null;
+      s.trend = null;
+      s.composite = null;
+      s.hasRealData = false;
+      return;
+    }
+
+    // GEU suppliers: no assessment metrics (same as WX)
+    if (s.bu_line === 'GEU') {
+      s.metrics = null;
+      s.trend = null;
+      s.composite = null;
+      s.hasRealData = false;
+      return;
+    }
+
+    // Use real assessment data if available (GUS suppliers with 考核 data)
+    if (s.gus_assessment && s.gus_assessment.delivery !== undefined) {
+      s.metrics = {
+        delivery: s.gus_assessment.delivery || 0,
+        quality: s.gus_assessment.quality || 0,
+        stability: s.gus_assessment.stability || 0,
+        safety: s.gus_assessment.safety || 0,
+        compliance: s.gus_assessment.compliance || 0
+      };
+      s.trend = [{
+        month: s.gus_assessment.month || '2026-05',
+        delivery: s.metrics.delivery,
+        quality: s.metrics.quality,
+        stability: s.metrics.stability
+      }];
+      s.composite = Math.round((s.metrics.delivery * 0.3 + s.metrics.quality * 0.25 + s.metrics.stability * 0.2 + s.metrics.safety * 0.15 + (100 - s.metrics.compliance * 5) * 0.1) * 10) / 10;
+      s.hasRealData = true;
+    } else {
+      // Fallback: generate metrics from rating (for FBU or GUS without assessment)
+      const r = s.rating === '—' ? 'B' : s.rating;
+      s.metrics = genAssessMetrics(r);
+      s.trend = genMonthlyTrend(s.metrics);
+      s.composite = Math.round((s.metrics.delivery * 0.3 + s.metrics.quality * 0.25 + s.metrics.stability * 0.2 + s.metrics.safety * 0.15 + (100 - s.metrics.compliance * 5) * 0.1) * 10) / 10;
+      s.hasRealData = false;
+    }
+  });
+}
+
+// 预警数据 - 从 Supabase 动态加载
+let alerts = [];
 let resolvedCount = 0;
 
-// 权限控制
-let isCHO = true;
-function toggleRole() {
-  isCHO = !isCHO;
-  const toggle = document.getElementById('roleToggle');
-  const label = document.getElementById('roleLabel');
-  if (isCHO) {
-    toggle.classList.remove('off');
-    label.textContent = '全量数据';
-    label.style.color = 'var(--primary)';
-  } else {
-    toggle.classList.add('off');
-    label.textContent = '受限视图';
-    label.style.color = 'var(--text-tertiary)';
-  }
-  renderCurrentPage();
-  showToast(isCHO ? '已切换为CHO全权限视图' : '已切换为受限视图（部分数据已隐藏）');
+// 权限控制 - 基于角色的权限系统
+let currentUser = null; // { id, name, role, regions, avatar_url }
+let isCHO = true; // Kept for backward compatibility, set based on role
+// Role-based permission functions
+function canEdit() {
+  return currentUser && (currentUser.role === 'admin' || currentUser.role === 'regional_manager');
+}
+function canEditRegion(region) {
+  if (!currentUser) return false;
+  if (currentUser.role === 'admin') return true;
+  if (currentUser.role === 'regional_manager') return (currentUser.regions || []).includes(region);
+  return false;
+}
+function canManageUsers() {
+  return currentUser && currentUser.role === 'admin';
+}
+function applyRolePermissions() {
+  const roleLabels = { admin: '系统管理员', regional_manager: '区域经理', user: '普通用户' };
+  const roleDescs = {
+    admin: '全系统管理权限',
+    regional_manager: (currentUser.regions || []).join('、') + ' 数据管理权限',
+    user: '数据只读访问权限'
+  };
+  // Update header
+  const avatar = document.getElementById('userAvatar');
+  if (avatar) avatar.textContent = (currentUser.name || '?').charAt(0);
+  const nameEl = document.getElementById('userName');
+  if (nameEl) nameEl.textContent = currentUser.name || '';
+  const roleEl = document.getElementById('userRoleText');
+  if (roleEl) roleEl.textContent = roleDescs[currentUser.role] || '';
+  const badge = document.getElementById('roleBadge');
+  if (badge) badge.innerHTML = '<span class="role-badge ' + currentUser.role + '">' + (roleLabels[currentUser.role] || '') + '</span>';
+
+  // Set isCHO based on role (admin and regional_manager see financials)
+  isCHO = currentUser.role !== 'user';
+
+  // Show/hide admin nav items
+  document.querySelectorAll('.nav-admin-only').forEach(el => {
+    el.style.display = canManageUsers() ? (el.classList.contains('nav-label') ? 'block' : 'flex') : 'none';
+  });
+
+  // Apply BU filter visibility based on user's bu_lines
+  applyBUFilterVisibility();
 }
 function maskSensitive(val) {
   return isCHO ? val : '***';
+}
+
+async function doLogout() {
+  try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch(e) {}
+  currentUser = null;
+  document.getElementById('loginOverlay').style.display = 'flex';
+  showToast('已退出登录');
 }
 
 // ============================== Page Navigation ==============================
@@ -1286,7 +1363,10 @@ const PAGE_TITLES = {
   pricing: '供应商定价',
   assessment: '供应商考核',
   onboard: '引入供应商',
-  compliance: '合规及预警'
+  compliance: '合规及预警',
+  'user-mgmt': '用户管理',
+  'data-mgmt': '数据管理',
+  'audit-logs': '操作日志'
 };
 const PAGE_BREADCRUMBS = {
   kanban: '全集团 / 供应商看板',
@@ -1294,7 +1374,10 @@ const PAGE_BREADCRUMBS = {
   pricing: '全集团 / 定价分析',
   assessment: '全集团 / 绩效考核',
   onboard: '全集团 / 供应商引入',
-  compliance: '全集团 / 风险监控'
+  compliance: '全集团 / 风险监控',
+  'user-mgmt': '系统管理 / 用户管理',
+  'data-mgmt': '系统管理 / 数据管理',
+  'audit-logs': '系统管理 / 操作日志'
 };
 let currentPage = 'kanban';
 
@@ -1318,6 +1401,9 @@ function renderCurrentPage() {
     case 'pricing': renderPricingCharts(); break;
     case 'assessment': renderAssessment(); break;
     case 'compliance': renderAlerts(); break;
+    case 'user-mgmt': renderUserMgmt(); break;
+    case 'data-mgmt': renderDataMgmtTable(); break;
+    case 'audit-logs': loadAuditLogs(); break;
   }
 }
 
@@ -1333,12 +1419,32 @@ function renderKanban() {
   // Summary cards
   document.getElementById('kanbanSummary').innerHTML = `
     <div class="ks-card"><div class="ks-label">供应商总数</div><div class="ks-value">${total}</div><div class="ks-sub">覆盖 ${allCountries.length} 个国家 · ${allAreas.length} 个地区</div></div>
-    <div class="ks-card" style="border-left-color:#27AE60;"><div class="ks-label">在用</div><div class="ks-value" style="color:#27AE60;">${activeCount}</div><div class="ks-sub">占比 ${Math.round(activeCount/total*100)}%</div></div>
-    <div class="ks-card" style="border-left-color:#E5484D;"><div class="ks-label">停用</div><div class="ks-value" style="color:#E5484D;">${inactiveCount}</div><div class="ks-sub">占比 ${Math.round(inactiveCount/total*100)}%</div></div>
-    <div class="ks-card" style="border-left-color:#F5A623;"><div class="ks-label">新增</div><div class="ks-value" style="color:#F5A623;">${newCount}</div><div class="ks-sub">占比 ${Math.round(newCount/total*100)}%</div></div>
+    <div class="ks-card" style="border-left-color:#27AE60;"><div class="ks-label">在用</div><div class="ks-value" style="color:#27AE60;">${activeCount}</div><div class="ks-sub">占比 ${total > 0 ? Math.round(activeCount/total*100) : 0}%</div></div>
+    <div class="ks-card" style="border-left-color:#E5484D;"><div class="ks-label">停用</div><div class="ks-value" style="color:#E5484D;">${inactiveCount}</div><div class="ks-sub">占比 ${total > 0 ? Math.round(inactiveCount/total*100) : 0}%</div></div>
+    <div class="ks-card" style="border-left-color:#F5A623;"><div class="ks-label">新增</div><div class="ks-value" style="color:#F5A623;">${newCount}</div><div class="ks-sub">占比 ${total > 0 ? Math.round(newCount/total*100) : 0}%</div></div>
   `;
 
-  // === BU aggregation ===
+  // BU-specific branching
+  const sectionBU = document.getElementById('kanbanSectionBU');
+  const sectionUsage = document.getElementById('kanbanSectionUsage');
+  const buSpecificEl = document.getElementById('buSpecificKanban');
+
+  if (currentBUFilter !== 'all') {
+    sectionBU.style.display = 'none';
+    sectionUsage.style.display = 'none';
+    buSpecificEl.style.display = 'block';
+    if (currentBUFilter === 'FBU') renderFBUKanban(buSpecificEl);
+    else if (currentBUFilter === 'GUS') renderGUSKanban(buSpecificEl);
+    else if (currentBUFilter === 'WX') renderWXKanban(buSpecificEl);
+    else if (currentBUFilter === 'GEU') renderGEUKanban(buSpecificEl);
+  } else {
+    sectionBU.style.display = '';
+    sectionUsage.style.display = '';
+    buSpecificEl.style.display = 'none';
+    buSpecificEl.innerHTML = '';
+  }
+
+  // === BU aggregation (always compute for sections II/III, and for "all" view sections I/IV) ===
   const buData = {};
   suppliers.forEach(s => {
     if (!buData[s.bu]) buData[s.bu] = { total: 0, active: 0, inactive: 0, newCount: 0, countries: new Set() };
@@ -1456,6 +1562,333 @@ function renderKanban() {
       </td>
     </tr>`;
   }).join('');
+}
+
+// ============================== BU-Specific Kanban Renderers ==============================
+const BU_COLORS = { FBU:'#2E6BE5', GUS:'#2E7D32', WX:'#E65100', GEU:'#7B1FA2' };
+const BU_LABELS = { FBU:'FBU', GUS:'GUS', WX:'WX', GEU:'GEU' };
+
+function renderFBUKanban(el) {
+  const buColor = BU_COLORS.FBU;
+  // 1. Avg markup per continent
+  const continents = {};
+  suppliers.forEach(s => {
+    if (!continents[s.bu]) continents[s.bu] = { markups: [], count: 0 };
+    continents[s.bu].count++;
+    const m = parseFloat(s.markup);
+    if (!isNaN(m) && m > 0) continents[s.bu].markups.push(m);
+  });
+  const contCards = Object.entries(continents).map(([bu, d]) => {
+    const avg = d.markups.length ? Math.round(d.markups.reduce((a,b)=>a+b,0)/d.markups.length) : 0;
+    return `<div class="ks-card" style="border-left-color:${buColor};"><div class="ks-label">${bu}</div><div class="ks-value" style="color:${buColor};">${avg}%</div><div class="ks-sub">平均Markup · ${d.count}家供应商</div></div>`;
+  }).join('');
+
+  // 2. Supplier type distribution
+  const typeMap = {};
+  suppliers.forEach(s => { typeMap[s.type] = (typeMap[s.type] || 0) + 1; });
+  const total = suppliers.length;
+  const typeRows = Object.entries(typeMap).sort((a,b) => b[1]-a[1]).map(([t, c]) => {
+    const pct = Math.round(c/total*100);
+    return `<tr><td style="font-weight:600;">${t || '未分类'}</td><td class="num-cell">${c}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:${pct}%;background:${buColor};"></div></div><span style="font-size:12px;">${pct}%</span></div></td></tr>`;
+  }).join('');
+
+  // 3. Rating distribution
+  const ratingMap = {};
+  suppliers.forEach(s => { ratingMap[s.rating] = (ratingMap[s.rating] || 0) + 1; });
+  const ratingColors = { 'A':'#27AE60', 'B':'#2E6BE5', 'C':'#F5A623', 'D':'#E5484D', '—':'#999' };
+  const ratingRows = ['A','B','C','D','—'].filter(r => ratingMap[r]).map(r => {
+    const c = ratingMap[r]; const pct = Math.round(c/total*100);
+    return `<tr><td><span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:6px;font-weight:700;font-size:13px;color:#fff;background:${ratingColors[r]};">${r}</span></td><td class="num-cell">${c}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:${pct}%;background:${ratingColors[r]};"></div></div><span style="font-size:12px;">${pct}%</span></div></td></tr>`;
+  }).join('');
+
+  // 4. Avg markup by area (for ECharts)
+  const areaMarkup = {};
+  suppliers.forEach(s => {
+    if (!areaMarkup[s.area]) areaMarkup[s.area] = { markups: [], bu: s.bu };
+    const m = parseFloat(s.markup);
+    if (!isNaN(m) && m > 0) areaMarkup[s.area].markups.push(m);
+  });
+  const sortedAreas = Object.entries(areaMarkup).sort((a,b) => {
+    const avgA = a[1].markups.length ? a[1].markups.reduce((x,y)=>x+y,0)/a[1].markups.length : 0;
+    const avgB = b[1].markups.length ? b[1].markups.reduce((x,y)=>x+y,0)/b[1].markups.length : 0;
+    return avgB - avgA;
+  });
+
+  el.innerHTML = `
+    <div class="kanban-summary">${contCards}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">供应商类型分布<span>按公司类型统计</span></div>
+        <table class="kanban-table"><thead><tr><th>类型</th><th>数量</th><th>占比</th></tr></thead><tbody>${typeRows}</tbody></table>
+      </div>
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">评级分布<span>按供应商评级统计</span></div>
+        <table class="kanban-table"><thead><tr><th>评级</th><th>数量</th><th>占比</th></tr></thead><tbody>${ratingRows}</tbody></table>
+      </div>
+    </div>
+    <div class="kanban-section">
+      <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">各大区平均Markup对比<span>按地区排列，仅含有定价数据的供应商</span></div>
+      <div style="height:400px;padding:16px;" id="fbuAreaChart"></div>
+    </div>
+  `;
+
+  // Render ECharts bar
+  try {
+    const chartEl = document.getElementById('fbuAreaChart');
+    if (chartEl && typeof echarts !== 'undefined') {
+      const chart = echarts.init(chartEl);
+      const contColors = { 'FBU美洲':'#2E6BE5', 'FBU欧洲':'#00B8A9', 'FBU亚太':'#F5A623' };
+      chart.setOption({
+        tooltip: { trigger:'axis', axisPointer:{type:'shadow'} },
+        grid: { top:20, right:60, bottom:20, left:120 },
+        xAxis: { type:'value', name:'Markup(%)', axisLabel:{formatter:'{value}%'} },
+        yAxis: { type:'category', data:sortedAreas.map(a=>a[0]).reverse(), axisLabel:{fontSize:12} },
+        series: [{ type:'bar', data:sortedAreas.map(a => {
+          const avg = a[1].markups.length ? Math.round(a[1].markups.reduce((x,y)=>x+y,0)/a[1].markups.length) : 0;
+          return { value:avg, itemStyle:{color:contColors[a[1].bu]||buColor, borderRadius:[0,4,4,0]} };
+        }).reverse(), label:{show:true,position:'right',formatter:'{c}%',fontWeight:600}, barWidth:'60%' }]
+      });
+      if (pricingChartInstances.fbuArea) pricingChartInstances.fbuArea.dispose();
+      pricingChartInstances.fbuArea = chart;
+    }
+  } catch(e) { console.error('FBU chart error:', e); }
+}
+
+function renderGUSKanban(el) {
+  const buColor = BU_COLORS.GUS;
+  const withMetrics = suppliers.filter(s => s.metrics);
+  const avg = (arr) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10 : 0;
+  const deliveries = withMetrics.map(s => s.metrics.delivery);
+  const qualities = withMetrics.map(s => s.metrics.quality);
+  const stabilities = withMetrics.map(s => s.metrics.stability);
+  const safeties = withMetrics.map(s => s.metrics.safety);
+  const compliances = withMetrics.map(s => s.metrics.compliance);
+
+  const cards = [
+    { label:'平均交付及时率', val:avg(deliveries)+'%', sub:deliveries.length+'家有数据', color:'#2E6BE5' },
+    { label:'平均质量合格率', val:avg(qualities)+'%', sub:qualities.length+'家有数据', color:'#27AE60' },
+    { label:'平均人员稳定性', val:avg(stabilities)+'%', sub:stabilities.length+'家有数据', color:'#00B8A9' },
+    { label:'平均安全事故率', val:avg(safeties)+'%', sub:safeties.length+'家有数据', color:'#F5A623' },
+    { label:'平均合规扣分', val:avg(compliances), sub:compliances.length+'家有数据', color:'#E5484D' }
+  ].map(c => `<div class="ks-card" style="border-left-color:${c.color};"><div class="ks-label">${c.label}</div><div class="ks-value" style="color:${c.color};">${c.val}</div><div class="ks-sub">${c.sub}</div></div>`).join('');
+
+  // TOP5 / BOTTOM5
+  const ranked = suppliers.filter(s => s.composite != null).sort((a,b) => b.composite - a.composite);
+  const top5 = ranked.slice(0, 5);
+  const bottom5 = ranked.slice(-5).reverse();
+  const scoreBadge = (score) => {
+    const c = score >= 80 ? '#27AE60' : score >= 60 ? '#F5A623' : '#E5484D';
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-weight:700;font-size:13px;color:#fff;background:${c};">${score}</span>`;
+  };
+  const rankTable = (list, title) => `<div class="kanban-section" style="margin-bottom:0;"><div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">${title}</div><table class="kanban-table"><thead><tr><th>排名</th><th>供应商</th><th>地区</th><th>综合分</th></tr></thead><tbody>${list.map((s,i) => `<tr><td class="num-cell">${i+1}</td><td style="font-weight:600;">${s.name}</td><td>${s.area}</td><td style="text-align:center;">${scoreBadge(s.composite)}</td></tr>`).join('')}</tbody></table></div>`;
+
+  // Regional averages
+  const regionScores = {};
+  withMetrics.forEach(s => {
+    if (!regionScores[s.area]) regionScores[s.area] = { d:[], q:[], st:[], sa:[], co:[] };
+    regionScores[s.area].d.push(s.metrics.delivery);
+    regionScores[s.area].q.push(s.metrics.quality);
+    regionScores[s.area].st.push(s.metrics.stability);
+    regionScores[s.area].sa.push(s.metrics.safety);
+    regionScores[s.area].co.push(s.metrics.compliance);
+  });
+  const regionRows = Object.entries(regionScores).map(([area, d]) =>
+    `<tr><td style="font-weight:600;">${area}</td><td class="num-cell">${avg(d.d)}%</td><td class="num-cell">${avg(d.q)}%</td><td class="num-cell">${avg(d.st)}%</td><td class="num-cell">${avg(d.sa)}%</td><td class="num-cell">${avg(d.co)}</td></tr>`
+  ).join('');
+
+  el.innerHTML = `
+    <div class="kanban-summary">${cards}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+      ${rankTable(top5, 'TOP5 考核最优供应商')}
+      ${rankTable(bottom5, 'BOTTOM5 考核待提升供应商')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">各区域考核平均分<span>按地区聚合</span></div>
+        <table class="kanban-table"><thead><tr><th>区域</th><th>交付</th><th>质量</th><th>稳定性</th><th>安全</th><th>合规</th></tr></thead><tbody>${regionRows}</tbody></table>
+      </div>
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">考核维度雷达<span>全BU平均得分</span></div>
+        <div style="height:300px;" id="gusRadar"></div>
+      </div>
+    </div>
+  `;
+
+  try {
+    const radarEl = document.getElementById('gusRadar');
+    if (radarEl && typeof echarts !== 'undefined') {
+      const chart = echarts.init(radarEl);
+      chart.setOption({
+        radar: { indicator: [{name:'交付',max:100},{name:'质量',max:100},{name:'稳定性',max:100},{name:'安全',max:100},{name:'合规',max:10}], shape:'polygon', splitArea:{show:true}, axisName:{color:'#333',fontSize:12} },
+        series: [{ type:'radar', data:[{ value:[avg(deliveries),avg(qualities),avg(stabilities),avg(safeties),avg(compliances)], name:'BU平均', areaStyle:{color:'rgba(46,125,50,0.2)'}, lineStyle:{color:buColor,width:2}, itemStyle:{color:buColor} }] }]
+      });
+      if (pricingChartInstances.gusRadar) pricingChartInstances.gusRadar.dispose();
+      pricingChartInstances.gusRadar = chart;
+    }
+  } catch(e) { console.error('GUS radar error:', e); }
+}
+
+function renderWXKanban(el) {
+  const buColor = BU_COLORS.WX;
+  const active = suppliers.filter(s => s.status !== '停用');
+  const avg = (arr) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10 : 0;
+  const rates = active.map(s => s.rate).filter(v => v != null && v > 0);
+  const bases = active.map(s => s.base).filter(v => v != null && v > 0);
+  const profits = active.map(s => s.wxData?.supplier_profit).filter(v => v != null);
+  const markups = active.map(s => { const m = parseFloat(s.markup); return isNaN(m) ? null : m; }).filter(v => v != null);
+
+  const cards = [
+    { label:'平均报价', val:avg(rates), sub:`${rates.length}家有数据`, color:'#E65100' },
+    { label:'平均最低时薪', val:avg(bases), sub:`${bases.length}家有数据`, color:'#2E6BE5' },
+    { label:'平均雇主成本', val:markups.length ? avg(markups).toFixed(1) : '—', sub:`${markups.length}家有数据`, color:'#00B8A9' },
+    { label:'平均供应商获利', val:profits.length ? avg(profits).toFixed(1) : '—', sub:`${profits.length}家有数据`, color:'#27AE60' }
+  ].map(c => `<div class="ks-card" style="border-left-color:${c.color};"><div class="ks-label">${c.label}</div><div class="ks-value" style="color:${c.color};">${c.val}</div><div class="ks-sub">${c.sub}</div></div>`).join('');
+
+  // Cost structure table
+  const costRows = active.sort((a,b) => (b.rate||0)-(a.rate||0)).map(s => {
+    const profit = s.wxData?.supplier_profit;
+    return `<tr><td style="font-weight:600;">${s.name}</td><td>${s.country}</td><td class="num-cell">${s.rate != null ? s.rate : '—'}</td><td class="num-cell">${s.base != null ? s.base : '—'}</td><td class="num-cell">${s.markup || '—'}</td><td class="num-cell">${profit != null ? profit : '—'}</td><td class="num-cell">${s.ratio || '—'}</td></tr>`;
+  }).join('');
+
+  // Monthly ratio trend data
+  const months = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'];
+  const monthAvgs = months.map(m => {
+    const vals = active.map(s => s.wxData?.monthly_ratios?.[m]).filter(v => v != null);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*1000)/10 : null;
+  });
+
+  // Country distribution
+  const countryCount = {};
+  active.forEach(s => { countryCount[s.country] = (countryCount[s.country]||0) + 1; });
+  const countryData = Object.entries(countryCount).sort((a,b) => b[1]-a[1]);
+
+  el.innerHTML = `
+    <div class="kanban-summary">${cards}</div>
+    <div class="kanban-section">
+      <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">供应商成本结构对比<span>按报价从高到低排列</span></div>
+      <table class="kanban-table"><thead><tr><th>供应商</th><th>国家</th><th>报价</th><th>最低时薪</th><th>雇主成本</th><th>供应商获利</th><th>占比</th></tr></thead><tbody>${costRows}</tbody></table>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">月度供应商占比趋势<span>2026年各月平均占比</span></div>
+        <div style="height:300px;" id="wxTrendChart"></div>
+      </div>
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">各国供应商分布<span>按国家统计</span></div>
+        <div style="height:300px;" id="wxPieChart"></div>
+      </div>
+    </div>
+  `;
+
+  try {
+    if (typeof echarts !== 'undefined') {
+      // Monthly trend
+      const trendEl = document.getElementById('wxTrendChart');
+      if (trendEl) {
+        const chart = echarts.init(trendEl);
+        const validMonths = months.filter((m,i) => monthAvgs[i] != null);
+        const validAvgs = monthAvgs.filter(v => v != null);
+        chart.setOption({
+          tooltip: { trigger:'axis', formatter: p => `${p[0].name}<br/>平均占比: ${p[0].value}%` },
+          grid: { top:20, right:20, bottom:30, left:50 },
+          xAxis: { type:'category', data:validMonths.map(m=>m.slice(5)), axisLabel:{fontSize:11} },
+          yAxis: { type:'value', name:'占比(%)', axisLabel:{formatter:'{value}%'} },
+          series: [{ type:'line', data:validAvgs, smooth:true, areaStyle:{color:'rgba(230,101,0,0.15)'}, lineStyle:{color:buColor,width:2}, itemStyle:{color:buColor} }]
+        });
+        if (pricingChartInstances.wxTrend) pricingChartInstances.wxTrend.dispose();
+        pricingChartInstances.wxTrend = chart;
+      }
+      // Pie chart
+      const pieEl = document.getElementById('wxPieChart');
+      if (pieEl) {
+        const chart = echarts.init(pieEl);
+        const pieColors = ['#E65100','#F5A623','#2E6BE5','#00B8A9','#27AE60','#8B5CF6','#E5484D','#0EA5E9'];
+        chart.setOption({
+          tooltip: { trigger:'item', formatter:'{b}: {c}家 ({d}%)' },
+          legend: { bottom:0, textStyle:{fontSize:11} },
+          series: [{ type:'pie', radius:['40%','70%'], center:['50%','45%'], data:countryData.map((d,i) => ({name:d[0],value:d[1],itemStyle:{color:pieColors[i%pieColors.length]}})), label:{show:true,formatter:'{b}\n{c}家',fontSize:11} }]
+        });
+        if (pricingChartInstances.wxPie) pricingChartInstances.wxPie.dispose();
+        pricingChartInstances.wxPie = chart;
+      }
+    }
+  } catch(e) { console.error('WX chart error:', e); }
+}
+
+function renderGEUKanban(el) {
+  const buColor = BU_COLORS.GEU;
+  const active = suppliers.filter(s => s.status !== '停用');
+  const feeRates = active.map(s => s.geuData?.fee_rate).filter(v => v != null && v > 0);
+  const avgFee = feeRates.length ? Math.round(feeRates.reduce((a,b)=>a+b,0)/feeRates.length*10)/10 : 0;
+  const warehouses = new Set(active.map(s => s.geuData?.warehouse).filter(Boolean));
+
+  const cards = [
+    { label:'平均费率', val:avgFee+'%', sub:`${feeRates.length}家有费率数据`, color:'#7B1FA2' },
+    { label:'在用仓库', val:warehouses.size, sub:'覆盖仓库数', color:'#2E6BE5' },
+    { label:'在用供应商', val:active.length, sub:`共${suppliers.length}家（含停用）`, color:'#27AE60' }
+  ].map(c => `<div class="ks-card" style="border-left-color:${c.color};"><div class="ks-label">${c.label}</div><div class="ks-value" style="color:${c.color};">${c.val}</div><div class="ks-sub">${c.sub}</div></div>`).join('');
+
+  // Warehouse distribution
+  const whMap = {};
+  suppliers.forEach(s => {
+    const wh = s.geuData?.warehouse || '未知';
+    const whs = wh.split(',');
+    whs.forEach(w => {
+      w = w.trim();
+      if (!whMap[w]) whMap[w] = { total:0, active:0, inactive:0 };
+      whMap[w].total++;
+      if (s.status === '使用中') whMap[w].active++; else whMap[w].inactive++;
+    });
+  });
+  const whTotal = Object.values(whMap).reduce((s,d) => s+d.total, 0);
+  const whRows = Object.entries(whMap).sort((a,b)=>b[1].total-a[1].total).map(([wh, d]) => {
+    const pct = Math.round(d.total/whTotal*100);
+    return `<tr><td style="font-weight:600;">${wh}</td><td class="num-cell">${d.total}</td><td><span class="tag-active">${d.active} 在用</span>${d.inactive ? ` <span class="tag-inactive">${d.inactive} 停用</span>` : ''}</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:${pct}%;background:${buColor};"></div></div><span style="font-size:12px;">${pct}%</span></div></td></tr>`;
+  }).join('');
+
+  // Fee rate ranking (for ECharts)
+  const feeSorted = active.filter(s => s.geuData?.fee_rate > 0).sort((a,b) => a.geuData.fee_rate - b.geuData.fee_rate);
+  const countryColors = { '荷兰':'#2E6BE5', '意大利':'#27AE60', '法国':'#E65100' };
+
+  // Supplier details table
+  const detailRows = suppliers.sort((a,b) => (a.name||'').localeCompare(b.name||'')).map(s => {
+    const gd = s.geuData || {};
+    return `<tr><td style="font-weight:600;">${s.name}</td><td>${s.country}</td><td>${gd.warehouse || '—'}</td><td class="num-cell">${gd.fee_rate > 0 ? gd.fee_rate+'%' : '—'}</td><td style="font-size:12px;">${gd.oa_process || '—'}</td><td style="font-size:12px;">${s.contact ? s.contact.split('/')[0].trim() : '—'}</td><td><span class="${s.status==='使用中'?'tag-active':'tag-inactive'}">${s.status}</span></td></tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="kanban-summary">${cards}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">仓库供应商分布<span>按物理仓统计</span></div>
+        <table class="kanban-table"><thead><tr><th>仓库</th><th>数量</th><th>状态</th><th>占比</th></tr></thead><tbody>${whRows}</tbody></table>
+      </div>
+      <div class="kanban-section" style="margin-bottom:0;">
+        <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">费率排名<span>仅显示费率>0的供应商，按国家着色</span></div>
+        <div style="height:300px;" id="geuFeeChart"></div>
+      </div>
+    </div>
+    <div class="kanban-section">
+      <div class="kanban-section-header" style="background:linear-gradient(135deg,${buColor},${buColor}dd);">供应商详情一览<span>GEU全部供应商核心信息</span></div>
+      <table class="kanban-table"><thead><tr><th>供应商</th><th>国家</th><th>仓库</th><th>费率</th><th>OA流程</th><th>联系人</th><th>状态</th></tr></thead><tbody>${detailRows}</tbody></table>
+    </div>
+  `;
+
+  try {
+    const feeEl = document.getElementById('geuFeeChart');
+    if (feeEl && typeof echarts !== 'undefined' && feeSorted.length > 0) {
+      const chart = echarts.init(feeEl);
+      chart.setOption({
+        tooltip: { trigger:'axis', axisPointer:{type:'shadow'} },
+        grid: { top:10, right:50, bottom:10, left:140 },
+        xAxis: { type:'value', name:'费率(%)', axisLabel:{formatter:'{value}%'} },
+        yAxis: { type:'category', data:feeSorted.map(s=>s.name), axisLabel:{fontSize:11} },
+        series: [{ type:'bar', data:feeSorted.map(s => ({ value:s.geuData.fee_rate, itemStyle:{color:countryColors[s.country]||buColor, borderRadius:[0,4,4,0]} })), label:{show:true,position:'right',formatter:'{c}%',fontWeight:600,fontSize:11}, barWidth:'55%' }]
+      });
+      if (pricingChartInstances.geuFee) pricingChartInstances.geuFee.dispose();
+      pricingChartInstances.geuFee = chart;
+    }
+  } catch(e) { console.error('GEU chart error:', e); }
 }
 
 // ============================== Page 1: 供应商明细 ==============================
@@ -1617,7 +2050,7 @@ function openSupplierDrawer(idx) {
 
   body.innerHTML = `
     <div class="drawer-section">
-      <h4>基本信息</h4>
+      <h4>基本信息 ${s.hasRealData ? '<span style="font-size:11px;padding:2px 6px;border-radius:3px;background:#e8f5e9;color:#2e7d32;font-weight:normal;margin-left:6px;">考核数据来源：2026年5月实测</span>' : '<span style="font-size:11px;padding:2px 6px;border-radius:3px;background:#fff3e0;color:#e65100;font-weight:normal;margin-left:6px;">考核指标为模拟数据</span>'}</h4>
       <div class="drawer-info-grid">
         <div class="drawer-info-item"><div class="dii-label">供应商ID</div><div class="dii-value">${s.id}</div></div>
         <div class="drawer-info-item"><div class="dii-label">BU / 国家 / 地区</div><div class="dii-value">${s.bu} / ${s.country} / ${s.area}</div></div>
@@ -1627,17 +2060,51 @@ function openSupplierDrawer(idx) {
         <div class="drawer-info-item"><div class="dii-label">联系人</div><div class="dii-value" style="font-size:12px;">${s.contact || '—'}</div></div>
         <div class="drawer-info-item"><div class="dii-label">资质证书</div><div class="dii-value" style="font-size:12px;">${s.cert || '—'}</div></div>
         <div class="drawer-info-item"><div class="dii-label">评级</div><div class="dii-value">${s.rating}</div></div>
+        ${s.gus_assessment?.qualification ? `
+        <div class="drawer-info-item"><div class="dii-label">公司注册</div><div class="dii-value">${s.gus_assessment.qualification.registration || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">经营状况</div><div class="dii-value">${s.gus_assessment.qualification.operating || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">保险信息</div><div class="dii-value">${s.gus_assessment.qualification.insurance || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">劳工保险</div><div class="dii-value">${s.gus_assessment.qualification.workers_comp || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">保险到期日</div><div class="dii-value">${s.gus_assessment.qualification.insurance_expiry || '—'}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">合规用工</div><div class="dii-value">${s.gus_assessment.qualification.legal_workers || '—'}</div></div>
+        ` : ''}
       </div>
     </div>
     <div class="drawer-section">
-      <h4>定价信息</h4>
+      <h4>定价信息 ${s.bu_line === 'WX' ? '<span style="font-size:11px;color:var(--text-tertiary);font-weight:normal;margin-left:6px;">（劳包Markup）</span>' : s.bu_line === 'GEU' ? '<span style="font-size:11px;color:var(--text-tertiary);font-weight:normal;margin-left:6px;">（GEU供应商）</span>' : ''}</h4>
       <div class="drawer-info-grid">
-        <div class="drawer-info-item"><div class="dii-label">结算时薪</div><div class="dii-value" style="font-size:18px;font-weight:700;color:var(--primary);">${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</div></div>
-        <div class="drawer-info-item"><div class="dii-label">基本时薪</div><div class="dii-value">${maskSensitive(s.base ? s.base.toFixed(2) : '—')}</div></div>
-        <div class="drawer-info-item"><div class="dii-label">Markup</div><div class="dii-value">${maskSensitive(s.markup)}</div></div>
-        <div class="drawer-info-item"><div class="dii-label">用工占比</div><div class="dii-value">${s.ratio}</div></div>
+        ${s.bu_line === 'WX' ? `
+          <div class="drawer-info-item"><div class="dii-label">报价（操作员）</div><div class="dii-value" style="font-size:18px;font-weight:700;color:var(--primary);">${s.rate != null ? s.rate : '—'} ${s.wxData?.currency || ''}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">法定最低时薪</div><div class="dii-value">${s.base != null ? s.base : '—'} ${s.wxData?.currency || ''}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">雇主成本</div><div class="dii-value">${s.markup != null ? s.markup : '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">供应商获利</div><div class="dii-value">${s.wxData?.supplier_profit != null ? s.wxData.supplier_profit : '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">劳包供应商占比</div><div class="dii-value">${s.ratio || '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">考核权重</div><div class="dii-value">${s.wxData?.assessment_weight != null ? (s.wxData.assessment_weight * 100).toFixed(1) + '%' : '—'}</div></div>
+        ` : s.bu_line === 'GEU' ? `
+          <div class="drawer-info-item"><div class="dii-label">费率（Fee Rate）</div><div class="dii-value" style="font-size:18px;font-weight:700;color:var(--primary);">${s.geuData?.fee_rate != null && s.geuData.fee_rate > 0 ? s.geuData.fee_rate + '%' : '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">仓库</div><div class="dii-value">${s.geuData?.warehouse || '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">OA流程号</div><div class="dii-value">${s.geuData?.oa_process || '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">财务名称</div><div class="dii-value">${s.geuData?.finance_name || '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">库存等级</div><div class="dii-value">${s.geuData?.inventory_level || '—'}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">联系方式</div><div class="dii-value" style="font-size:12px;">${s.contact || '—'}</div></div>
+        ` : `
+          <div class="drawer-info-item"><div class="dii-label">结算时薪</div><div class="dii-value" style="font-size:18px;font-weight:700;color:var(--primary);">${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">基本时薪</div><div class="dii-value">${maskSensitive(s.base ? s.base.toFixed(2) : '—')}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">Markup</div><div class="dii-value">${maskSensitive(s.markup)}</div></div>
+          <div class="drawer-info-item"><div class="dii-label">用工占比</div><div class="dii-value">${s.ratio}</div></div>
+        `}
       </div>
     </div>
+    ${s.bu_line === 'WX' && s.wxData?.monthly_ratios ? `
+    <div class="drawer-section">
+      <h4>月度供应商占比变化（2026年）</h4>
+      <table class="mini-table">
+        <tr><th>月份</th><th>占比</th></tr>
+        ${Object.entries(s.wxData.monthly_ratios).map(([m, v]) => `<tr><td>${m}</td><td>${v != null ? (v * 100).toFixed(1) + '%' : '—'}</td></tr>`).join('')}
+      </table>
+    </div>
+    ` : ''}
+    ${s.metrics ? `
     <div class="drawer-section">
       <h4>考核趋势（近6个月）</h4>
       <div class="detail-chart" id="drawerTrendChart"></div>
@@ -1653,6 +2120,12 @@ function openSupplierDrawer(idx) {
         <tr><td>合规扣分</td><td>${s.metrics.compliance}</td><td>${s.metrics.compliance <= 2 ? '🟢 良好' : s.metrics.compliance <= 5 ? '🟡 一般' : '🔴 需关注'}</td></tr>
       </table>
     </div>
+    ` : `
+    <div class="drawer-section">
+      <h4>考核数据</h4>
+      <div style="color:var(--text-tertiary);font-size:13px;padding:8px 0;">该业务线暂无考核数据</div>
+    </div>
+    `}
     <div class="drawer-section">
       <h4>相关预警事件</h4>
       ${alerts.filter(a => a.supplier === s.name).length > 0 ?
@@ -1670,10 +2143,12 @@ function openSupplierDrawer(idx) {
   document.getElementById('drawerOverlay').classList.add('show');
   document.getElementById('drawer').classList.add('show');
 
-  // Render mini trend chart
+  // Render mini trend chart (only if element exists - WX suppliers skip this)
   setTimeout(() => {
+    const chartEl = document.getElementById('drawerTrendChart');
+    if (!chartEl) return;
     if (pricingChartInstances.drawerTrend) pricingChartInstances.drawerTrend.dispose();
-    const chart = echarts.init(document.getElementById('drawerTrendChart'));
+    const chart = echarts.init(chartEl);
     pricingChartInstances.drawerTrend = chart;
     chart.setOption({
       tooltip: { trigger: 'axis' },
@@ -1703,20 +2178,34 @@ function switchPricingTab(tab, evt) {
   if (evt && evt.target) evt.target.classList.add('active');
   else document.querySelector('#pricingTabs .tab-btn').classList.add('active');
   document.getElementById('pricing' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = 'block';
-  if (tab === 'bu') renderBUComparison();
-  if (tab === 'type') renderTypeComparison();
-  if (tab === 'supplier') renderSupplierCrossBU();
+  try {
+    if (tab === 'bu') renderBUComparison();
+    if (tab === 'type') renderTypeComparison();
+    if (tab === 'supplier') renderSupplierCrossBU();
+  } catch(e) {
+    console.error('switchPricingTab error:', e);
+  }
 }
 
 function renderPricingCharts() {
-  renderBUComparison();
-  populateSupplierSelect();
+  try {
+    renderBUComparison();
+  } catch(e) {
+    console.error('renderBUComparison error:', e);
+    const el = document.getElementById('chartBUavg');
+    if (el) el.innerHTML = '<div style="padding:20px;color:#E5484D;">BU对比图表加载失败: ' + e.message + '</div>';
+  }
+  try {
+    populateSupplierSelect();
+  } catch(e) {
+    console.error('populateSupplierSelect error:', e);
+  }
 }
 
 function renderBUComparison() {
-  // 按 BU 聚合平均结算时薪 (仅取可比的: 同货币区合并)
   const buData = {};
-  suppliers.filter(s => s.status !== '停用' && s.rate > 0).forEach(s => {
+  const withRate = suppliers.filter(s => s.status !== '停用' && s.rate > 0);
+  withRate.forEach(s => {
     if (!buData[s.bu]) buData[s.bu] = [];
     buData[s.bu].push(s);
   });
@@ -1735,8 +2224,16 @@ function renderBUComparison() {
   const colors = ['#2E6BE5','#00B8A9','#D97706'];
 
   if (pricingChartInstances.buavg) pricingChartInstances.buavg.dispose();
-  const chart = echarts.init(document.getElementById('chartBUavg'));
+  const chartEl = document.getElementById('chartBUavg');
+  if (!chartEl) return;
+  const chart = echarts.init(chartEl);
   pricingChartInstances.buavg = chart;
+
+  if (bus.length === 0) {
+    chartEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:14px;">当前筛选下无定价数据</div>';
+    return;
+  }
+
   chart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
       const d = p[0];
@@ -1775,7 +2272,9 @@ function showBUDrillDown(bu) {
   document.getElementById('buDrillTitle').textContent = `${bu} — 供应商Markup排名`;
 
   if (pricingChartInstances.budrill) pricingChartInstances.budrill.dispose();
-  const chart = echarts.init(document.getElementById('chartBUdrill'));
+  const drillEl = document.getElementById('chartBUdrill');
+  if (!drillEl) return;
+  const chart = echarts.init(drillEl);
   pricingChartInstances.budrill = chart;
 
   chart.setOption({
@@ -1816,7 +2315,9 @@ function renderTypeComparison() {
   const minMarkups = typeNames.map(t => Math.round(Math.min(...types[t])));
 
   if (pricingChartInstances.typeCompare) pricingChartInstances.typeCompare.dispose();
-  const chart = echarts.init(document.getElementById('chartTypeCompare'));
+  const typeEl = document.getElementById('chartTypeCompare');
+  if (!typeEl) return;
+  const chart = echarts.init(typeEl);
   pricingChartInstances.typeCompare = chart;
 
   chart.setOption({
@@ -1835,55 +2336,112 @@ function renderTypeComparison() {
 
 function populateSupplierSelect() {
   const select = document.getElementById('supplierSelect');
-  // Find suppliers that appear in multiple areas (for cross-BU demo, we'll use all)
-  const multiAreaSuppliers = suppliers.filter(s => s.status !== '停用' && s.rate > 0);
-  select.innerHTML = multiAreaSuppliers.map((s, i) =>
-    `<option value="${suppliers.indexOf(s)}">${s.name} (${s.bu} - ${s.country})</option>`
+  // Group by name, find suppliers that genuinely appear in multiple areas/BUs
+  const nameMap = {};
+  suppliers.forEach((s, i) => {
+    if (s.status === '停用' || !s.name) return;
+    if (!nameMap[s.name]) nameMap[s.name] = [];
+    nameMap[s.name].push({ idx: i, area: s.area, bu: s.bu, bu_line: s.bu_line });
+  });
+
+  const multiArea = Object.entries(nameMap)
+    .filter(([, entries]) => {
+      const uniqueAreas = new Set(entries.map(e => e.area));
+      const uniqueBUs = new Set(entries.map(e => e.bu_line));
+      return uniqueAreas.size > 1 || uniqueBUs.size > 1;
+    })
+    .map(([name, entries]) => ({ name, entries }));
+
+  window._multiAreaSuppliers = multiArea;
+
+  if (multiArea.length === 0) {
+    select.innerHTML = '<option value="">暂无跨区域供应商数据</option>';
+    return;
+  }
+
+  select.innerHTML = multiArea.map((s, i) =>
+    `<option value="${i}">${s.name}（${s.entries.length}个区域）</option>`
   ).join('');
 }
 
 function renderSupplierCrossBU() {
   const idx = parseInt(document.getElementById('supplierSelect').value);
-  const s = suppliers[idx];
-  if (!s) return;
+  const multiArea = window._multiAreaSuppliers;
+  if (!multiArea || !multiArea[idx]) return;
 
-  document.getElementById('crossBUTitle').textContent = `${s.name} — 跨地区定价分析`;
+  const { name, entries } = multiArea[idx];
+  document.getElementById('crossBUTitle').textContent = `${name} — 跨地区定价分析`;
 
-  // Simulate cross-area data for demo
-  const areas = ['加州区','新泽西区','亚特兰大区','英国区','捷克区','德国区'];
-  const baseRate = s.rate || 20;
-  const simRates = areas.map((a, i) => Math.round((baseRate * (0.85 + Math.random() * 0.35)) * 10) / 10);
-  const simMarkups = areas.map((a, i) => Math.round(15 + Math.random() * 40));
+  // Build real chart data from actual supplier records
+  const labels = [];
+  const values = [];
+  const colors = ['#2E6BE5','#E5484D','#00B8A9','#F5A623','#243B63','#0EA5E9','#8B5CF6','#EC4899'];
+  let valueType = 'Markup(%)';
+
+  entries.forEach((entry, i) => {
+    const s = suppliers[entry.idx];
+    let val = 0;
+
+    if (s.bu_line === 'GEU') {
+      val = s.geuData?.fee_rate || 0;
+      valueType = '费率(%)';
+    } else if (s.bu_line === 'WX') {
+      val = s.rate || 0;
+      valueType = '报价';
+    } else {
+      const m = parseFloat(s.markup);
+      if (!isNaN(m) && m > 0) {
+        val = m;
+      } else if (s.rate && s.base && s.base > 0) {
+        val = Math.round((s.rate - s.base) / s.base * 100);
+      }
+    }
+
+    labels.push(`${entry.area}（${entry.bu_line}）`);
+    values.push({
+      value: val,
+      itemStyle: {
+        color: colors[i % colors.length],
+        borderRadius: [0, 4, 4, 0]
+      }
+    });
+  });
+
+  // Update description with value type
+  document.querySelector('#pricingSupplier .cb-desc').textContent =
+    `展示选定供应商在各服务地区的${valueType}差异（真实数据）`;
 
   if (pricingChartInstances.crossBU) pricingChartInstances.crossBU.dispose();
-  const chart = echarts.init(document.getElementById('chartCrossBU'));
+  const crossEl = document.getElementById('chartCrossBU');
+  if (!crossEl) return;
+  const chart = echarts.init(crossEl);
   pricingChartInstances.crossBU = chart;
 
   chart.setOption({
     tooltip: { trigger: 'axis' },
-    legend: { data: ['Markup(%)'], bottom: 0 },
-    grid: { top: 30, right: 60, bottom: 50, left: 120 },
-    xAxis: { type: 'value', name: 'Markup(%)' },
-    yAxis: { type: 'category', data: areas, axisLabel: { fontSize: 12 } },
+    legend: { data: [valueType], bottom: 0 },
+    grid: { top: 30, right: 60, bottom: 50, left: 160 },
+    xAxis: { type: 'value', name: valueType },
+    yAxis: { type: 'category', data: labels, axisLabel: { fontSize: 12 } },
     series: [{
-      name: 'Markup(%)',
+      name: valueType,
       type: 'bar',
-      data: simMarkups.map((m, i) => ({
-        value: m,
-        itemStyle: {
-          color: i === 0 ? '#2E6BE5' : i === 1 ? '#243B63' : i === 2 ? '#00B8A9' : i === 3 ? '#F5A623' : i === 4 ? '#E5484D' : '#0EA5E9',
-          borderRadius: [0, 4, 4, 0]
-        }
-      })),
-      label: { show: true, position: 'right', formatter: '{c}%', fontWeight: 600 }
+      data: values,
+      label: { show: true, position: 'right', formatter: '{c}', fontWeight: 600 }
     }]
   });
 }
 
 // ============================== Page 3: 供应商考核 ==============================
 function renderAssessment() {
-  const filtered = suppliers.filter(s => s.status !== '停用');
+  const filtered = suppliers.filter(s => s.status !== '停用' && s.metrics);
   const tbody = document.getElementById('assessBody');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:#999;">当前筛选下暂无考核数据</td></tr>';
+    document.getElementById('assessDetail').style.display = 'none';
+    return;
+  }
 
   // Calculate percentile thresholds
   const allMetrics = filtered.map(s => s.metrics);
@@ -1929,8 +2487,11 @@ function renderAssessment() {
 
   tbody.innerHTML = filtered.sort((a,b) => b.composite - a.composite).map((s, i) => {
     const m = s.metrics;
+    const dataBadge = s.hasRealData
+      ? '<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:#e8f5e9;color:#2e7d32;margin-left:4px;">实测</span>'
+      : '<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:#fff3e0;color:#e65100;margin-left:4px;">模拟</span>';
     return `<tr>
-      <td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</td>
+      <td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}${dataBadge}</td>
       <td>${ratingTag(s.rating)}</td>
       <td>${heatCell(m.delivery, pDelivery, false)}</td>
       <td>${heatCell(m.quality, pQuality, false)}</td>
@@ -2060,7 +2621,9 @@ function renderAlerts() {
   document.getElementById('alertYellow').textContent = alerts.filter(a => a.level === 'yellow' && a.status === 'pending').length;
   document.getElementById('alertBlue').textContent = alerts.filter(a => a.level === 'blue' && a.status === 'pending').length;
   document.getElementById('alertResolved').textContent = alerts.filter(a => a.status === 'resolved').length;
-  document.getElementById('alertBadge').textContent = alerts.filter(a => a.status === 'pending').length;
+  const pendingCount = alerts.filter(a => a.status === 'pending').length;
+  document.getElementById('alertBadge').textContent = pendingCount;
+  document.getElementById('alertBadge').style.display = pendingCount > 0 ? '' : 'none';
 
   const list = document.getElementById('alertList');
   if (filtered.length === 0) {
@@ -2110,11 +2673,463 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
+// ============================== Auth & Data Loading ==============================
+async function initAuth() {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    if (res.ok) {
+      currentUser = await res.json();
+      document.getElementById('loginOverlay').style.display = 'none';
+      applyRolePermissions();
+      loadDashboardData(currentBUFilter);
+    } else {
+      document.getElementById('loginOverlay').style.display = 'flex';
+    }
+  } catch (e) {
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
+}
+
+// BU filter switch - reload data for selected business line
+function switchBU(bu) {
+  currentBUFilter = bu;
+  // Update active button
+  document.querySelectorAll('.bu-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.bu === bu);
+  });
+  // Hide/show BU filter buttons based on user's bu_lines access
+  loadDashboardData(bu);
+}
+
+// Apply BU filter visibility based on user's bu_lines
+function applyBUFilterVisibility() {
+  const filterEl = document.getElementById('buFilter');
+  if (!filterEl || !currentUser) return;
+  const buLines = currentUser.bu_lines || ['FBU', 'GUS', 'WX', 'GEU'];
+  // Show filter if user has access to more than one BU line
+  filterEl.style.display = buLines.length > 1 ? 'flex' : 'none';
+  // Hide buttons for BU lines user can't access
+  document.querySelectorAll('.bu-filter-btn').forEach(btn => {
+    const bu = btn.dataset.bu;
+    if (bu === 'all') {
+      btn.style.display = '';
+    } else {
+      btn.style.display = buLines.includes(bu) ? '' : 'none';
+    }
+  });
+  // If user only has one BU, auto-select it
+  if (buLines.length === 1 && currentBUFilter === 'all') {
+    switchBU(buLines[0]);
+  }
+}
+
+async function loadDashboardData(buFilter) {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.style.display = 'flex';
+
+  try {
+    // Build query params
+    const params = new URLSearchParams();
+    if (buFilter && buFilter !== 'all') {
+      params.set('bu_line', buFilter);
+    }
+    const qs = params.toString() ? '?' + params.toString() : '';
+
+    const [supRes, alertRes] = await Promise.all([
+      fetch('/api/suppliers' + qs, { credentials: 'include' }),
+      fetch('/api/alerts', { credentials: 'include' })
+    ]);
+
+    if (!supRes.ok) throw new Error('Failed to load suppliers');
+    if (!alertRes.ok) throw new Error('Failed to load alerts');
+
+    const supData = await supRes.json();
+    const alertData = await alertRes.json();
+
+    suppliers = supData.map(row => ({
+      id: row.id,
+      name: row.name || '',
+      region: row.region || '',
+      area: row.area || '',
+      type: row.type || '',
+      status: row.status || '使用中',
+      rate: row.rate,
+      base: row.base,
+      markup: row.markup || '',
+      ratio: row.ratio || '',
+      rating: row.rating || '—',
+      contact: row.contact || '',
+      startDate: row.start_date || '',
+      cert: row.cert || '',
+      bu_line: row.bu_line || 'FBU',
+      gus_assessment: row.gus_assessment || null
+    }));
+
+    alerts = alertData.map ? alertData.map(row => ({
+      id: row.id,
+      level: row.level || '',
+      title: row.title || '',
+      desc: row.description || row.desc || '',
+      supplier: row.supplier || '',
+      time: row.time || '',
+      status: row.status || 'pending'
+    })) : [];
+
+    enrichSuppliers();
+    renderCurrentPage();
+    // Also pre-render data management table if user has access
+    if (canEdit()) renderDataMgmtTable();
+
+    console.log('Dashboard loaded: ' + suppliers.length + ' suppliers, ' + alerts.length + ' alerts');
+  } catch (err) {
+    console.error('Failed to load data:', err);
+    showToast('数据加载失败: ' + err.message);
+  } finally {
+    if (overlay) overlay.style.display = 'none';
+  }
+}
+
+// ============================== Admin Pages ==============================
+let _userCache = [];
+let _auditPage = 1;
+let _logTab = 'audit';
+
+// --- User Management ---
+async function renderUserMgmt() {
+  try {
+    const res = await fetch('/api/users', { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to load users');
+    _userCache = await res.json();
+    const tbody = document.getElementById('userTableBody');
+    if (!_userCache.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#999;">暂无用户数据</td></tr>'; return; }
+    const roleLabels = { admin: '管理员', regional_manager: '区域经理', user: '普通用户' };
+    tbody.innerHTML = _userCache.map(u => `<tr>
+      <td><strong>${u.name}</strong></td>
+      <td style="font-size:12px;color:#888;">${u.feishu_user_id || '—'}</td>
+      <td>${u.email || '—'}</td>
+      <td><span class="role-badge ${u.role}">${roleLabels[u.role] || u.role}</span></td>
+      <td>${(u.regions || []).join(', ') || '—'}</td>
+      <td>${(u.bu_lines || ['FBU','GUS','WX','GEU']).map(b => `<span class="tag" style="background:${b==='FBU'?'#EEF3FA':b==='GUS'?'#E8F5E9':b==='WX'?'#FFF3E0':'#F3E5F5'};color:${b==='FBU'?'#2E6BE5':b==='GUS'?'#2E7D32':b==='WX'?'#E65100':'#7B1FA2'};">${b}</span>`).join(' ')}</td>
+      <td><span class="status-dot ${u.is_active ? 'active' : 'inactive'}"></span>${u.is_active ? '正常' : '已禁用'}</td>
+      <td style="font-size:12px;">${u.created_at ? new Date(u.created_at).toLocaleDateString('zh-CN') : '—'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="showEditUserModal('${u.id}')">编辑</button>
+        ${u.is_active ? `<button class="btn btn-sm btn-danger" onclick="disableUser('${u.id}')">禁用</button>` : `<button class="btn btn-sm btn-success" onclick="enableUser('${u.id}')">启用</button>`}
+      </td>
+    </tr>`).join('');
+  } catch (e) { showToast('加载用户列表失败'); }
+}
+
+function showAddUserModal() {
+  document.getElementById('modalTitle').textContent = '添加用户';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group"><label>飞书用户ID</label><input id="mFeishuId" type="text" placeholder="飞书 open_id"></div>
+    <div class="form-group"><label>姓名</label><input id="mUserName" type="text"></div>
+    <div class="form-group"><label>邮箱</label><input id="mUserEmail" type="text"></div>
+    <div class="form-group"><label>角色</label><select id="mUserRole"><option value="user">普通用户</option><option value="regional_manager">区域经理</option><option value="admin">管理员</option></select></div>
+    <div class="form-group"><label>负责区域（区域经理选择）</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        <label><input type="checkbox" class="mRegionCheck" value="美洲区"> 美洲区</label>
+        <label><input type="checkbox" class="mRegionCheck" value="欧洲区"> 欧洲区</label>
+        <label><input type="checkbox" class="mRegionCheck" value="亚太区"> 亚太区</label>
+      </div>
+    </div>
+    <div class="form-group"><label>业务线权限</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        <label><input type="checkbox" class="mBUCheck" value="FBU" checked> FBU</label>
+        <label><input type="checkbox" class="mBUCheck" value="GUS" checked> GUS</label>
+        <label><input type="checkbox" class="mBUCheck" value="WX" checked> WX</label>
+        <label><input type="checkbox" class="mBUCheck" value="GEU" checked> GEU</label>
+      </div>
+    </div>`;
+  document.getElementById('modalSaveBtn').onclick = saveNewUser;
+  document.getElementById('editModal').classList.add('show');
+}
+
+async function saveNewUser() {
+  const regions = Array.from(document.querySelectorAll('.mRegionCheck:checked')).map(c => c.value);
+  const buLines = Array.from(document.querySelectorAll('.mBUCheck:checked')).map(c => c.value);
+  const body = {
+    feishu_user_id: document.getElementById('mFeishuId').value.trim(),
+    name: document.getElementById('mUserName').value.trim(),
+    email: document.getElementById('mUserEmail').value.trim(),
+    role: document.getElementById('mUserRole').value,
+    regions: regions,
+    bu_lines: buLines
+  };
+  if (!body.feishu_user_id || !body.name) { showToast('请填写飞书ID和姓名'); return; }
+  try {
+    const res = await fetch('/api/users', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+    closeModal(); showToast('用户创建成功'); renderUserMgmt();
+  } catch (e) { showToast('创建失败: ' + e.message); }
+}
+
+function showEditUserModal(id) {
+  const u = _userCache.find(x => x.id === id);
+  if (!u) return;
+  const roleLabels = { admin: '管理员', regional_manager: '区域经理', user: '普通用户' };
+  document.getElementById('modalTitle').textContent = '编辑用户: ' + u.name;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group"><label>角色</label><select id="mEditRole">
+      <option value="user" ${u.role==='user'?'selected':''}>普通用户</option>
+      <option value="regional_manager" ${u.role==='regional_manager'?'selected':''}>区域经理</option>
+      <option value="admin" ${u.role==='admin'?'selected':''}>管理员</option>
+    </select></div>
+    <div class="form-group"><label>负责区域</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        <label><input type="checkbox" class="mEditRegionCheck" value="美洲区" ${(u.regions||[]).includes('美洲区')?'checked':''}> 美洲区</label>
+        <label><input type="checkbox" class="mEditRegionCheck" value="欧洲区" ${(u.regions||[]).includes('欧洲区')?'checked':''}> 欧洲区</label>
+        <label><input type="checkbox" class="mEditRegionCheck" value="亚太区" ${(u.regions||[]).includes('亚太区')?'checked':''}> 亚太区</label>
+      </div>
+    </div>
+    <div class="form-group"><label>业务线权限</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        ${['FBU','GUS','WX','GEU'].map(b => `<label><input type="checkbox" class="mEditBUCheck" value="${b}" ${(u.bu_lines||['FBU','GUS','WX','GEU']).includes(b)?'checked':''}> ${b}</label>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('modalSaveBtn').onclick = () => saveEditUser(id);
+  document.getElementById('editModal').classList.add('show');
+}
+
+async function saveEditUser(id) {
+  const regions = Array.from(document.querySelectorAll('.mEditRegionCheck:checked')).map(c => c.value);
+  const buLines = Array.from(document.querySelectorAll('.mEditBUCheck:checked')).map(c => c.value);
+  const body = { role: document.getElementById('mEditRole').value, regions, bu_lines: buLines };
+  try {
+    const res = await fetch('/api/users/' + id, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error((await res.json()).error);
+    closeModal(); showToast('用户更新成功'); renderUserMgmt();
+  } catch (e) { showToast('更新失败: ' + e.message); }
+}
+
+async function disableUser(id) {
+  if (!confirm('确定禁用该用户？')) return;
+  try {
+    await fetch('/api/users/' + id, { method: 'DELETE', credentials: 'include' });
+    showToast('用户已禁用'); renderUserMgmt();
+  } catch (e) { showToast('操作失败'); }
+}
+
+async function enableUser(id) {
+  try {
+    await fetch('/api/users/' + id, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: true }) });
+    showToast('用户已启用'); renderUserMgmt();
+  } catch (e) { showToast('操作失败'); }
+}
+
+// --- Data Management ---
+function renderDataMgmtTable() {
+  const buLine = document.getElementById('dmFilterBU')?.value || '';
+  const region = document.getElementById('dmFilterRegion')?.value || '';
+  const search = (document.getElementById('dmSearch')?.value || '').toLowerCase();
+  let list = suppliers;
+  if (buLine) list = list.filter(s => s.bu_line === buLine);
+  if (region) list = list.filter(s => s.region === region);
+  if (search) list = list.filter(s => s.name.toLowerCase().includes(search));
+
+  // Regional managers only see their regions
+  if (currentUser?.role === 'regional_manager') {
+    list = list.filter(s => (currentUser.regions || []).includes(s.region));
+  }
+
+  const tbody = document.getElementById('dataMgmtBody');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">无数据</td></tr>'; return; }
+  tbody.innerHTML = list.map(s => {
+    const canEditThis = canEditRegion(s.region);
+    return `<tr>
+      <td style="font-size:12px;">${s.id}</td>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="tag" style="background:${s.bu_line==='GUS'?'#e8f5e9;color:#2e7d32':'#e3f2fd;color:#1565c0'}">${s.bu_line || 'FBU'}</span></td>
+      <td>${s.region}</td><td>${s.area}</td><td>${s.type}</td>
+      <td><span class="tag tag-${s.status==='使用中'?'active':s.status==='停用'?'inactive':'new'}">${s.status}</span></td>
+      <td>${maskSensitive(s.rate ? s.rate.toFixed(1) : '—')}</td>
+      <td>${maskSensitive(s.markup)}</td>
+      <td><span class="tag tag-${(s.rating||'').toLowerCase()}">${s.rating}</span></td>
+      <td>
+        ${canEditThis ? `<button class="btn btn-sm btn-outline" onclick="showEditSupplierModal('${s.id}')">编辑</button>` : ''}
+        ${currentUser?.role === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteSupplier('${s.id}')">删除</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function showAddSupplierModal() {
+  document.getElementById('modalTitle').textContent = '新增供应商';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-grid">
+      <div class="form-group"><label>业务线*</label><select id="mSupBU" onchange="updateModalAreas()"><option value="FBU">FBU</option><option value="GUS">GUS</option></select></div>
+      <div class="form-group"><label>供应商ID</label><input id="mSupId" type="text" value="S${String(Math.floor(Math.random()*90000)+10000)}"></div>
+      <div class="form-group"><label>名称*</label><input id="mSupName" type="text"></div>
+      <div class="form-group"><label>大区*</label><select id="mSupRegion" onchange="updateModalAreas()"><option value="">请选择</option><option value="美洲区">美洲区</option><option value="欧洲区">欧洲区</option><option value="亚太区">亚太区</option></select></div>
+      <div class="form-group"><label>地区*</label><select id="mSupArea"><option value="">请先选择大区</option></select></div>
+      <div class="form-group"><label>类型</label><select id="mSupType"><option value="劳务">劳务</option><option value="卸柜">卸柜</option><option value="外包">外包</option><option value="保安">保安</option></select></div>
+      <div class="form-group"><label>状态</label><select id="mSupStatus"><option value="使用中">使用中</option><option value="新增">新增</option><option value="停用">停用</option></select></div>
+      <div class="form-group"><label>结算时薪</label><input id="mSupRate" type="number" step="0.01"></div>
+      <div class="form-group"><label>基本时薪</label><input id="mSupBase" type="number" step="0.01"></div>
+      <div class="form-group"><label>联系人</label><input id="mSupContact" type="text"></div>
+      <div class="form-group"><label>评级</label><select id="mSupRating"><option value="—">—</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+    </div>`;
+  document.getElementById('modalSaveBtn').onclick = saveNewSupplier;
+  document.getElementById('editModal').classList.add('show');
+}
+
+function updateModalAreas() {
+  const buLine = document.getElementById('mSupBU')?.value || 'FBU';
+  const region = document.getElementById('mSupRegion')?.value;
+  const areaSelect = document.getElementById('mSupArea');
+  // Determine BU key for area lookup
+  let buKey = '';
+  if (buLine === 'GUS') {
+    buKey = region === '美洲区' ? 'GUS美洲' : '';
+  } else {
+    buKey = BU_MAP[region] || '';
+  }
+  const areas = buKey ? (AREAS_MAP[buKey] || []) : [];
+  areaSelect.innerHTML = areas.length ? '<option value="">请选择</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('') : '<option value="">请先选择大区</option>';
+}
+
+async function saveNewSupplier() {
+  const rate = parseFloat(document.getElementById('mSupRate').value) || null;
+  const base = parseFloat(document.getElementById('mSupBase').value) || null;
+  let markup = '';
+  if (rate && base && base > 0) markup = Math.round((rate - base) / base * 100) + '%';
+  const body = {
+    id: document.getElementById('mSupId').value.trim(),
+    name: document.getElementById('mSupName').value.trim(),
+    region: document.getElementById('mSupRegion').value,
+    area: document.getElementById('mSupArea').value,
+    type: document.getElementById('mSupType').value,
+    status: document.getElementById('mSupStatus').value,
+    rate: rate, base: base, markup: markup,
+    contact: document.getElementById('mSupContact').value.trim(),
+    rating: document.getElementById('mSupRating').value,
+    bu_line: document.getElementById('mSupBU').value || 'FBU'
+  };
+  if (!body.name || !body.region || !body.area) { showToast('请填写必填字段'); return; }
+  try {
+    const res = await fetch('/api/suppliers', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error((await res.json()).error);
+    closeModal(); showToast('供应商创建成功'); loadDashboardData(currentBUFilter).then(() => renderDataMgmtTable());
+  } catch (e) { showToast('创建失败: ' + e.message); }
+}
+
+function showEditSupplierModal(id) {
+  const s = suppliers.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modalTitle').textContent = '编辑: ' + s.name;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-grid">
+      <div class="form-group"><label>名称</label><input id="mESupName" type="text" value="${s.name}"></div>
+      <div class="form-group"><label>状态</label><select id="mESupStatus"><option ${s.status==='使用中'?'selected':''}>使用中</option><option ${s.status==='停用'?'selected':''}>停用</option><option ${s.status==='新增'?'selected':''}>新增</option></select></div>
+      <div class="form-group"><label>结算时薪</label><input id="mESupRate" type="number" step="0.01" value="${s.rate||''}"></div>
+      <div class="form-group"><label>基本时薪</label><input id="mESupBase" type="number" step="0.01" value="${s.base||''}"></div>
+      <div class="form-group"><label>联系人</label><input id="mESupContact" type="text" value="${s.contact||''}"></div>
+      <div class="form-group"><label>评级</label><select id="mESupRating">${['—','A','B','C','D'].map(r=>`<option ${s.rating===r?'selected':''}>${r}</option>`).join('')}</select></div>
+    </div>`;
+  document.getElementById('modalSaveBtn').onclick = () => saveEditSupplier(id);
+  document.getElementById('editModal').classList.add('show');
+}
+
+async function saveEditSupplier(id) {
+  const rate = parseFloat(document.getElementById('mESupRate').value) || null;
+  const base = parseFloat(document.getElementById('mESupBase').value) || null;
+  let markup = '';
+  if (rate && base && base > 0) markup = Math.round((rate - base) / base * 100) + '%';
+  const body = {
+    name: document.getElementById('mESupName').value.trim(),
+    status: document.getElementById('mESupStatus').value,
+    rate, base, markup,
+    contact: document.getElementById('mESupContact').value.trim(),
+    rating: document.getElementById('mESupRating').value
+  };
+  try {
+    const res = await fetch('/api/suppliers/' + id, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error((await res.json()).error);
+    closeModal(); showToast('供应商更新成功'); loadDashboardData(currentBUFilter).then(() => renderDataMgmtTable());
+  } catch (e) { showToast('更新失败: ' + e.message); }
+}
+
+async function deleteSupplier(id) {
+  const s = suppliers.find(x => x.id === id);
+  if (!confirm('确定删除供应商 "' + (s?.name || id) + '"？此操作不可恢复。')) return;
+  try {
+    await fetch('/api/suppliers/' + id, { method: 'DELETE', credentials: 'include' });
+    showToast('供应商已删除'); loadDashboardData(currentBUFilter).then(() => renderDataMgmtTable());
+  } catch (e) { showToast('删除失败'); }
+}
+
+function closeModal() { document.getElementById('editModal').classList.remove('show'); }
+
+// --- Audit Logs ---
+function switchLogTab(tab) {
+  _logTab = tab;
+  document.querySelectorAll('#logTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('auditLogSection').style.display = tab === 'audit' ? '' : 'none';
+  document.getElementById('loginLogSection').style.display = tab === 'login' ? '' : 'none';
+  if (tab === 'audit') loadAuditLogs();
+  else loadLoginLogs();
+}
+
+async function loadAuditLogs() {
+  const action = document.getElementById('logActionFilter')?.value || '';
+  const user = document.getElementById('logUserFilter')?.value || '';
+  let url = '/api/logs?page=' + _auditPage + '&page_size=50';
+  if (action) url += '&action=' + encodeURIComponent(action);
+  if (user) url += '&user_name=' + encodeURIComponent(user);
+  try {
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed');
+    const result = await res.json();
+    const tbody = document.getElementById('auditLogBody');
+    if (!result.data?.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#999;">暂无日志</td></tr>'; return; }
+    const actionLabels = { 'login':'登录','logout':'登出','supplier.create':'新增供应商','supplier.update':'编辑供应商','supplier.delete':'删除供应商','user.create':'新增用户','user.update':'编辑用户','user.disable':'禁用用户' };
+    tbody.innerHTML = result.data.map(log => `<tr>
+      <td style="font-size:12px;white-space:nowrap;">${new Date(log.created_at).toLocaleString('zh-CN')}</td>
+      <td>${log.user_name || '—'}</td>
+      <td><span class="tag tag-blue">${actionLabels[log.action] || log.action}</span></td>
+      <td>${log.entity_type || '—'}</td>
+      <td style="font-size:12px;">${log.entity_id || '—'}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${JSON.stringify(log.details || {})}</td>
+      <td style="font-size:12px;">${log.ip_address || '—'}</td>
+    </tr>`).join('');
+    // Pagination
+    const pg = result.pagination;
+    const pgEl = document.getElementById('auditLogPagination');
+    pgEl.innerHTML = '';
+    if (pg.total_pages > 1) {
+      for (let i = 1; i <= pg.total_pages; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm ' + (i === pg.page ? 'btn-primary' : 'btn-outline');
+        btn.textContent = i;
+        btn.onclick = () => { _auditPage = i; loadAuditLogs(); };
+        pgEl.appendChild(btn);
+      }
+    }
+  } catch (e) { document.getElementById('auditLogBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#E5484D;">加载失败</td></tr>'; }
+}
+
+async function loadLoginLogs() {
+  try {
+    const res = await fetch('/api/login-history?page_size=50', { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed');
+    const result = await res.json();
+    const tbody = document.getElementById('loginLogBody');
+    if (!result.data?.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">暂无登录记录</td></tr>'; return; }
+    tbody.innerHTML = result.data.map(log => `<tr>
+      <td style="font-size:12px;white-space:nowrap;">${new Date(log.login_at).toLocaleString('zh-CN')}</td>
+      <td>${log.user_name || '—'}</td>
+      <td>${log.success ? '<span class="tag tag-green">成功</span>' : '<span class="tag tag-red">失败</span>'}</td>
+      <td style="font-size:12px;">${log.failure_reason || '—'}</td>
+      <td style="font-size:12px;">${log.ip_address || '—'}</td>
+    </tr>`).join('');
+  } catch (e) { document.getElementById('loginLogBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#E5484D;">加载失败</td></tr>'; }
+}
+
 // ============================== Init ==============================
 window.addEventListener('load', function() {
-  renderBUCards();
-  renderRegistryTable();
-  renderAlerts();
+  initAuth();
 });
 
 // Handle resize for ECharts
@@ -2122,5 +3137,67 @@ window.addEventListener('resize', function() {
   Object.values(pricingChartInstances).forEach(c => { if (c && c.resize) c.resize(); });
 });
 </script>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(232,238,246,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="width:48px;height:48px;border:4px solid #DAE8FB;border-top-color:#2E6BE5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <p style="margin-top:16px;color:#1E3D7A;font-size:15px;font-weight:600;">正在加载数据...</p>
+</div>
+<style>@keyframes spin { to { transform: rotate(360deg); } }
+/* ============================== Login Overlay ============================== */
+.login-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #1E3D7A 0%, #2E6BE5 50%, #00B8A9 100%);
+  z-index: 10000; display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.login-card {
+  background: rgba(255,255,255,0.95); border-radius: 16px; padding: 48px 40px;
+  text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-width: 400px; width: 90%; backdrop-filter: blur(10px);
+}
+.login-card .login-logo {
+  width: 64px; height: 64px; margin: 0 auto 16px;
+  background: linear-gradient(135deg, #2E6BE5, #00B8A9);
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 800; letter-spacing: 1px;
+  box-shadow: 0 4px 16px rgba(46,107,229,0.4);
+}
+.login-card h2 { font-size: 22px; font-weight: 700; color: #1E3D7A; margin-bottom: 8px; }
+.login-card p { font-size: 14px; color: #4A5568; margin-bottom: 28px; line-height: 1.6; }
+.login-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 36px; border-radius: 10px; font-size: 15px; font-weight: 600;
+  background: linear-gradient(135deg, #3370FF, #2E6BE5); color: #fff;
+  border: none; cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(46,107,229,0.35);
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,107,229,0.45); }
+.login-btn svg { width: 20px; height: 20px; }
+
+/* ============================== Admin Pages ============================== */
+.admin-section { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; border: 1px solid #ECEEF3; }
+.admin-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.admin-header h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.admin-filters { display: flex; gap: 10px; align-items: center; padding: 12px 20px; border-bottom: 1px solid #F0F2F5; flex-wrap: wrap; }
+.admin-filters select, .admin-filters input { padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; }
+.role-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.role-badge.admin { background: #FFEBEE; color: #C62828; }
+.role-badge.regional_manager { background: #E3F2FD; color: #1565C0; }
+.role-badge.user { background: #E8F5E9; color: #2E7D32; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.status-dot.active { background: #36B37E; }
+.status-dot.inactive { background: #E5484D; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,20,35,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card); border-radius: 12px; width: 520px; max-width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+</style>
 </body>
 </html>
