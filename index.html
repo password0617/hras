@@ -3279,20 +3279,6 @@ function generateAutoAlerts() {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
-  // Pre-compute BU average markup for pricing anomaly detection
-  const buMarkups = {};
-  suppliers.forEach(s => {
-    const m = getMarkupPct(s);
-    if (m != null && m > 0) {
-      if (!buMarkups[s.bu]) buMarkups[s.bu] = [];
-      buMarkups[s.bu].push(m);
-    }
-  });
-  const buAvgMarkup = {};
-  Object.entries(buMarkups).forEach(([bu, arr]) => {
-    buAvgMarkup[bu] = arr.reduce((a, b) => a + b, 0) / arr.length;
-  });
-
   suppliers.forEach(s => {
     if (s.status !== '使用中') return; // Only check active suppliers
     const name = s.name;
@@ -3321,51 +3307,41 @@ function generateAutoAlerts() {
       autoAlerts.push({ id: alertId--, level: 'yellow', title: '资质数据缺失', desc: `${name} (GUS) 有考核数据但缺少资质信息(qualification)，合规审计可能存在隐患`, supplier: name, time: todayStr, status: 'pending' });
     }
 
-    // === Category 2: Assessment & Scoring ===
+    // === Category 2: Assessment & Scoring (only for real assessment data) ===
 
-    // Rule 5: D-rated active supplier (RED)
-    if (s.rating === 'D') {
-      autoAlerts.push({ id: alertId--, level: 'red', title: 'D级供应商仍在使用中', desc: `${name} 考核评级为D（不合格），当前状态仍为"使用中"，建议评估是否暂停合作`, supplier: name, time: todayStr, status: 'pending' });
-    }
+    if (s.hasRealData) {
+      // Rule 5: D-rated active supplier (RED)
+      if (s.rating === 'D') {
+        autoAlerts.push({ id: alertId--, level: 'red', title: 'D级供应商仍在使用中', desc: `${name} 考核评级为D（不合格），当前状态仍为"使用中"，建议评估是否暂停合作`, supplier: name, time: todayStr, status: 'pending' });
+      }
 
-    // Rule 6: Low composite score (YELLOW)
-    if (assess && s.composite != null && s.composite < 60) {
-      autoAlerts.push({ id: alertId--, level: 'yellow', title: '考核综合分不及格', desc: `${name} 考核综合分 ${Math.round(s.composite)} 分（低于60分及格线），需关注服务质量`, supplier: name, time: todayStr, status: 'pending' });
-    }
+      // Rule 6: Low composite score (YELLOW)
+      if (assess && s.composite != null && s.composite < 60) {
+        autoAlerts.push({ id: alertId--, level: 'yellow', title: '考核综合分不及格', desc: `${name} 考核综合分 ${Math.round(s.composite)} 分（低于60分及格线），需关注服务质量`, supplier: name, time: todayStr, status: 'pending' });
+      }
 
-    // Rule 7: High compliance deduction (RED)
-    if (assess?.compliance > 5) {
-      autoAlerts.push({ id: alertId--, level: 'red', title: '合规扣分严重', desc: `${name} 合规扣分达 ${assess.compliance} 分（阈值5分），存在严重合规问题`, supplier: name, time: todayStr, status: 'pending' });
-    }
+      // Rule 7: High compliance deduction (RED)
+      if (assess?.compliance > 5) {
+        autoAlerts.push({ id: alertId--, level: 'red', title: '合规扣分严重', desc: `${name} 合规扣分达 ${assess.compliance} 分（阈值5分），存在严重合规问题`, supplier: name, time: todayStr, status: 'pending' });
+      }
 
-    // Rule 8: Delivery or quality below threshold (YELLOW)
-    if (assess) {
-      const lowMetrics = [];
-      if (assess.delivery != null && assess.delivery < 75) lowMetrics.push(`交付及时率 ${assess.delivery}%`);
-      if (assess.quality != null && assess.quality < 75) lowMetrics.push(`质量合格率 ${assess.quality}%`);
-      if (lowMetrics.length > 0) {
-        autoAlerts.push({ id: alertId--, level: 'yellow', title: '考核指标不达标', desc: `${name} ${lowMetrics.join('、')}，低于75%警戒线`, supplier: name, time: todayStr, status: 'pending' });
+      // Rule 8: Delivery or quality below threshold (YELLOW)
+      if (assess) {
+        const lowMetrics = [];
+        if (assess.delivery != null && assess.delivery < 75) lowMetrics.push(`交付及时率 ${assess.delivery}%`);
+        if (assess.quality != null && assess.quality < 75) lowMetrics.push(`质量合格率 ${assess.quality}%`);
+        if (lowMetrics.length > 0) {
+          autoAlerts.push({ id: alertId--, level: 'yellow', title: '考核指标不达标', desc: `${name} ${lowMetrics.join('、')}，低于75%警戒线`, supplier: name, time: todayStr, status: 'pending' });
+        }
+      }
+
+      // Rule 9: Low stability (YELLOW)
+      if (assess?.stability != null && assess.stability < 65) {
+        autoAlerts.push({ id: alertId--, level: 'yellow', title: '人员稳定性不足', desc: `${name} 人员稳定性 ${assess.stability}%（低于65%警戒线），流动率过高`, supplier: name, time: todayStr, status: 'pending' });
       }
     }
 
-    // Rule 9: Low stability (YELLOW)
-    if (assess?.stability != null && assess.stability < 65) {
-      autoAlerts.push({ id: alertId--, level: 'yellow', title: '人员稳定性不足', desc: `${name} 人员稳定性 ${assess.stability}%（低于65%警戒线），流动率过高`, supplier: name, time: todayStr, status: 'pending' });
-    }
-
-    // === Category 3: Pricing & Markup ===
-
-    // Rule 10 & 11: Markup anomaly (RED if >avg+30%, YELLOW if >avg+15%)
-    const markup = getMarkupPct(s);
-    const avg = buAvgMarkup[s.bu];
-    if (markup != null && avg != null && avg > 0) {
-      const diff = markup - avg;
-      if (diff > 30) {
-        autoAlerts.push({ id: alertId--, level: 'red', title: 'Markup异常偏高', desc: `${name} Markup为 ${markup.toFixed(1)}%，高于${s.bu}均值(${avg.toFixed(1)}%) ${diff.toFixed(1)}个百分点，费率显著偏离`, supplier: name, time: todayStr, status: 'pending' });
-      } else if (diff > 15) {
-        autoAlerts.push({ id: alertId--, level: 'yellow', title: 'Markup偏高', desc: `${name} Markup为 ${markup.toFixed(1)}%，高于${s.bu}均值(${avg.toFixed(1)}%) ${diff.toFixed(1)}个百分点，建议关注`, supplier: name, time: todayStr, status: 'pending' });
-      }
-    }
+    // === Category 3: Pricing ===
 
     // Rule 12: Missing pricing data (BLUE)
     const hasPricing = s.certObj?.pricing?.length > 0 || s.geuData?.pricing?.length > 0;
