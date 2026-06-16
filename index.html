@@ -1668,9 +1668,9 @@ function renderKanban() {
       html += `<tr><td style="padding:3px 8px 3px 16px;white-space:nowrap;">${s.name}</td><td style="padding:3px 8px;color:#667;white-space:nowrap;">${s.country}</td><td style="padding:3px 8px;color:#999;">${s.area || '—'}</td></tr>`;
     });
     if (remaining > 0) {
-      html += `<tr><td colspan="3" style="padding:4px 16px;color:var(--primary);font-size:12px;cursor:pointer;" onclick="this.parentElement.querySelectorAll('tr.hidden-row').forEach(r=>r.style.display='');this.style.display='none';">还有 ${remaining} 家，点击展开全部 ▾</td></tr>`;
+      html += `<tr><td colspan="3" style="padding:4px 16px;color:var(--primary);font-size:12px;cursor:pointer;" onclick="toggleShowAllSuppliers(this)">还有 ${remaining} 家，点击展开全部 ▾</td></tr>`;
       suppliers.slice(maxShow || 10).forEach(s => {
-        html += `<tr class="hidden-row" style="display:none;"><td style="padding:3px 8px 3px 16px;white-space:nowrap;">${s.name}</td><td style="padding:3px 8px;color:#667;white-space:nowrap;">${s.country}</td><td style="padding:3px 8px;color:#999;">${s.area || '—'}</td></tr>`;
+        html += `<tr style="display:none;"><td style="padding:3px 8px 3px 16px;white-space:nowrap;">${s.name}</td><td style="padding:3px 8px;color:#667;white-space:nowrap;">${s.country}</td><td style="padding:3px 8px;color:#999;">${s.area || '—'}</td></tr>`;
       });
     }
     html += `</table>`;
@@ -3395,6 +3395,17 @@ function toggleUsageDrill(row) {
   document.querySelectorAll('.usage-main-row').forEach(r => {
     if (r.getAttribute('data-bu') !== bu || isExpanded) r.style.background = '';
   });
+}
+
+// Show all hidden supplier rows in a status group
+function toggleShowAllSuppliers(el) {
+  const table = el.closest('table');
+  if (table) {
+    table.querySelectorAll('tr[style*="display:none"], tr[style*="display: none"]').forEach(r => {
+      r.style.display = '';
+    });
+  }
+  el.style.display = 'none';
 }
 
 function switchBU(bu) {
