@@ -733,7 +733,7 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="kanban-section">
           <div class="kanban-section-header">二、各国家供应商数量<span>按国家/地区统计</span></div>
           <table class="kanban-table" id="kanbanCountryTable">
-            <thead><tr><th>国家</th><th>所属 BU</th><th>供应商数量</th><th>占比</th></tr></thead>
+            <thead><tr><th style="width:30px;"></th><th>国家</th><th>供应商数量</th><th>占比</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -1540,21 +1540,23 @@ function renderKanban() {
   </tr>`;
   buTbody.innerHTML = buRows;
 
-  // Table 2: Country
+  // Table 2: Country (with drill-down by BU)
   const countryMap = {};
-  const countryBU = {};
+  const countryBUDetail = {};
   suppliers.forEach(s => {
     countryMap[s.country] = (countryMap[s.country] || 0) + 1;
-    if (!countryBU[s.country]) countryBU[s.country] = new Set();
-    countryBU[s.country].add(s.bu);
+    if (!countryBUDetail[s.country]) countryBUDetail[s.country] = {};
+    countryBUDetail[s.country][s.bu] = (countryBUDetail[s.country][s.bu] || 0) + 1;
   });
   const sortedCountries = Object.entries(countryMap).sort((a,b) => b[1] - a[1]);
   const countryTbody = document.querySelector('#kanbanCountryTable tbody');
-  countryTbody.innerHTML = sortedCountries.map(([country, count]) => {
+  let countryRows = '';
+  sortedCountries.forEach(([country, count], idx) => {
     const pct = Math.round(count / total * 100);
-    return `<tr>
+    // Main row (clickable)
+    countryRows += `<tr class="country-main-row" data-country="${country}" onclick="toggleCountryDrill(this)" style="cursor:pointer;">
+      <td class="country-arrow" style="text-align:center;color:#999;font-size:12px;transition:transform 0.2s;">&#9654;</td>
       <td style="font-weight:700;color:var(--navy);">${country}</td>
-      <td>${[...countryBU[country]].join('、')}</td>
       <td class="num-cell">${count}</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -1563,7 +1565,40 @@ function renderKanban() {
         </div>
       </td>
     </tr>`;
-  }).join('');
+    // Drill-down sub-row (hidden by default)
+    const buEntries = Object.entries(countryBUDetail[country]).sort((a,b) => b[1] - a[1]);
+    const buSubRows = buEntries.map(([bu, buCount]) => {
+      const buPct = Math.round(buCount / count * 100);
+      const color = BU_COLORS[bu] || '#999';
+      return `<tr>
+        <td></td>
+        <td style="padding-left:24px;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px;"></span>
+          <span style="font-weight:600;">${bu}</span>
+        </td>
+        <td class="num-cell" style="font-weight:600;">${buCount}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="progress-bar" style="flex:1;max-width:100px;"><div class="progress-fill" style="width:${buPct}%;background:${color};"></div></div>
+            <span style="font-size:12px;">${buPct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+    countryRows += `<tr class="country-drill-row" data-country="${country}" style="display:none;">
+      <td colspan="4" style="padding:8px 16px 12px 46px;background:#F8FAFC;border-bottom:1px solid #E8ECF0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:#EDF1F5;">
+            <th style="padding:6px 12px;text-align:left;font-size:12px;color:#667;">BU</th>
+            <th style="padding:6px 12px;text-align:right;font-size:12px;color:#667;">供应商数量</th>
+            <th style="padding:6px 12px;text-align:left;font-size:12px;color:#667;">占该国比例</th>
+          </tr></thead>
+          <tbody>${buSubRows}</tbody>
+        </table>
+      </td>
+    </tr>`;
+  });
+  countryTbody.innerHTML = countryRows;
 
   // Table 3: Area
   const areaMap = {};
@@ -3230,6 +3265,33 @@ async function initAuth() {
 }
 
 // BU filter switch - reload data for selected business line
+// Toggle country drill-down: expand/collapse BU breakdown
+function toggleCountryDrill(row) {
+  const country = row.getAttribute('data-country');
+  const drillRow = document.querySelector(`.country-drill-row[data-country="${country}"]`);
+  const arrow = row.querySelector('.country-arrow');
+  if (!drillRow) return;
+
+  const isExpanded = drillRow.style.display !== 'none';
+
+  // Collapse all other drill rows first
+  document.querySelectorAll('.country-drill-row').forEach(r => r.style.display = 'none');
+  document.querySelectorAll('.country-arrow').forEach(a => { a.style.transform = ''; a.innerHTML = '&#9654;'; });
+
+  if (!isExpanded) {
+    drillRow.style.display = '';
+    arrow.style.transform = 'rotate(90deg)';
+    row.style.background = '#F0F5FF';
+  } else {
+    row.style.background = '';
+  }
+
+  // Reset background on all main rows
+  document.querySelectorAll('.country-main-row').forEach(r => {
+    if (r.getAttribute('data-country') !== country || isExpanded) r.style.background = '';
+  });
+}
+
 function switchBU(bu) {
   currentBUFilter = bu;
   // Update active button
