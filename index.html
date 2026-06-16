@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HRAS全球劳务工供应商管理平台</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 /* ============================== CSS Reset & Variables ============================== */
 :root {
@@ -2520,18 +2520,15 @@ function renderBUComparison() {
   const bus = Object.keys(buData).sort((a,b) => (buMarkup[b]||0) - (buMarkup[a]||0));
   const colors = ['#2E6BE5','#E5484D','#00B8A9','#F5A623','#243B63','#0EA5E9','#8B5CF6','#EC4899'];
 
-  if (pricingChartInstances.buavg) pricingChartInstances.buavg.dispose();
   const chartEl = document.getElementById('chartBUavg');
   if (!chartEl) return;
-  const chart = echarts.init(chartEl);
-  pricingChartInstances.buavg = chart;
 
   if (bus.length === 0) {
     chartEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:14px;">当前筛选下无定价数据</div>';
     return;
   }
 
-  // Summary cards
+  // Summary cards (always render)
   const avgAll = bus.length ? Math.round(Object.values(buMarkup).reduce((a,b)=>a+b,0)/bus.length*10)/10 : 0;
   const summaryHtml = bus.map((bu, i) => {
     const count = buData[bu].length;
@@ -2544,6 +2541,33 @@ function renderBUComparison() {
   }).join('');
   const summaryEl = document.getElementById('buSummaryCards');
   if (summaryEl) summaryEl.innerHTML = summaryHtml;
+
+  // Check if echarts is available
+  if (typeof echarts === 'undefined') {
+    // Fallback: render data as table
+    const tableRows = bus.map((bu, i) => {
+      const count = buData[bu].length;
+      const markup = buMarkup[bu] || 0;
+      const avgRate = Math.round(buData[bu].reduce((sum,s) => sum + (s.rate||0), 0) / count * 100) / 100;
+      return `<tr>
+        <td style="font-weight:600;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colors[i%colors.length]};margin-right:8px;"></span>${bu}</td>
+        <td class="num-cell">${count}</td>
+        <td class="num-cell" style="font-weight:600;">${markup}%</td>
+        <td class="num-cell">${avgRate}</td>
+        <td><button class="btn btn-sm" onclick="showBUDrillDown('${bu}')" style="font-size:11px;padding:2px 10px;">查看明细</button></td>
+      </tr>`;
+    }).join('');
+    chartEl.style.height = 'auto';
+    chartEl.innerHTML = `<div style="padding:10px 0;"><div style="padding:8px 0 12px;color:#F5A623;font-size:12px;">图表库加载失败，以表格形式展示数据</div>
+      <table class="kanban-table"><thead><tr><th>BU</th><th>供应商数</th><th>平均Markup</th><th>平均时薪</th><th>操作</th></tr></thead><tbody>${tableRows}</tbody></table>
+    </div>`;
+    document.getElementById('buDrillDown').style.display = 'none';
+    return;
+  }
+
+  if (pricingChartInstances.buavg) pricingChartInstances.buavg.dispose();
+  const chart = echarts.init(chartEl);
+  pricingChartInstances.buavg = chart;
 
   chart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) {
@@ -2575,6 +2599,29 @@ function showBUDrillDown(bu) {
 
   document.getElementById('buDrillDown').style.display = 'block';
   document.getElementById('buDrillTitle').textContent = `${bu} — 供应商Markup排名（${sups.length}家）`;
+
+  // Also render the drill-down table regardless of echarts
+  const tableEl = document.getElementById('buDrillTable');
+  if (tableEl) {
+    const rows = sups.map((s, i) => {
+      const currency = getCurrencySym(s);
+      return `<tr>
+        <td>${i+1}</td>
+        <td style="font-weight:600;">${s.name}</td>
+        <td class="num-cell">${s.markupPct ? s.markupPct + '%' : '—'}</td>
+        <td class="num-cell">${s.rate || '—'}${currency ? ' ' + currency : ''}</td>
+        <td class="num-cell">${s.base || '—'}</td>
+        <td>${s.rating || '—'}</td>
+      </tr>`;
+    }).join('');
+    tableEl.innerHTML = `<table class="kanban-table"><thead><tr><th>#</th><th>供应商</th><th>Markup</th><th>报价</th><th>底价</th><th>评级</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  if (typeof echarts === 'undefined') {
+    const drillEl = document.getElementById('chartBUdrill');
+    if (drillEl) drillEl.innerHTML = '';
+    return;
+  }
 
   if (pricingChartInstances.budrill) pricingChartInstances.budrill.dispose();
   const drillEl = document.getElementById('chartBUdrill');
