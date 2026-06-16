@@ -950,12 +950,19 @@ tbody tr:last-child td { border-bottom: none; }
             </div>
             <div class="form-group">
               <label>所属 BU <span style="color:var(--danger)">*</span></label>
-              <select id="newRegion">
+              <select id="newBU" onchange="updateNewFormRegions()">
                 <option value="">请选择</option>
-                <option value="FBU美洲">FBU美洲</option>
-                <option value="FBU欧洲">FBU欧洲</option>
-                <option value="FBU亚太">FBU亚太</option>
-                <option value="LBU欧洲质检项目部">LBU欧洲质检项目部</option>
+                <option value="FBU">FBU</option>
+                <option value="GUS">GUS</option>
+                <option value="WX">WX</option>
+                <option value="GEU">GEU</option>
+                <option value="LBU">LBU</option>
+              </select>
+            </div>
+            <div class="form-group" id="newRegionGroup" style="display:none;">
+              <label>所属区域 <span style="color:var(--danger)">*</span></label>
+              <select id="newRegion" onchange="updateNewFormAreas()">
+                <option value="">请选择</option>
               </select>
             </div>
             <div class="form-group">
@@ -1197,6 +1204,25 @@ const LBU_BU_MAP = {
   '欧洲质检项目部': 'LBU欧洲质检项目部'
 };
 
+// BU line → available regions (for dropdown population)
+const BU_REGIONS_MAP = {
+  'FBU': ['美洲区', '欧洲区', '亚太区'],
+  'GUS': ['美洲区'],
+  'WX': ['欧洲'],
+  'GEU': ['欧洲'],
+  'LBU': ['欧洲质检项目部']
+};
+
+// BU + region → AREAS_MAP key
+function getBUKey(bu, region) {
+  if (bu === 'FBU') return BU_MAP[region] || '';
+  if (bu === 'GUS') return region === '美洲区' ? 'GUS美洲' : '';
+  if (bu === 'WX') return WX_BU_MAP[Object.keys(WX_BU_MAP)[0]] || 'WX欧洲';
+  if (bu === 'GEU') return 'GEU欧洲';
+  if (bu === 'LBU') return region === '欧洲质检项目部' ? 'LBU欧洲质检项目部' : '';
+  return '';
+}
+
 // Current BU filter state
 let currentBUFilter = 'all'; // 'all', 'FBU', 'GUS', 'WX', 'GEU', 'LBU'
 
@@ -1247,18 +1273,8 @@ let suppliers = [];
 // 为每个供应商添加 BU 和国家字段，和考核指标
 function enrichSuppliers() {
   suppliers.forEach(s => {
-    // BU mapping based on business line
-    if (s.bu_line === 'GUS') {
-      s.bu = GUS_BU_MAP[s.region] || ('GUS' + s.region);
-    } else if (s.bu_line === 'WX') {
-      s.bu = WX_BU_MAP[s.region] || ('WX' + s.region);
-    } else if (s.bu_line === 'GEU') {
-      s.bu = GEU_BU_MAP[s.region] || ('GEU' + s.region);
-    } else if (s.bu_line === 'LBU') {
-      s.bu = LBU_BU_MAP[s.region] || ('LBU' + s.region);
-    } else {
-      s.bu = BU_MAP[s.region] || s.region;
-    }
+    // BU is just the business line letter
+    s.bu = s.bu_line || 'FBU';
     s.country = COUNTRY_MAP[s.area] || s.area || '未知';
 
     // Parse cert JSON universally (FBU monthly markup, GUS pricing, WX/GEU metadata)
@@ -2223,7 +2239,7 @@ function renderRegistryTable() {
   tbody.innerHTML = filtered.map((s, i) => `<tr onclick="openSupplierDrawer(${suppliers.indexOf(s)})">
     <td style="font-family:monospace;font-size:12px;color:var(--text-tertiary);">${s.id}</td>
     <td style="font-weight:600;">${s.name}</td>
-    <td>${s.bu}</td>
+    <td>${s.bu_line || s.bu}</td>
     <td>${s.country}</td>
     <td>${s.area}</td>
     <td>${s.type}</td>
@@ -2253,7 +2269,7 @@ function openSupplierDrawer(idx) {
       <h4>基本信息 ${s.hasRealData ? '<span style="font-size:11px;padding:2px 6px;border-radius:3px;background:#e8f5e9;color:#2e7d32;font-weight:normal;margin-left:6px;">考核数据来源：2026年5月实测</span>' : '<span style="font-size:11px;padding:2px 6px;border-radius:3px;background:#fff3e0;color:#e65100;font-weight:normal;margin-left:6px;">考核指标为模拟数据</span>'}</h4>
       <div class="drawer-info-grid">
         <div class="drawer-info-item"><div class="dii-label">供应商ID</div><div class="dii-value">${s.id}</div></div>
-        <div class="drawer-info-item"><div class="dii-label">BU / 国家 / 地区</div><div class="dii-value">${s.bu} / ${s.country} / ${s.area}</div></div>
+        <div class="drawer-info-item"><div class="dii-label">BU / 国家 / 地区</div><div class="dii-value">${s.bu_line || s.bu} / ${s.country} / ${s.area}</div></div>
         <div class="drawer-info-item"><div class="dii-label">公司类型</div><div class="dii-value">${s.type}</div></div>
         <div class="drawer-info-item"><div class="dii-label">启用状态</div><div class="dii-value">${s.status}</div></div>
         <div class="drawer-info-item"><div class="dii-label">合作起始</div><div class="dii-value">${s.startDate || '—'}</div></div>
@@ -2974,16 +2990,54 @@ function showAssessTrend(idx) {
 }
 
 // ============================== Page 4: 引入供应商 ==============================
-document.getElementById('newRegion').addEventListener('change', function() {
+function updateNewFormRegions() {
+  const bu = document.getElementById('newBU').value;
+  const regionSelect = document.getElementById('newRegion');
+  const regionGroup = document.getElementById('newRegionGroup');
   const areaSelect = document.getElementById('newArea');
-  const areas = AREAS_MAP[this.value] || [];
-  areaSelect.innerHTML = areas.length ?
-    '<option value="">请选择</option>' + areas.map(a => `<option value="${a}">${a}（${COUNTRY_MAP[a] || ''}）</option>`).join('') :
-    '<option value="">请先选择 BU</option>';
+
+  if (!bu) {
+    regionGroup.style.display = 'none';
+    regionSelect.innerHTML = '<option value="">请选择</option>';
+    areaSelect.innerHTML = '<option value="">请先选择 BU</option>';
+    return;
+  }
+
+  const regions = BU_REGIONS_MAP[bu] || [];
+  if (regions.length <= 1) {
+    // Only one region available - auto-select and show areas directly
+    regionGroup.style.display = 'none';
+    regionSelect.innerHTML = '<option value="' + regions[0] + '">' + regions[0] + '</option>';
+    regionSelect.value = regions[0];
+    updateNewFormAreas();
+  } else {
+    // Multiple regions - show dropdown
+    regionGroup.style.display = '';
+    regionSelect.innerHTML = '<option value="">请选择</option>' + regions.map(r => '<option value="' + r + '">' + r + '</option>').join('');
+    areaSelect.innerHTML = '<option value="">请先选择区域</option>';
+  }
+
   // Auto-generate ID
   const newIdField = document.getElementById('newId');
   newIdField.value = 'S' + String(Math.floor(Math.random() * 9000) + 1000).padStart(5, '0');
-});
+}
+
+function updateNewFormAreas() {
+  const bu = document.getElementById('newBU').value;
+  const region = document.getElementById('newRegion').value;
+  const areaSelect = document.getElementById('newArea');
+
+  if (!bu || !region) {
+    areaSelect.innerHTML = '<option value="">请先选择 BU</option>';
+    return;
+  }
+
+  const buKey = getBUKey(bu, region);
+  const areas = buKey ? (AREAS_MAP[buKey] || []) : [];
+  areaSelect.innerHTML = areas.length ?
+    '<option value="">请选择</option>' + areas.map(a => '<option value="' + a + '">' + a + '（' + (COUNTRY_MAP[a] || '') + '）</option>').join('') :
+    '<option value="">无可用地区</option>';
+}
 
 function simulateUpload() {
   document.getElementById('uploadResult').style.display = 'block';
@@ -2991,7 +3045,8 @@ function simulateUpload() {
 
 function submitNewSupplier() {
   const name = document.getElementById('newName').value.trim();
-  const bu = document.getElementById('newRegion').value;
+  const buLine = document.getElementById('newBU').value;
+  const region = document.getElementById('newRegion').value;
   const area = document.getElementById('newArea').value;
   const type = document.getElementById('newType').value;
   const rate = parseFloat(document.getElementById('newRate').value) || 0;
@@ -3000,16 +3055,14 @@ function submitNewSupplier() {
   const id = document.getElementById('newId').value;
 
   if (!name) { showToast('请输入供应商名称'); return; }
-  if (!bu) { showToast('请选择所属 BU'); return; }
+  if (!buLine) { showToast('请选择所属 BU'); return; }
   if (!area) { showToast('请选择所属地区'); return; }
 
   const markup = base > 0 ? Math.round((rate - base) / base * 100) + '%' : '—';
-  // Reverse map BU to region
-  const regionMap = {'FBU美洲':'美洲区','FBU欧洲':'欧洲区','FBU亚太':'亚太区','LBU欧洲质检项目部':'欧洲质检项目部'};
 
   const newSupplier = {
     id: id || 'S' + String(Math.floor(Math.random() * 9000) + 1000),
-    name, region: regionMap[bu] || bu, bu, area, type,
+    name, region: region || buLine, bu_line: buLine, bu: buLine, area, type,
     country: COUNTRY_MAP[area] || '未知',
     status: '新增',
     rate, base, markup,
@@ -3035,7 +3088,9 @@ function submitNewSupplier() {
 function resetForm() {
   document.getElementById('newName').value = '';
   document.getElementById('newId').value = '';
-  document.getElementById('newRegion').value = '';
+  document.getElementById('newBU').value = '';
+  document.getElementById('newRegionGroup').style.display = 'none';
+  document.getElementById('newRegion').innerHTML = '<option value="">请选择</option>';
   document.getElementById('newArea').innerHTML = '<option value="">请先选择 BU</option>';
   document.getElementById('newType').value = '劳务';
   document.getElementById('newRate').value = '';
@@ -3530,15 +3585,7 @@ function updateModalAreas() {
   const buLine = document.getElementById('mSupBU')?.value || 'FBU';
   const region = document.getElementById('mSupRegion')?.value;
   const areaSelect = document.getElementById('mSupArea');
-  // Determine BU key for area lookup
-  let buKey = '';
-  if (buLine === 'GUS') {
-    buKey = region === '美洲区' ? 'GUS美洲' : '';
-  } else if (buLine === 'LBU') {
-    buKey = region === '欧洲质检项目部' ? 'LBU欧洲质检项目部' : '';
-  } else {
-    buKey = BU_MAP[region] || '';
-  }
+  const buKey = getBUKey(buLine, region);
   const areas = buKey ? (AREAS_MAP[buKey] || []) : [];
   areaSelect.innerHTML = areas.length ? '<option value="">请选择</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('') : '<option value="">请先选择大区</option>';
 }
