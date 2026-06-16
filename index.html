@@ -751,7 +751,7 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="kanban-section" id="kanbanSectionUsage">
           <div class="kanban-section-header">四、各 BU 使用情况<span>在用 vs 停用 vs 新增</span></div>
           <table class="kanban-table" id="kanbanUsageTable">
-            <thead><tr><th>BU</th><th>在用</th><th>停用</th><th>新增</th><th>使用率</th><th>状态分布</th></tr></thead>
+            <thead><tr><th style="width:30px;"></th><th>BU</th><th>在用</th><th>停用</th><th>新增</th><th>使用率</th><th>状态分布</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -1276,6 +1276,8 @@ function enrichSuppliers() {
     // BU is just the business line letter
     s.bu = s.bu_line || 'FBU';
     s.country = COUNTRY_MAP[s.area] || s.area || '未知';
+    // Normalize status: LBU uses "启用" which should be treated as "使用中"
+    if (s.status === '启用') s.status = '使用中';
 
     // Parse cert JSON universally (FBU monthly markup, GUS pricing, WX/GEU metadata)
     s.certObj = null;
@@ -1647,16 +1649,50 @@ function renderKanban() {
     </tr>`;
   }).join('');
 
-  // Table 4: BU Usage
+  // Table 4: BU Usage (with drill-down by status)
+  // Group suppliers by BU and status
+  const buStatusGroups = {};
+  suppliers.forEach(s => {
+    if (!buStatusGroups[s.bu]) buStatusGroups[s.bu] = { active: [], inactive: [], newSuppliers: [] };
+    if (s.status === '使用中') buStatusGroups[s.bu].active.push(s);
+    else if (s.status === '停用') buStatusGroups[s.bu].inactive.push(s);
+    else if (s.status === '新增') buStatusGroups[s.bu].newSuppliers.push(s);
+  });
+
+  function renderStatusGroup(suppliers, color, label, maxShow) {
+    if (!suppliers.length) return `<div style="padding:6px 0;font-size:13px;color:#999;">无${label}供应商</div>`;
+    const show = suppliers.slice(0, maxShow || 10);
+    const remaining = suppliers.length - show.length;
+    let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;">`;
+    show.forEach(s => {
+      html += `<tr><td style="padding:3px 8px 3px 16px;white-space:nowrap;">${s.name}</td><td style="padding:3px 8px;color:#667;white-space:nowrap;">${s.country}</td><td style="padding:3px 8px;color:#999;">${s.area || '—'}</td></tr>`;
+    });
+    if (remaining > 0) {
+      html += `<tr><td colspan="3" style="padding:4px 16px;color:var(--primary);font-size:12px;cursor:pointer;" onclick="this.parentElement.querySelectorAll('tr.hidden-row').forEach(r=>r.style.display='');this.style.display='none';">还有 ${remaining} 家，点击展开全部 ▾</td></tr>`;
+      suppliers.slice(maxShow || 10).forEach(s => {
+        html += `<tr class="hidden-row" style="display:none;"><td style="padding:3px 8px 3px 16px;white-space:nowrap;">${s.name}</td><td style="padding:3px 8px;color:#667;white-space:nowrap;">${s.country}</td><td style="padding:3px 8px;color:#999;">${s.area || '—'}</td></tr>`;
+      });
+    }
+    html += `</table>`;
+    return html;
+  }
+
   const usageTbody = document.querySelector('#kanbanUsageTable tbody');
-  usageTbody.innerHTML = buNames.map(bu => {
+  let usageRows = '';
+  buNames.forEach(bu => {
     const d = buData[bu];
     const rate = d.total > 0 ? Math.round((d.active + d.newCount) / d.total * 100) : 0;
     const activePct = d.total > 0 ? (d.active / d.total * 100).toFixed(1) : 0;
     const inactivePct = d.total > 0 ? (d.inactive / d.total * 100).toFixed(1) : 0;
     const newPct = d.total > 0 ? (d.newCount / d.total * 100).toFixed(1) : 0;
-    return `<tr>
-      <td style="font-weight:700;color:var(--navy);">${bu}</td>
+    const color = BU_COLORS[bu] || '#999';
+
+    // Main row (clickable)
+    usageRows += `<tr class="usage-main-row" data-bu="${bu}" onclick="toggleUsageDrill(this)" style="cursor:pointer;">
+      <td class="usage-arrow" style="text-align:center;color:#999;font-size:12px;transition:transform 0.2s;">&#9654;</td>
+      <td style="font-weight:700;color:var(--navy);">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:6px;vertical-align:middle;"></span>${bu}
+      </td>
       <td><span class="tag-active">${d.active} 家</span></td>
       <td><span class="tag-inactive">${d.inactive} 家</span></td>
       <td><span class="tag-new">${d.newCount} 家</span></td>
@@ -1669,7 +1705,29 @@ function renderKanban() {
         </div>
       </td>
     </tr>`;
-  }).join('');
+
+    // Drill-down sub-row
+    const groups = buStatusGroups[bu] || { active: [], inactive: [], newSuppliers: [] };
+    usageRows += `<tr class="usage-drill-row" data-bu="${bu}" style="display:none;">
+      <td colspan="7" style="padding:12px 20px 16px 50px;background:#F8FAFC;border-bottom:2px solid #E8ECF0;">
+        <div style="display:flex;gap:24px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:250px;">
+            <div style="font-weight:700;color:#27AE60;font-size:14px;padding-bottom:6px;border-bottom:2px solid #27AE60;">● 在用（${groups.active.length} 家）</div>
+            ${renderStatusGroup(groups.active, '#27AE60', '在用', 10)}
+          </div>
+          <div style="flex:1;min-width:250px;">
+            <div style="font-weight:700;color:#E5484D;font-size:14px;padding-bottom:6px;border-bottom:2px solid #E5484D;">● 停用（${groups.inactive.length} 家）</div>
+            ${renderStatusGroup(groups.inactive, '#E5484D', '停用', 10)}
+          </div>
+          <div style="flex:1;min-width:250px;">
+            <div style="font-weight:700;color:#F5A623;font-size:14px;padding-bottom:6px;border-bottom:2px solid #F5A623;">● 新增（${groups.newSuppliers.length} 家）</div>
+            ${renderStatusGroup(groups.newSuppliers, '#F5A623', '新增', 10)}
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  });
+  usageTbody.innerHTML = usageRows;
 }
 
 // ============================== BU-Specific Kanban Renderers ==============================
@@ -3310,6 +3368,32 @@ function toggleCountryDrill(row) {
   // Reset background on all main rows
   document.querySelectorAll('.country-main-row').forEach(r => {
     if (r.getAttribute('data-country') !== country || isExpanded) r.style.background = '';
+  });
+}
+
+// Toggle BU usage drill-down: expand/collapse status breakdown
+function toggleUsageDrill(row) {
+  const bu = row.getAttribute('data-bu');
+  const drillRow = document.querySelector(`.usage-drill-row[data-bu="${bu}"]`);
+  const arrow = row.querySelector('.usage-arrow');
+  if (!drillRow) return;
+
+  const isExpanded = drillRow.style.display !== 'none';
+
+  // Collapse all other drill rows
+  document.querySelectorAll('.usage-drill-row').forEach(r => r.style.display = 'none');
+  document.querySelectorAll('.usage-arrow').forEach(a => { a.style.transform = ''; a.innerHTML = '&#9654;'; });
+
+  if (!isExpanded) {
+    drillRow.style.display = '';
+    arrow.style.transform = 'rotate(90deg)';
+    row.style.background = '#F0F5FF';
+  } else {
+    row.style.background = '';
+  }
+
+  document.querySelectorAll('.usage-main-row').forEach(r => {
+    if (r.getAttribute('data-bu') !== bu || isExpanded) r.style.background = '';
   });
 }
 
