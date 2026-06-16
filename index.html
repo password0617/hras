@@ -631,7 +631,7 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="logo-brand">HRAS</div>
       </div>
       <div class="logo-title">全球劳务工供应商管理平台</div>
-      <div class="logo-sub">FBU/GUS/WX/GEU 交付前台管理系统</div>
+      <div class="logo-sub">FBU/GUS/WX/GEU/LBU 交付前台管理系统</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-label">管理中心</div>
@@ -667,7 +667,7 @@ tbody tr:last-child td { border-bottom: none; }
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="margin-bottom:4px;">FBU/GUS/WX/GEU 交付前台管理系统</div>
+      <div style="margin-bottom:4px;">FBU/GUS/WX/GEU/LBU 交付前台管理系统</div>
       <div>v2.8.0 · 数据更新于 2026-06-15</div>
     </div>
   </aside>
@@ -711,6 +711,7 @@ tbody tr:last-child td { border-bottom: none; }
           <button class="bu-filter-btn" data-bu="GUS" onclick="switchBU('GUS')">GUS</button>
           <button class="bu-filter-btn" data-bu="WX" onclick="switchBU('WX')">WX</button>
           <button class="bu-filter-btn" data-bu="GEU" onclick="switchBU('GEU')">GEU</button>
+          <button class="bu-filter-btn" data-bu="LBU" onclick="switchBU('LBU')">LBU</button>
         </div>
 
         <!-- Summary Row -->
@@ -830,7 +831,7 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
         <div style="padding:12px 16px;font-size:12px;color:var(--text-tertiary);display:flex;justify-content:space-between;align-items:center;">
           <span id="tableCount">共 0 条记录</span>
-          <span>数据基于 2026年 FBU/GUS/WX/GEU交付前台劳务供应商更新表</span>
+          <span>数据基于 2026年 FBU/GUS/WX/GEU/LBU交付前台劳务供应商更新表</span>
         </div>
       </div>
 
@@ -954,6 +955,9 @@ tbody tr:last-child td { border-bottom: none; }
                 <option value="FBU美洲">FBU美洲</option>
                 <option value="FBU欧洲">FBU欧洲</option>
                 <option value="FBU亚太">FBU亚太</option>
+                <option value="LBU美洲">LBU美洲</option>
+                <option value="LBU欧洲">LBU欧洲</option>
+                <option value="LBU亚太">LBU亚太</option>
               </select>
             </div>
             <div class="form-group">
@@ -1083,7 +1087,7 @@ tbody tr:last-child td { border-bottom: none; }
       <button class="btn btn-primary btn-sm" onclick="showAddSupplierModal()">+ 新增供应商</button>
     </div>
     <div class="admin-filters">
-      <select id="dmFilterBU" onchange="renderDataMgmtTable()"><option value="">全部业务线</option><option value="FBU">FBU</option><option value="GUS">GUS</option></select>
+      <select id="dmFilterBU" onchange="renderDataMgmtTable()"><option value="">全部业务线</option><option value="FBU">FBU</option><option value="GUS">GUS</option><option value="WX">WX</option><option value="GEU">GEU</option><option value="LBU">LBU</option></select>
       <select id="dmFilterRegion" onchange="renderDataMgmtTable()"><option value="">全部大区</option><option value="美洲区">美洲区</option><option value="欧洲区">欧洲区</option><option value="亚太区">亚太区</option></select>
       <input type="text" id="dmSearch" placeholder="搜索供应商名称..." oninput="renderDataMgmtTable()" style="flex:1;min-width:200px;">
     </div>
@@ -1168,7 +1172,10 @@ const AREAS_MAP = {
   'FBU亚太': ['澳洲区','日本区','韩国区'],
   'GUS美洲': ['美西大区','佛州区','纽约区','芝加华区','德州区','亚特兰大区'],
   'WX欧洲': ['英国','西班牙','荷兰','丹麦','匈牙利','意大利','比利时','法国'],
-  'GEU欧洲': ['荷兰区','意大利区','法国区']
+  'GEU欧洲': ['荷兰区','意大利区','法国区'],
+  'LBU美洲': ['加州区','新泽西区','亚特兰大区','芝加哥区','萨凡纳区','达拉斯区','迈阿密区','休斯顿区','诺福克区（撤仓）','西雅图区','加拿大区','墨西哥区'],
+  'LBU欧洲': ['英国区','捷克区','法国区','德国区','波兰区','意大利区','西班牙区'],
+  'LBU亚太': ['澳洲区','日本区','韩国区']
 };
 
 const BU_MAP = {
@@ -1190,8 +1197,12 @@ const GEU_BU_MAP = {
   '荷兰': 'GEU欧洲', '意大利': 'GEU欧洲', '法国': 'GEU欧洲'
 };
 
+const LBU_BU_MAP = {
+  '美洲区': 'LBU美洲', '欧洲区': 'LBU欧洲', '亚太区': 'LBU亚太'
+};
+
 // Current BU filter state
-let currentBUFilter = 'all'; // 'all', 'FBU', 'GUS', 'WX', 'GEU'
+let currentBUFilter = 'all'; // 'all', 'FBU', 'GUS', 'WX', 'GEU', 'LBU'
 
 const COUNTRY_MAP = {
   '加州区':'美国','新泽西区':'美国','亚特兰大区':'美国','芝加哥区':'美国',
@@ -1246,6 +1257,8 @@ function enrichSuppliers() {
       s.bu = WX_BU_MAP[s.region] || ('WX' + s.region);
     } else if (s.bu_line === 'GEU') {
       s.bu = GEU_BU_MAP[s.region] || ('GEU' + s.region);
+    } else if (s.bu_line === 'LBU') {
+      s.bu = LBU_BU_MAP[s.region] || ('LBU' + s.region);
     } else {
       s.bu = BU_MAP[s.region] || s.region;
     }
@@ -1462,6 +1475,7 @@ function renderKanban() {
     else if (currentBUFilter === 'GUS') renderGUSKanban(buSpecificEl);
     else if (currentBUFilter === 'WX') renderWXKanban(buSpecificEl);
     else if (currentBUFilter === 'GEU') renderGEUKanban(buSpecificEl);
+    else if (currentBUFilter === 'LBU') renderLBUKanban(buSpecificEl);
   } else {
     sectionBU.style.display = '';
     sectionUsage.style.display = '';
@@ -1590,8 +1604,8 @@ function renderKanban() {
 }
 
 // ============================== BU-Specific Kanban Renderers ==============================
-const BU_COLORS = { FBU:'#2E6BE5', GUS:'#2E7D32', WX:'#E65100', GEU:'#7B1FA2' };
-const BU_LABELS = { FBU:'FBU', GUS:'GUS', WX:'WX', GEU:'GEU' };
+const BU_COLORS = { FBU:'#2E6BE5', GUS:'#2E7D32', WX:'#E65100', GEU:'#7B1FA2', LBU:'#00ACC1' };
+const BU_LABELS = { FBU:'FBU', GUS:'GUS', WX:'WX', GEU:'GEU', LBU:'LBU' };
 
 function renderFBUKanban(el) {
   const buColor = BU_COLORS.FBU;
@@ -1990,6 +2004,125 @@ function renderGEUKanban(el) {
       }
     }
   } catch(e) { console.error('GEU chart error:', e); }
+}
+
+function renderLBUKanban(el) {
+  const buColor = BU_COLORS.LBU;
+  const active = suppliers.filter(s => s.status !== '停用');
+  const stopped = suppliers.filter(s => s.status === '停用');
+
+  // KPI cards
+  const markups = active.map(s => parseFloat(s.markup)).filter(v => !isNaN(v) && v > 0 && v < 5);
+  const avgMarkup = markups.length ? Math.round(markups.reduce((a,b)=>a+b,0)/markups.length*100)/100 : 0;
+  const rates = active.map(s => s.rate).filter(v => v != null && v > 0);
+  const avgRate = rates.length ? Math.round(rates.reduce((a,b)=>a+b,0)/rates.length*100)/100 : 0;
+
+  const cards = [
+    { label:'平均Markup', val:(avgMarkup*100).toFixed(0)+'%', sub:markups.length+'家有Markup数据', color:'#00ACC1' },
+    { label:'平均结算时薪', val:avgRate.toFixed(2), sub:rates.length+'家有报价数据', color:'#2E6BE5' },
+    { label:'在用供应商', val:active.length, sub:`共${suppliers.length}家（含停用${stopped.length}家）`, color:'#27AE60' },
+    { label:'停用供应商', val:stopped.length, sub:`占比${Math.round(stopped.length/suppliers.length*100)}%`, color:'#E5484D' }
+  ].map(c => '<div class="ks-card" style="border-left-color:'+c.color+';"><div class="ks-label">'+c.label+'</div><div class="ks-value" style="color:'+c.color+';">'+c.val+'</div><div class="ks-sub">'+c.sub+'</div></div>').join('');
+
+  // Region distribution
+  const regionMap = {};
+  suppliers.forEach(s => {
+    if (!regionMap[s.region]) regionMap[s.region] = { total:0, active:0, inactive:0 };
+    regionMap[s.region].total++;
+    if (s.status === '使用中') regionMap[s.region].active++; else regionMap[s.region].inactive++;
+  });
+  const total = suppliers.length;
+  const regionRows = Object.entries(regionMap).sort((a,b)=>b[1].total-a[1].total).map(([r, d]) => {
+    const pct = Math.round(d.total/total*100);
+    return '<tr><td style="font-weight:600;">'+r+'</td><td class="num-cell">'+d.total+'</td><td><span class="tag-active">'+d.active+' 在用</span>'+(d.inactive ? ' <span class="tag-inactive">'+d.inactive+' 停用</span>' : '')+'</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:'+pct+'%;background:'+buColor+';"></div></div><span style="font-size:12px;">'+pct+'%</span></div></td></tr>';
+  }).join('');
+
+  // Type distribution
+  const typeMap = {};
+  suppliers.forEach(s => { typeMap[s.type || '未分类'] = (typeMap[s.type || '未分类'] || 0) + 1; });
+  const typeRows = Object.entries(typeMap).sort((a,b)=>b[1]-a[1]).map(([t, c]) => {
+    const pct = Math.round(c/total*100);
+    return '<tr><td style="font-weight:600;">'+t+'</td><td class="num-cell">'+c+'</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:'+pct+'%;background:'+buColor+';"></div></div><span style="font-size:12px;">'+pct+'%</span></div></td></tr>';
+  }).join('');
+
+  // Rating distribution
+  const ratingMap = {};
+  suppliers.forEach(s => { ratingMap[s.rating || '—'] = (ratingMap[s.rating || '—'] || 0) + 1; });
+  const ratingColors = { 'A':'#27AE60', 'B':'#2E6BE5', 'C':'#F5A623', 'D':'#E5484D', '—':'#999' };
+  const ratingRows = Object.entries(ratingMap).sort((a,b)=>b[1]-a[1]).map(([r, c]) => {
+    const pct = Math.round(c/total*100);
+    const color = ratingColors[r] || '#999';
+    return '<tr><td><span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:6px;font-weight:700;font-size:13px;color:#fff;background:'+color+';">'+r+'</span></td><td class="num-cell">'+c+'</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:'+pct+'%;background:'+color+';"></div></div><span style="font-size:12px;">'+pct+'%</span></div></td></tr>';
+  }).join('');
+
+  // Markup by area chart data
+  const areaMarkup = {};
+  suppliers.forEach(s => {
+    const area = s.area || s.region;
+    if (!areaMarkup[area]) areaMarkup[area] = { markups: [], region: s.region };
+    const m = parseFloat(s.markup);
+    if (!isNaN(m) && m > 0 && m < 5) areaMarkup[area].markups.push(m);
+  });
+  const sortedAreas = Object.entries(areaMarkup).filter(a => a[1].markups.length > 0).sort((a,b) => {
+    const avgA = a[1].markups.reduce((x,y)=>x+y,0)/a[1].markups.length;
+    const avgB = b[1].markups.reduce((x,y)=>x+y,0)/b[1].markups.length;
+    return avgB - avgA;
+  });
+
+  // Supplier detail table
+  const detailRows = suppliers.sort((a,b) => (a.name||'').localeCompare(b.name||'')).map(s => {
+    const m = parseFloat(s.markup);
+    const markupDisplay = !isNaN(m) && m > 0 && m < 5 ? (m*100).toFixed(0)+'%' : '—';
+    return '<tr><td style="font-weight:600;">'+s.name+'</td><td>'+(s.region||'—')+'</td><td>'+(s.area||'—')+'</td><td>'+(s.type||'—')+'</td><td class="num-cell">'+(s.rate != null ? s.rate : '—')+'</td><td class="num-cell">'+(s.base != null ? s.base : '—')+'</td><td class="num-cell" style="font-weight:600;">'+markupDisplay+'</td><td>'+(s.rating||'—')+'</td><td><span class="'+(s.status==='使用中'?'tag-active':'tag-inactive')+'">'+s.status+'</span></td></tr>';
+  }).join('');
+
+  el.innerHTML =
+    '<div class="kanban-summary">'+cards+'</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">' +
+      '<div class="kanban-section" style="margin-bottom:0;">' +
+        '<div class="kanban-section-header" style="background:linear-gradient(135deg,'+buColor+','+buColor+'dd);">区域供应商分布<span>按大区统计</span></div>' +
+        '<table class="kanban-table"><thead><tr><th>大区</th><th>数量</th><th>状态</th><th>占比</th></tr></thead><tbody>'+regionRows+'</tbody></table>' +
+      '</div>' +
+      '<div class="kanban-section" style="margin-bottom:0;">' +
+        '<div class="kanban-section-header" style="background:linear-gradient(135deg,'+buColor+','+buColor+'dd);">供应商类型分布<span>按公司类型统计</span></div>' +
+        '<table class="kanban-table"><thead><tr><th>类型</th><th>数量</th><th>占比</th></tr></thead><tbody>'+typeRows+'</tbody></table>' +
+      '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">' +
+      '<div class="kanban-section" style="margin-bottom:0;">' +
+        '<div class="kanban-section-header" style="background:linear-gradient(135deg,'+buColor+','+buColor+'dd);">评级分布<span>按供应商评级统计</span></div>' +
+        '<table class="kanban-table"><thead><tr><th>评级</th><th>数量</th><th>占比</th></tr></thead><tbody>'+ratingRows+'</tbody></table>' +
+      '</div>' +
+      '<div class="kanban-section" style="margin-bottom:0;">' +
+        '<div class="kanban-section-header" style="background:linear-gradient(135deg,'+buColor+','+buColor+'dd);">各地区Markup排名<span>按平均Markup从高到低排列</span></div>' +
+        '<div style="height:350px;" id="lbuAreaChart"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="kanban-section">' +
+      '<div class="kanban-section-header" style="background:linear-gradient(135deg,'+buColor+','+buColor+'dd);">供应商详情一览<span>LBU全部供应商核心信息</span></div>' +
+      '<table class="kanban-table"><thead><tr><th>供应商</th><th>大区</th><th>区域</th><th>类型</th><th>结算时薪</th><th>基本时薪</th><th>Markup</th><th>评级</th><th>状态</th></tr></thead><tbody>'+detailRows+'</tbody></table>' +
+    '</div>';
+
+  // Render ECharts
+  try {
+    const chartEl = document.getElementById('lbuAreaChart');
+    if (chartEl && typeof echarts !== 'undefined' && sortedAreas.length > 0) {
+      const chart = echarts.init(chartEl);
+      const regionColors = { '美洲区':'#2E6BE5', '欧洲区':'#00B8A9', '亚太区':'#F5A623' };
+      chart.setOption({
+        tooltip: { trigger:'axis', axisPointer:{type:'shadow'} },
+        grid: { top:10, right:60, bottom:10, left:140 },
+        xAxis: { type:'value', name:'Markup(%)', axisLabel:{formatter:function(v){return (v*100).toFixed(0)+'%'}} },
+        yAxis: { type:'category', data:sortedAreas.map(a=>a[0]).reverse(), axisLabel:{fontSize:11} },
+        series: [{ type:'bar', data:sortedAreas.map(a => {
+          const avg = a[1].markups.reduce((x,y)=>x+y,0)/a[1].markups.length;
+          return { value:avg, itemStyle:{color:regionColors[a[1].region]||buColor, borderRadius:[0,4,4,0]} };
+        }).reverse(), label:{show:true,position:'right',formatter:function(p){return (p.value*100).toFixed(0)+'%'},fontWeight:600,fontSize:11}, barWidth:'55%' }]
+      });
+      if (pricingChartInstances.lbuArea) pricingChartInstances.lbuArea.dispose();
+      pricingChartInstances.lbuArea = chart;
+    }
+  } catch(e) { console.error('LBU chart error:', e); }
 }
 
 // ============================== Page 1: 供应商明细 ==============================
@@ -2906,7 +3039,7 @@ function submitNewSupplier() {
 
   const markup = base > 0 ? Math.round((rate - base) / base * 100) + '%' : '—';
   // Reverse map BU to region
-  const regionMap = {'FBU美洲':'美洲区','FBU欧洲':'欧洲区','FBU亚太':'亚太区'};
+  const regionMap = {'FBU美洲':'美洲区','FBU欧洲':'欧洲区','FBU亚太':'亚太区','LBU美洲':'美洲区','LBU欧洲':'欧洲区','LBU亚太':'亚太区'};
 
   const newSupplier = {
     id: id || 'S' + String(Math.floor(Math.random() * 9000) + 1000),
@@ -3047,7 +3180,7 @@ function switchBU(bu) {
 function applyBUFilterVisibility() {
   const filterEl = document.getElementById('buFilter');
   if (!filterEl || !currentUser) return;
-  const buLines = currentUser.bu_lines || ['FBU', 'GUS', 'WX', 'GEU'];
+  const buLines = currentUser.bu_lines || ['FBU', 'GUS', 'WX', 'GEU', 'LBU'];
   // Show filter if user has access to more than one BU line
   filterEl.style.display = buLines.length > 1 ? 'flex' : 'none';
   // Hide buttons for BU lines user can't access
@@ -3170,7 +3303,7 @@ async function renderUserMgmt() {
       <td>${u.email || '—'}</td>
       <td><span class="role-badge ${u.role}">${roleLabels[u.role] || u.role}</span>${editBadge}</td>
       <td>${(u.regions || []).join(', ') || '—'}</td>
-      <td>${(u.bu_lines || []).length > 0 ? u.bu_lines.map(b => `<span class="tag" style="background:${b==='FBU'?'#EEF3FA':b==='GUS'?'#E8F5E9':b==='WX'?'#FFF3E0':'#F3E5F5'};color:${b==='FBU'?'#2E6BE5':b==='GUS'?'#2E7D32':b==='WX'?'#E65100':'#7B1FA2'};">${b}</span>`).join(' ') : '—'}</td>
+      <td>${(u.bu_lines || []).length > 0 ? u.bu_lines.map(b => `<span class="tag" style="background:${b==='FBU'?'#EEF3FA':b==='GUS'?'#E8F5E9':b==='WX'?'#FFF3E0':b==='LBU'?'#E0F7FA':'#F3E5F5'};color:${b==='FBU'?'#2E6BE5':b==='GUS'?'#2E7D32':b==='WX'?'#E65100':b==='LBU'?'#00ACC1':'#7B1FA2'};">${b}</span>`).join(' ') : '—'}</td>
       <td>${statusHtml}</td>
       <td style="font-size:12px;">${u.created_at ? new Date(u.created_at).toLocaleDateString('zh-CN') : '—'}</td>
       <td>${actionBtns}</td>
@@ -3210,6 +3343,7 @@ function showAddUserModal() {
         <label><input type="checkbox" class="mBUCheck" value="GUS" checked> GUS</label>
         <label><input type="checkbox" class="mBUCheck" value="WX" checked> WX</label>
         <label><input type="checkbox" class="mBUCheck" value="GEU" checked> GEU</label>
+        <label><input type="checkbox" class="mBUCheck" value="LBU" checked> LBU</label>
       </div>
     </div>`;
   document.getElementById('modalSaveBtn').onclick = saveNewUser;
@@ -3273,7 +3407,7 @@ function showEditUserModal(id) {
     </div>
     <div class="form-group"><label>业务线权限</label>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
-        ${['FBU','GUS','WX','GEU'].map(b => `<label><input type="checkbox" class="mEditBUCheck" value="${b}" ${(u.bu_lines||['FBU','GUS','WX','GEU']).includes(b)?'checked':''}> ${b}</label>`).join('')}
+        ${['FBU','GUS','WX','GEU','LBU'].map(b => `<label><input type="checkbox" class="mEditBUCheck" value="${b}" ${(u.bu_lines||['FBU','GUS','WX','GEU','LBU']).includes(b)?'checked':''}> ${b}</label>`).join('')}
       </div>
     </div>`;
   document.getElementById('modalSaveBtn').onclick = () => saveEditUser(id);
@@ -3342,6 +3476,7 @@ function showActivateUserModal(id) {
         <label><input type="checkbox" class="mActBUCheck" value="GUS" checked> GUS</label>
         <label><input type="checkbox" class="mActBUCheck" value="WX" checked> WX</label>
         <label><input type="checkbox" class="mActBUCheck" value="GEU" checked> GEU</label>
+        <label><input type="checkbox" class="mActBUCheck" value="LBU" checked> LBU</label>
       </div>
     </div>`;
   document.getElementById('modalSaveBtn').onclick = () => activateUser(id);
@@ -3409,7 +3544,7 @@ function showAddSupplierModal() {
   document.getElementById('modalTitle').textContent = '新增供应商';
   document.getElementById('modalBody').innerHTML = `
     <div class="form-grid">
-      <div class="form-group"><label>业务线*</label><select id="mSupBU" onchange="updateModalAreas()"><option value="FBU">FBU</option><option value="GUS">GUS</option></select></div>
+      <div class="form-group"><label>业务线*</label><select id="mSupBU" onchange="updateModalAreas()"><option value="FBU">FBU</option><option value="GUS">GUS</option><option value="WX">WX</option><option value="GEU">GEU</option><option value="LBU">LBU</option></select></div>
       <div class="form-group"><label>供应商ID</label><input id="mSupId" type="text" value="S${String(Math.floor(Math.random()*90000)+10000)}"></div>
       <div class="form-group"><label>名称*</label><input id="mSupName" type="text"></div>
       <div class="form-group"><label>大区*</label><select id="mSupRegion" onchange="updateModalAreas()"><option value="">请选择</option><option value="美洲区">美洲区</option><option value="欧洲区">欧洲区</option><option value="亚太区">亚太区</option></select></div>
@@ -3433,6 +3568,9 @@ function updateModalAreas() {
   let buKey = '';
   if (buLine === 'GUS') {
     buKey = region === '美洲区' ? 'GUS美洲' : '';
+  } else if (buLine === 'LBU') {
+    const buVal = buLine + (region === '美洲区' ? '美洲' : region === '欧洲区' ? '欧洲' : region === '亚太区' ? '亚太' : '');
+    buKey = buVal;
   } else {
     buKey = BU_MAP[region] || '';
   }
