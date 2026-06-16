@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HRAS全球劳务工供应商管理平台</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ============================== CSS Reset & Variables ============================== */
 :root {
@@ -712,6 +714,18 @@ tbody tr:last-child td { border-bottom: none; }
           <button class="bu-filter-btn" data-bu="WX" onclick="switchBU('WX')">WX</button>
           <button class="bu-filter-btn" data-bu="GEU" onclick="switchBU('GEU')">GEU</button>
           <button class="bu-filter-btn" data-bu="LBU" onclick="switchBU('LBU')">LBU</button>
+        </div>
+
+        <!-- Export Buttons -->
+        <div id="kanbanExportBar" style="display:flex;gap:10px;margin-bottom:12px;">
+          <button onclick="exportKanbanPDF()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1px solid #D0D5DD;border-radius:6px;background:#fff;color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='#F0F5FF';this.style.borderColor='var(--primary)'" onmouseout="this.style.background='#fff';this.style.borderColor='#D0D5DD'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+            导出 PDF
+          </button>
+          <button onclick="exportKanbanExcel()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1px solid #D0D5DD;border-radius:6px;background:#fff;color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='#F0F5FF';this.style.borderColor='var(--primary)'" onmouseout="this.style.background='#fff';this.style.borderColor='#D0D5DD'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+            导出 Excel
+          </button>
         </div>
 
         <!-- Summary Row -->
@@ -3406,6 +3420,143 @@ function toggleShowAllSuppliers(el) {
     });
   }
   el.style.display = 'none';
+}
+
+// ============================== Kanban Export ==============================
+
+function exportKanbanPDF() {
+  if (typeof html2pdf === 'undefined') { showToast('PDF导出库未加载，请检查网络'); return; }
+  const page = document.getElementById('page-kanban');
+  if (!page) return;
+
+  // Temporarily expand all drill-down rows for the capture
+  const drillRows = page.querySelectorAll('.country-drill-row, .usage-drill-row');
+  const arrows = page.querySelectorAll('.country-arrow, .usage-arrow');
+  const showAllLinks = page.querySelectorAll('[onclick*="toggleShowAllSuppliers"]');
+  const hiddenTrs = page.querySelectorAll('tr[style*="display:none"], tr[style*="display: none"]');
+  drillRows.forEach(r => r.style.display = '');
+  arrows.forEach(a => { a.style.transform = 'rotate(90deg)'; });
+  hiddenTrs.forEach(r => { r._wasHidden = true; r.style.display = ''; });
+  showAllLinks.forEach(el => el.style.display = 'none');
+
+  // Hide export buttons and BU filter during capture
+  const exportBar = document.getElementById('kanbanExportBar');
+  const buFilter = document.getElementById('buFilter');
+  if (exportBar) exportBar.style.display = 'none';
+
+  // Generate filename with date
+  const today = new Date().toISOString().slice(0, 10);
+  const buLabel = currentBUFilter === 'all' ? '全部' : currentBUFilter;
+
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: `HRAS供应商看板_${buLabel}_${today}.pdf`,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  };
+
+  html2pdf().set(opt).from(page).save().then(() => {
+    // Restore hidden rows
+    drillRows.forEach(r => r.style.display = 'none');
+    arrows.forEach(a => { a.style.transform = ''; });
+    hiddenTrs.forEach(r => { if (r._wasHidden) r.style.display = 'none'; delete r._wasHidden; });
+    showAllLinks.forEach(el => el.style.display = '');
+    if (exportBar) exportBar.style.display = 'flex';
+    showToast('PDF导出成功');
+  }).catch(err => {
+    drillRows.forEach(r => r.style.display = 'none');
+    arrows.forEach(a => { a.style.transform = ''; });
+    hiddenTrs.forEach(r => { if (r._wasHidden) r.style.display = 'none'; delete r._wasHidden; });
+    showAllLinks.forEach(el => el.style.display = '');
+    if (exportBar) exportBar.style.display = 'flex';
+    showToast('PDF导出失败: ' + err.message);
+  });
+}
+
+function exportKanbanExcel() {
+  if (typeof XLSX === 'undefined') { showToast('Excel导出库未加载，请检查网络'); return; }
+  const today = new Date().toISOString().slice(0, 10);
+  const buLabel = currentBUFilter === 'all' ? '全部' : currentBUFilter;
+  const wb = XLSX.utils.book_new();
+
+  // Helper: read table rows from DOM
+  function tableToArray(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return [];
+    const rows = [];
+    const headerCells = table.querySelectorAll('thead th');
+    if (headerCells.length) rows.push(Array.from(headerCells).map(th => th.textContent.trim()));
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      // Skip drill-down sub-rows (they have colspan)
+      if (tr.querySelector('td[colspan]')) return;
+      const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+      if (cells.some(c => c)) rows.push(cells);
+    });
+    return rows;
+  }
+
+  // Sheet 1: BU统计
+  const buRows = tableToArray('kanbanBUTable');
+  if (buRows.length) {
+    const ws = XLSX.utils.aoa_to_sheet(buRows);
+    XLSX.utils.book_append_sheet(wb, ws, 'BU统计');
+  }
+
+  // Sheet 2: 国家统计
+  const countryRows = tableToArray('kanbanCountryTable');
+  if (countryRows.length) {
+    const ws = XLSX.utils.aoa_to_sheet(countryRows);
+    XLSX.utils.book_append_sheet(wb, ws, '国家统计');
+  }
+
+  // Sheet 3: 地区统计
+  const areaRows = tableToArray('kanbanAreaTable');
+  if (areaRows.length) {
+    const ws = XLSX.utils.aoa_to_sheet(areaRows);
+    XLSX.utils.book_append_sheet(wb, ws, '地区统计');
+  }
+
+  // Sheet 4: BU使用情况
+  const usageRows = tableToArray('kanbanUsageTable');
+  if (usageRows.length) {
+    // Clean up status text (remove "家" suffix for numeric columns)
+    const cleaned = usageRows.map((row, i) => {
+      if (i === 0) return row; // header
+      return row.map((cell, j) => {
+        if (j >= 2 && j <= 4) return cell.replace(/\s*家/g, '');
+        return cell;
+      });
+    });
+    const ws = XLSX.utils.aoa_to_sheet(cleaned);
+    XLSX.utils.book_append_sheet(wb, ws, 'BU使用情况');
+  }
+
+  // Sheet 5: Full supplier list (bonus)
+  const supplierData = suppliers.map(s => ({
+    'BU': s.bu,
+    'ID': s.id,
+    '供应商名称': s.name,
+    '国家': s.country,
+    '地区': s.area || '',
+    '类型': s.type || '',
+    '状态': s.status || '',
+    '费率': s.rate != null ? s.rate : '',
+    '基数': s.base != null ? s.base : '',
+    'Markup': s.markup || '',
+    '占比': s.ratio || '',
+    '评级': s.rating || '',
+    '联系人': s.contact || '',
+    '开始日期': s.start_date || ''
+  }));
+  if (supplierData.length) {
+    const ws = XLSX.utils.json_to_sheet(supplierData);
+    XLSX.utils.book_append_sheet(wb, ws, '供应商明细');
+  }
+
+  XLSX.writeFile(wb, `HRAS供应商看板_${buLabel}_${today}.xlsx`);
+  showToast('Excel导出成功');
 }
 
 function switchBU(bu) {
