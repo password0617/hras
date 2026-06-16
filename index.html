@@ -2150,16 +2150,12 @@ function renderBUCards() {
   });
   document.getElementById('buCards').innerHTML = html;
 
-  // Populate BU filter options (once)
+  // Populate BU filter options (always rebuild to ensure completeness)
   const buSelect = document.getElementById('filterBU');
-  if (buSelect.options.length <= 1) {
-    Object.keys(bus).forEach(bu => {
-      const opt = document.createElement('option');
-      opt.value = bu; opt.textContent = bu;
-      buSelect.appendChild(opt);
-    });
-  }
-  buSelect.value = curBU;
+  const prevVal = buSelect.value;
+  buSelect.innerHTML = '<option value="">全部 BU</option>' +
+    Object.keys(bus).sort().map(bu => `<option value="${bu}">${bu}</option>`).join('');
+  buSelect.value = prevVal;
 
   // Cascade: BU → Country → Area
   updateCascadingFilters();
