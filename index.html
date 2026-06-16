@@ -1540,7 +1540,8 @@ function renderKanban() {
   </tr>`;
   buTbody.innerHTML = buRows;
 
-  // Table 2: Country (with drill-down by BU)
+  // Table 2: Country (drill-down only when BU filter is 'all')
+  const isAllBU = currentBUFilter === 'all';
   const countryMap = {};
   const countryBUDetail = {};
   suppliers.forEach(s => {
@@ -1549,54 +1550,74 @@ function renderKanban() {
     countryBUDetail[s.country][s.bu] = (countryBUDetail[s.country][s.bu] || 0) + 1;
   });
   const sortedCountries = Object.entries(countryMap).sort((a,b) => b[1] - a[1]);
-  const countryTbody = document.querySelector('#kanbanCountryTable tbody');
+  const countryTable = document.querySelector('#kanbanCountryTable');
+  const countryTbody = countryTable.querySelector('tbody');
+  // Update table header based on filter mode
+  if (isAllBU) {
+    countryTable.querySelector('thead').innerHTML = '<tr><th style="width:30px;"></th><th>国家</th><th>供应商数量</th><th>占比</th></tr>';
+  } else {
+    countryTable.querySelector('thead').innerHTML = '<tr><th>国家</th><th>供应商数量</th><th>占比</th></tr>';
+  }
   let countryRows = '';
-  sortedCountries.forEach(([country, count], idx) => {
+  sortedCountries.forEach(([country, count]) => {
     const pct = Math.round(count / total * 100);
-    // Main row (clickable)
-    countryRows += `<tr class="country-main-row" data-country="${country}" onclick="toggleCountryDrill(this)" style="cursor:pointer;">
-      <td class="country-arrow" style="text-align:center;color:#999;font-size:12px;transition:transform 0.2s;">&#9654;</td>
-      <td style="font-weight:700;color:var(--navy);">${country}</td>
-      <td class="num-cell">${count}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:${pct}%;background:var(--primary);"></div></div>
-          <span style="font-size:12px;color:var(--text-secondary);">${pct}%</span>
-        </div>
-      </td>
-    </tr>`;
-    // Drill-down sub-row (hidden by default)
-    const buEntries = Object.entries(countryBUDetail[country]).sort((a,b) => b[1] - a[1]);
-    const buSubRows = buEntries.map(([bu, buCount]) => {
-      const buPct = Math.round(buCount / count * 100);
-      const color = BU_COLORS[bu] || '#999';
-      return `<tr>
-        <td></td>
-        <td style="padding-left:24px;">
-          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px;"></span>
-          <span style="font-weight:600;">${bu}</span>
-        </td>
-        <td class="num-cell" style="font-weight:600;">${buCount}</td>
+    if (isAllBU) {
+      // Drill-down mode: expandable rows with BU breakdown
+      countryRows += `<tr class="country-main-row" data-country="${country}" onclick="toggleCountryDrill(this)" style="cursor:pointer;">
+        <td class="country-arrow" style="text-align:center;color:#999;font-size:12px;transition:transform 0.2s;">&#9654;</td>
+        <td style="font-weight:700;color:var(--navy);">${country}</td>
+        <td class="num-cell">${count}</td>
         <td>
           <div style="display:flex;align-items:center;gap:8px;">
-            <div class="progress-bar" style="flex:1;max-width:100px;"><div class="progress-fill" style="width:${buPct}%;background:${color};"></div></div>
-            <span style="font-size:12px;">${buPct}%</span>
+            <div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:${pct}%;background:var(--primary);"></div></div>
+            <span style="font-size:12px;color:var(--text-secondary);">${pct}%</span>
           </div>
         </td>
       </tr>`;
-    }).join('');
-    countryRows += `<tr class="country-drill-row" data-country="${country}" style="display:none;">
-      <td colspan="4" style="padding:8px 16px 12px 46px;background:#F8FAFC;border-bottom:1px solid #E8ECF0;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead><tr style="background:#EDF1F5;">
-            <th style="padding:6px 12px;text-align:left;font-size:12px;color:#667;">BU</th>
-            <th style="padding:6px 12px;text-align:right;font-size:12px;color:#667;">供应商数量</th>
-            <th style="padding:6px 12px;text-align:left;font-size:12px;color:#667;">占该国比例</th>
-          </tr></thead>
-          <tbody>${buSubRows}</tbody>
-        </table>
-      </td>
-    </tr>`;
+      const buEntries = Object.entries(countryBUDetail[country]).sort((a,b) => b[1] - a[1]);
+      const buSubRows = buEntries.map(([bu, buCount]) => {
+        const buPct = Math.round(buCount / count * 100);
+        const color = BU_COLORS[bu] || '#999';
+        return `<tr>
+          <td></td>
+          <td style="padding-left:24px;">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px;"></span>
+            <span style="font-weight:600;">${bu}</span>
+          </td>
+          <td class="num-cell" style="font-weight:600;">${buCount}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="progress-bar" style="flex:1;max-width:100px;"><div class="progress-fill" style="width:${buPct}%;background:${color};"></div></div>
+              <span style="font-size:12px;">${buPct}%</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+      countryRows += `<tr class="country-drill-row" data-country="${country}" style="display:none;">
+        <td colspan="4" style="padding:8px 16px 12px 46px;background:#F8FAFC;border-bottom:1px solid #E8ECF0;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#EDF1F5;">
+              <th style="padding:6px 12px;text-align:left;font-size:12px;color:#667;">BU</th>
+              <th style="padding:6px 12px;text-align:right;font-size:12px;color:#667;">供应商数量</th>
+              <th style="padding:6px 12px;text-align:left;font-size:12px;color:#667;">占该国比例</th>
+            </tr></thead>
+            <tbody>${buSubRows}</tbody>
+          </table>
+        </td>
+      </tr>`;
+    } else {
+      // Flat mode: simple table without drill-down
+      countryRows += `<tr>
+        <td style="font-weight:700;color:var(--navy);">${country}</td>
+        <td class="num-cell">${count}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="progress-bar" style="flex:1;max-width:120px;"><div class="progress-fill" style="width:${pct}%;background:var(--primary);"></div></div>
+            <span style="font-size:12px;color:var(--text-secondary);">${pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }
   });
   countryTbody.innerHTML = countryRows;
 
