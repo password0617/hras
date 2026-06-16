@@ -1360,6 +1360,7 @@ function enrichSuppliers() {
 
 // 预警数据 - 从 Supabase 动态加载
 let alerts = [];
+let autoAlerts = []; // Auto-generated alerts from supplier data
 let resolvedCount = 0;
 
 // 权限控制 - 基于角色的权限系统
@@ -3271,26 +3272,157 @@ function resetForm() {
   document.getElementById('uploadResult').style.display = 'none';
 }
 
+// ============================== Auto-Alert Generation ==============================
+function generateAutoAlerts() {
+  autoAlerts = [];
+  let alertId = -1;
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  // Pre-compute BU average markup for pricing anomaly detection
+  const buMarkups = {};
+  suppliers.forEach(s => {
+    const m = getMarkupPct(s);
+    if (m != null && m > 0) {
+      if (!buMarkups[s.bu]) buMarkups[s.bu] = [];
+      buMarkups[s.bu].push(m);
+    }
+  });
+  const buAvgMarkup = {};
+  Object.entries(buMarkups).forEach(([bu, arr]) => {
+    buAvgMarkup[bu] = arr.reduce((a, b) => a + b, 0) / arr.length;
+  });
+
+  suppliers.forEach(s => {
+    if (s.status !== '使用中') return; // Only check active suppliers
+    const name = s.name;
+    const assess = s.gus_assessment;
+    const qual = assess?.qualification;
+
+    // === Category 1: Contract & Qualification ===
+
+    // Rule 1: Insurance expired (RED)
+    if (qual?.insurance_expiry) {
+      const expDate = new Date(qual.insurance_expiry);
+      const daysUntilExpiry = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+      if (daysUntilExpiry < 0) {
+        autoAlerts.push({ id: alertId--, level: 'red', title: '保险已过期', desc: `${name} 的保险已于 ${qual.insurance_expiry} 过期，当前仍在合作中，存在合规风险`, supplier: name, time: todayStr, status: 'pending' });
+      } else if (daysUntilExpiry <= 30) {
+        // Rule 2: Insurance expiring within 30 days (YELLOW)
+        autoAlerts.push({ id: alertId--, level: 'yellow', title: '保险即将到期', desc: `${name} 的保险将于 ${qual.insurance_expiry} 到期（${daysUntilExpiry}天后），请及时安排续保`, supplier: name, time: todayStr, status: 'pending' });
+      } else if (daysUntilExpiry <= 90) {
+        // Rule 3: Insurance expiring within 90 days (BLUE)
+        autoAlerts.push({ id: alertId--, level: 'blue', title: '保险到期提醒', desc: `${name} 的保险将于 ${qual.insurance_expiry} 到期（${daysUntilExpiry}天后），请关注续保安排`, supplier: name, time: todayStr, status: 'pending' });
+      }
+    }
+
+    // Rule 4: GUS supplier missing qualification data (YELLOW)
+    if (s.bu_line === 'GUS' && assess && !qual) {
+      autoAlerts.push({ id: alertId--, level: 'yellow', title: '资质数据缺失', desc: `${name} (GUS) 有考核数据但缺少资质信息(qualification)，合规审计可能存在隐患`, supplier: name, time: todayStr, status: 'pending' });
+    }
+
+    // === Category 2: Assessment & Scoring ===
+
+    // Rule 5: D-rated active supplier (RED)
+    if (s.rating === 'D') {
+      autoAlerts.push({ id: alertId--, level: 'red', title: 'D级供应商仍在使用中', desc: `${name} 考核评级为D（不合格），当前状态仍为"使用中"，建议评估是否暂停合作`, supplier: name, time: todayStr, status: 'pending' });
+    }
+
+    // Rule 6: Low composite score (YELLOW)
+    if (assess && s.composite != null && s.composite < 60) {
+      autoAlerts.push({ id: alertId--, level: 'yellow', title: '考核综合分不及格', desc: `${name} 考核综合分 ${Math.round(s.composite)} 分（低于60分及格线），需关注服务质量`, supplier: name, time: todayStr, status: 'pending' });
+    }
+
+    // Rule 7: High compliance deduction (RED)
+    if (assess?.compliance > 5) {
+      autoAlerts.push({ id: alertId--, level: 'red', title: '合规扣分严重', desc: `${name} 合规扣分达 ${assess.compliance} 分（阈值5分），存在严重合规问题`, supplier: name, time: todayStr, status: 'pending' });
+    }
+
+    // Rule 8: Delivery or quality below threshold (YELLOW)
+    if (assess) {
+      const lowMetrics = [];
+      if (assess.delivery != null && assess.delivery < 75) lowMetrics.push(`交付及时率 ${assess.delivery}%`);
+      if (assess.quality != null && assess.quality < 75) lowMetrics.push(`质量合格率 ${assess.quality}%`);
+      if (lowMetrics.length > 0) {
+        autoAlerts.push({ id: alertId--, level: 'yellow', title: '考核指标不达标', desc: `${name} ${lowMetrics.join('、')}，低于75%警戒线`, supplier: name, time: todayStr, status: 'pending' });
+      }
+    }
+
+    // Rule 9: Low stability (YELLOW)
+    if (assess?.stability != null && assess.stability < 65) {
+      autoAlerts.push({ id: alertId--, level: 'yellow', title: '人员稳定性不足', desc: `${name} 人员稳定性 ${assess.stability}%（低于65%警戒线），流动率过高`, supplier: name, time: todayStr, status: 'pending' });
+    }
+
+    // === Category 3: Pricing & Markup ===
+
+    // Rule 10 & 11: Markup anomaly (RED if >avg+30%, YELLOW if >avg+15%)
+    const markup = getMarkupPct(s);
+    const avg = buAvgMarkup[s.bu];
+    if (markup != null && avg != null && avg > 0) {
+      const diff = markup - avg;
+      if (diff > 30) {
+        autoAlerts.push({ id: alertId--, level: 'red', title: 'Markup异常偏高', desc: `${name} Markup为 ${markup.toFixed(1)}%，高于${s.bu}均值(${avg.toFixed(1)}%) ${diff.toFixed(1)}个百分点，费率显著偏离`, supplier: name, time: todayStr, status: 'pending' });
+      } else if (diff > 15) {
+        autoAlerts.push({ id: alertId--, level: 'yellow', title: 'Markup偏高', desc: `${name} Markup为 ${markup.toFixed(1)}%，高于${s.bu}均值(${avg.toFixed(1)}%) ${diff.toFixed(1)}个百分点，建议关注`, supplier: name, time: todayStr, status: 'pending' });
+      }
+    }
+
+    // Rule 12: Missing pricing data (BLUE)
+    const hasPricing = s.certObj?.pricing?.length > 0 || s.geuData?.pricing?.length > 0;
+    if (!hasPricing && s.bu_line !== 'LBU') {
+      autoAlerts.push({ id: alertId--, level: 'blue', title: '定价数据缺失', desc: `${name} (${s.bu}) 状态为"使用中"但缺少定价数据，需补充报价信息`, supplier: name, time: todayStr, status: 'pending' });
+    }
+
+    // Rule 13: Pricing outdated >1 year (YELLOW)
+    const pricingUpdated = s.certObj?.pricing_updated || s.geuData?.pricing_updated;
+    if (pricingUpdated) {
+      const pDate = new Date(pricingUpdated);
+      const daysSinceUpdate = Math.floor((today - pDate) / (1000 * 60 * 60 * 24));
+      if (daysSinceUpdate > 365) {
+        autoAlerts.push({ id: alertId--, level: 'yellow', title: '定价数据过期', desc: `${name} 的报价最后更新于 ${pricingUpdated}（${daysSinceUpdate}天前），超过1年未更新`, supplier: name, time: todayStr, status: 'pending' });
+      }
+    }
+  });
+
+  console.log('Auto-alerts generated: ' + autoAlerts.length + ' alerts');
+}
+
 // ============================== Page 5: 合规及预警 ==============================
 function renderAlerts() {
   const levelFilter = document.getElementById('alertLevelFilter').value;
   const statusFilter = document.getElementById('alertStatusFilter').value;
 
-  let filtered = alerts.filter(a => {
+  // Merge database alerts + auto-generated alerts
+  // For auto alerts, filter by currentBUFilter if not 'all'
+  let filteredAuto = autoAlerts;
+  if (currentBUFilter !== 'all') {
+    const buSupplierNames = new Set(suppliers.filter(s => s.bu === currentBUFilter).map(s => s.name));
+    filteredAuto = autoAlerts.filter(a => buSupplierNames.has(a.supplier));
+  }
+  const allAlerts = alerts.concat(filteredAuto);
+
+  let filtered = allAlerts.filter(a => {
     if (levelFilter && a.level !== levelFilter) return false;
     if (statusFilter === 'pending' && a.status !== 'pending') return false;
     if (statusFilter === 'resolved' && a.status !== 'resolved') return false;
     return true;
   });
 
-  // Update stats
-  document.getElementById('alertRed').textContent = alerts.filter(a => a.level === 'red' && a.status === 'pending').length;
-  document.getElementById('alertYellow').textContent = alerts.filter(a => a.level === 'yellow' && a.status === 'pending').length;
-  document.getElementById('alertBlue').textContent = alerts.filter(a => a.level === 'blue' && a.status === 'pending').length;
-  document.getElementById('alertResolved').textContent = alerts.filter(a => a.status === 'resolved').length;
-  const pendingCount = alerts.filter(a => a.status === 'pending').length;
+  // Update stats from merged data
+  document.getElementById('alertRed').textContent = allAlerts.filter(a => a.level === 'red' && a.status === 'pending').length;
+  document.getElementById('alertYellow').textContent = allAlerts.filter(a => a.level === 'yellow' && a.status === 'pending').length;
+  document.getElementById('alertBlue').textContent = allAlerts.filter(a => a.level === 'blue' && a.status === 'pending').length;
+  document.getElementById('alertResolved').textContent = allAlerts.filter(a => a.status === 'resolved').length;
+  const pendingCount = allAlerts.filter(a => a.status === 'pending').length;
   document.getElementById('alertBadge').textContent = pendingCount;
   document.getElementById('alertBadge').style.display = pendingCount > 0 ? '' : 'none';
+
+  // Sort: red first, then yellow, then blue; pending before resolved
+  const levelOrder = { red: 0, yellow: 1, blue: 2 };
+  filtered.sort((a, b) => {
+    if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+    return (levelOrder[a.level] || 9) - (levelOrder[b.level] || 9);
+  });
 
   const list = document.getElementById('alertList');
   if (filtered.length === 0) {
@@ -3323,7 +3455,9 @@ function renderAlerts() {
 }
 
 function resolveAlert(id) {
-  const alert = alerts.find(a => a.id === id);
+  // Search both arrays
+  let alert = alerts.find(a => a.id === id);
+  if (!alert) alert = autoAlerts.find(a => a.id === id);
   if (alert) {
     alert.status = 'resolved';
     resolvedCount++;
@@ -3644,6 +3778,7 @@ async function loadDashboardData(buFilter) {
     })) : [];
 
     enrichSuppliers();
+    generateAutoAlerts();
     renderCurrentPage();
     // Also pre-render data management table if user has access
     if (canEdit()) renderDataMgmtTable();
